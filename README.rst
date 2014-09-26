@@ -31,7 +31,7 @@ What still needs to be done
 
 - Correctly invalidate ``.extra`` queries
 - Handle transactions
-- Handle multiple database
+- Handle multiple databases
 - Write tests, including multi-table inheritance, prefetch_related, etc
 - Find out if it’s thread-safe and test it
 - Add a ``CACHALOT_ENABLED`` setting
