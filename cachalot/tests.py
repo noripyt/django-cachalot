@@ -653,9 +653,29 @@ class WriteTestCase(TestCase):
         self.assertEqual(len(data3), 1)
         self.assertDictEqual(data3[0], {'name': 'test2', 'public': True})
 
-    @skip(NotImplementedError)
     def test_invalidate_aggregate(self):
-        pass
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 0)
+
+        with self.assertNumQueries(1):
+            u = User.objects.create_user('test')
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 0)
+
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test1')
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 0)
+
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test2', owner=u)
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 1)
+
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test3')
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 1)
 
     @skip(NotImplementedError)
     def test_invalidate_annotate(self):
