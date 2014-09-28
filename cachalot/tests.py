@@ -694,9 +694,38 @@ class WriteTestCase(TestCase):
         self.assertListEqual(data1, [])
         self.assertListEqual(data2, [t])
 
-    @skip(NotImplementedError)
     def test_invalidate_select_related(self):
-        pass
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.select_related('owner'))
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(2):
+            u1 = User.objects.create_user('test1')
+            u2 = User.objects.create_user('test2')
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.select_related('owner'))
+        self.assertListEqual(data2, [])
+
+        with self.assertNumQueries(1):
+            Test.objects.bulk_create([
+                Test(name='test1', owner=u1),
+                Test(name='test2', owner=u2),
+                Test(name='test3', owner=u2),
+                Test(name='test4', owner=u1),
+            ])
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.select_related('owner'))
+            self.assertEqual(data3[0].owner, u1)
+            self.assertEqual(data3[1].owner, u2)
+            self.assertEqual(data3[2].owner, u2)
+            self.assertEqual(data3[3].owner, u1)
+
+        with self.assertNumQueries(1):
+            Test.objects.filter(name__in=['test1', 'test2']).delete()
+        with self.assertNumQueries(1):
+            data4 = list(Test.objects.select_related('owner'))
+            self.assertEqual(data4[0].owner, u2)
+            self.assertEqual(data4[1].owner, u1)
 
     @skip(NotImplementedError)
     def test_invalidate_prefetch_related(self):
