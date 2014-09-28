@@ -27,9 +27,8 @@ def _get_tables(query):
     """
     Returns a ``set`` of all database table names used by ``query``.
     """
-    tables = query.used_aliases.copy()
+    tables = set(query.tables)
     tables.add(query.model._meta.db_table)
-    tables.update(query.extra_tables)
     return tables
 
 
