@@ -6,6 +6,7 @@ import datetime
 from django.conf import settings
 from django.contrib.auth.models import User, Permission
 from django.core.cache import cache
+from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField,
     DateField, DateTimeField, Count)
@@ -582,21 +583,75 @@ class WriteTestCase(TestCase):
         self.assertListEqual(data1, [t1.name, t2.name])
         self.assertListEqual(data2, [t1.name])
 
-    @skip(NotImplementedError)
+        with self.assertNumQueries(1):
+            Test.objects.bulk_create([Test(name='test%s' % i)
+                                      for i in range(2, 11)])
+        with self.assertNumQueries(1):
+            self.assertEqual(Test.objects.count(), 10)
+        with self.assertNumQueries(1):
+            Test.objects.all().delete()
+        with self.assertNumQueries(1):
+            self.assertEqual(Test.objects.count(), 0)
+
     def test_invalidate_exists(self):
-        pass
+        with self.assertNumQueries(1):
+            self.assertFalse(Test.objects.exists())
 
-    @skip(NotImplementedError)
+        Test.objects.create(name='test')
+
+        with self.assertNumQueries(1):
+            self.assertTrue(Test.objects.create())
+
     def test_invalidate_count(self):
-        pass
+        with self.assertNumQueries(1):
+            self.assertEqual(Test.objects.count(), 0)
 
-    @skip(NotImplementedError)
+        Test.objects.create(name='test1')
+
+        with self.assertNumQueries(1):
+            self.assertEqual(Test.objects.count(), 1)
+
+        Test.objects.create(name='test2')
+
+        with self.assertNumQueries(1):
+            self.assertEqual(Test.objects.count(), 2)
+
     def test_invalidate_get(self):
-        pass
+        with self.assertNumQueries(1):
+            with self.assertRaises(Test.DoesNotExist):
+                Test.objects.get(name='test')
 
-    @skip(NotImplementedError)
+        Test.objects.create(name='test')
+
+        with self.assertNumQueries(1):
+            Test.objects.get(name='test')
+
+        Test.objects.create(name='test')
+
+        with self.assertNumQueries(1):
+            with self.assertRaises(MultipleObjectsReturned):
+                Test.objects.get(name='test')
+
     def test_invalidate_values(self):
-        pass
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values('name', 'public'))
+        self.assertListEqual(data1, [])
+
+        Test.objects.bulk_create([Test(name='test1'),
+                                  Test(name='test2', public=True)])
+
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.values('name', 'public'))
+        self.assertEqual(len(data2), 2)
+        self.assertDictEqual(data2[0], {'name': 'test1', 'public': False})
+        self.assertDictEqual(data2[1], {'name': 'test2', 'public': True})
+
+        Test.objects.all()[0].delete()
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.values('name', 'public'))
+        self.assertEqual(len(data3), 1)
+        self.assertDictEqual(data3[0], {'name': 'test2', 'public': True})
 
     @skip(NotImplementedError)
     def test_invalidate_aggregate(self):
