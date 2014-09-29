@@ -20,6 +20,11 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': '5432',
     },
+    'mysql': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'cachalot',
+        'USER': 'root',
+    },
 }
 
 
