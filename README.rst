@@ -64,7 +64,6 @@ What still needs to be done
 For version 1.0
 ...............
 
-- Handle transactions
 - Find out if it’s thread-safe and test it
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
 - Add support for other caches like memcached
