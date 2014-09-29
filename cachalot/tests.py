@@ -122,9 +122,9 @@ class ReadTestCase(TestCase):
         self.assertListEqual(data2, [self.t2])
 
         with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(pk__in=range(2, 10)))
+            data1 = list(Test.objects.filter(name__in=['test2', 'test72']))
         with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(pk__in=range(2, 10)))
+            data2 = list(Test.objects.filter(name__in=['test2', 'test72']))
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t2])
 
@@ -147,9 +147,9 @@ class ReadTestCase(TestCase):
         self.assertListEqual(data2, [self.t1])
 
         with self.assertNumQueries(1):
-            data1 = list(Test.objects.exclude(pk__in=range(2, 10)))
+            data1 = list(Test.objects.exclude(name__in=['test2', 'test72']))
         with self.assertNumQueries(0):
-            data2 = list(Test.objects.exclude(pk__in=range(2, 10)))
+            data2 = list(Test.objects.exclude(name__in=['test2', 'test72']))
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t1])
 
@@ -214,11 +214,11 @@ class ReadTestCase(TestCase):
 
     def test_in_bulk(self):
         with self.assertNumQueries(1):
-            data1 = Test.objects.in_bulk((7, 2, 5))
+            data1 = Test.objects.in_bulk((5432, self.t2.pk, 9200))
         with self.assertNumQueries(0):
-            data2 = Test.objects.in_bulk((7, 2, 5))
+            data2 = Test.objects.in_bulk((5432, self.t2.pk, 9200))
         self.assertDictEqual(data2, data1)
-        self.assertDictEqual(data2, {2: self.t2})
+        self.assertDictEqual(data2, {self.t2.pk: self.t2})
 
     def test_values(self):
         with self.assertNumQueries(1):
@@ -316,10 +316,10 @@ class ReadTestCase(TestCase):
     def test_annotate(self):
         Test.objects.create(name='test3', owner=self.user)
         with self.assertNumQueries(1):
-            data1 = list(User.objects.annotate(n=Count('test'))
+            data1 = list(User.objects.annotate(n=Count('test')).order_by('pk')
                          .values_list('n', flat=True))
         with self.assertNumQueries(0):
-            data2 = list(User.objects.annotate(n=Count('test'))
+            data2 = list(User.objects.annotate(n=Count('test')).order_by('pk')
                          .values_list('n', flat=True))
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [2, 1])
@@ -416,16 +416,16 @@ class ReadTestCase(TestCase):
         # Prefetch_related through a foreign key where exactly
         # the same prefetch_related SQL request was not fetched before
         with self.assertNumQueries(2):
-            data5 = list(Test.objects.filter(pk=1)
+            data5 = list(Test.objects
                          .select_related('owner')
-                         .prefetch_related('owner__user_permissions'))
+                         .prefetch_related('owner__user_permissions')[:1])
         with self.assertNumQueries(0):
             permissions5 = []
             for t in data5:
                 permissions5.extend(t.owner.user_permissions.all())
         with self.assertNumQueries(0):
-            data6 = list(Test.objects.filter(pk=1).select_related('owner')
-                         .prefetch_related('owner__user_permissions'))
+            data6 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__user_permissions')[:1])
             permissions6 = []
             for t in data6:
                 permissions6.extend(t.owner.user_permissions.all())
