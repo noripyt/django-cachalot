@@ -3,7 +3,7 @@ Django-cachalot
 
 Caches your Django ORM queries and automatically invalidates them.
 
-**In alpha, do not use for production**
+**In alpha, do not use in production**
 
 .. image:: https://raw.github.com/BertrandBordage/django-cachalot/master/django-cachalot.jpg
 
