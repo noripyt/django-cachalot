@@ -234,8 +234,29 @@ def _unpatch_atomic():
     Atomic.__exit__ = Atomic.__exit__.original
 
 
+def _patch_test_db():
+    def patch(original):
+        def inner(*args, **kwargs):
+            django_cache.clear()
+            return original(*args, **kwargs)
+
+        inner.original = original
+        return inner
+
+    creation = connection.creation
+    creation.create_test_db = patch(creation.create_test_db)
+    creation.destroy_test_db = patch(creation.destroy_test_db)
+
+
+def _unpatch_test_db():
+    creation = connection.creation
+    creation.create_test_db = creation.create_test_db.original
+    creation.destroy_test_db = creation.destroy_test_db.original
+
+
 def patch():
     global PATCHED
+    _patch_test_db()
     _patch_orm_write()
     _patch_orm_read()
     _patch_atomic()
@@ -244,6 +265,7 @@ def patch():
 
 def unpatch():
     global PATCHED
+    _unpatch_test_db()
     _unpatch_orm_read()
     _unpatch_orm_write()
     _unpatch_atomic()
