@@ -53,7 +53,7 @@ Monkey patching
 ...............
 
 django-cachalot modifies Django in place during execution to add a caching tool
-is added just before SQL queries are executed.
+just before SQL queries are executed.
 We detect which cache keys must be removed when some data
 is created/changed/deleted on the database.
 
