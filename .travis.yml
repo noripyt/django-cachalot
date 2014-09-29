@@ -11,8 +11,8 @@ services:
   - redis-server
 
 env:
-  - DJANGO=1.6.7 PSYCOPG2=2.5.4 MYSQL-PYTHON=1.2.5 DJANGO_REDIS=3.7.1
-  - DJANGO=1.7 PSYCOPG2=2.5.4 MYSQL-PYTHON=1.2.5 DJANGO_REDIS=3.7.1
+  - DJANGO=1.6.7 PSYCOPG2=2.5.4 MYSQL_PYTHON=1.2.5 DJANGO_REDIS=3.7.1
+  - DJANGO=1.7 PSYCOPG2=2.5.4 MYSQL_PYTHON=1.2.5 DJANGO_REDIS=3.7.1
 
 install:
   - pip install Django==$DJANGO psycopg2==$PSYCOPG2 django-redis==$DJANGO_REDIS
@@ -22,7 +22,7 @@ install:
       pip install
         -e git+https://github.com/clelland/MySQL-for-Python-3#egg=MySQL-python;
     else
-      pip install MySQL-python==$MYSQL-PYTHON;
+      pip install MySQL-python==$MYSQL_PYTHON;
     fi
 
 before_script:
