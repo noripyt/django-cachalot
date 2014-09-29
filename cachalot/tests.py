@@ -1083,7 +1083,6 @@ class AtomicTestCase(TestCase):
                             data2 = list(Test.objects.all())
                             self.assertListEqual(data2, [t1, t3])
                             raise ZeroDivisionError
-                        Test.objects.create(name='test4')
                 except ZeroDivisionError:
                     pass
         data3 = list(Test.objects.all())
