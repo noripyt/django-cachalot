@@ -49,7 +49,7 @@ class ReadTestCase(TestCase):
         self.admin = User.objects.create_superuser('admin', 'admin@test.me',
                                                    'password')
         self.t1__permission = (Permission.objects.order_by('?')
-                              .select_related('content_type')[0])
+                               .select_related('content_type')[0])
         self.t1 = Test.objects.create(
             name='test1', owner=self.user,
             date='1789-07-14', datetime='1789-07-14T16:43:27',
@@ -284,6 +284,28 @@ class ReadTestCase(TestCase):
             data2 = list(Test.objects.filter(owner__in=User.objects.all()))
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t1, self.t2])
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.filter(
+                owner__groups__permissions__in=Permission.objects.all()))
+        with self.assertNumQueries(0):
+            data4 = list(Test.objects.filter(
+                owner__groups__permissions__in=Permission.objects.all()))
+        self.assertListEqual(data4, data3)
+        self.assertListEqual(data4, [self.t1, self.t1, self.t1])
+
+        with self.assertNumQueries(1):
+            data5 = list(
+                Test.objects.filter(
+                    owner__groups__permissions__in=Permission.objects.all()
+                ).distinct())
+        with self.assertNumQueries(0):
+            data6 = list(
+                Test.objects.filter(
+                    owner__groups__permissions__in=Permission.objects.all()
+                ).distinct())
+        self.assertListEqual(data6, data5)
+        self.assertListEqual(data6, [self.t1])
 
     def test_aggregate(self):
         Test.objects.create(name='test3', owner=self.user)
@@ -802,15 +824,54 @@ class WriteTestCase(TestCase):
     def test_invalidate_subquery(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(owner__in=User.objects.all()))
+        self.assertListEqual(data1, [])
 
         u = User.objects.create_user('test')
-        t = Test.objects.create(name='test', owner=u)
 
         with self.assertNumQueries(1):
             data2 = list(Test.objects.filter(owner__in=User.objects.all()))
+        self.assertListEqual(data2, [])
 
-        self.assertListEqual(data1, [])
-        self.assertListEqual(data2, [t])
+        t = Test.objects.create(name='test', owner=u)
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.filter(owner__in=User.objects.all()))
+        self.assertListEqual(data3, [t])
+
+        with self.assertNumQueries(1):
+            data4 = list(
+                Test.objects.filter(
+                    owner__groups__permissions__in=Permission.objects.all()
+                ).distinct())
+        self.assertListEqual(data4, [])
+
+        g = Group.objects.create(name='test_group')
+
+        with self.assertNumQueries(1):
+            data5 = list(
+                Test.objects.filter(
+                    owner__groups__permissions__in=Permission.objects.all()
+                ).distinct())
+        self.assertListEqual(data5, [])
+
+        p = Permission.objects.first()
+        g.permissions.add(p)
+
+        with self.assertNumQueries(1):
+            data6 = list(
+                Test.objects.filter(
+                    owner__groups__permissions__in=Permission.objects.all()
+                ).distinct())
+        self.assertListEqual(data6, [])
+
+        u.groups.add(g)
+
+        with self.assertNumQueries(1):
+            data7 = list(
+                Test.objects.filter(
+                    owner__groups__permissions__in=Permission.objects.all()
+                ).distinct())
+        self.assertListEqual(data7, [t])
 
     def test_invalidate_select_related(self):
         with self.assertNumQueries(1):
