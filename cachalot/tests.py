@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 try:
     from unittest import skip
-except ImportError:  # For Python 2.6 & 3.2
+except ImportError:  # For Python 2.6
     from unittest2 import skip
 import datetime
 from django.conf import settings

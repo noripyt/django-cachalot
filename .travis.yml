@@ -16,13 +16,13 @@ env:
 
 install:
   - pip install Django==$DJANGO psycopg2==$PSYCOPG2 django-redis==$DJANGO_REDIS
-                unittest2 coveralls
+                coveralls
   - if [[ $TRAVIS_PYTHON_VERSION == 3* ]];
     then
       pip install
         -e git+https://github.com/clelland/MySQL-for-Python-3#egg=MySQL-python;
     else
-      pip install MySQL-python==$MYSQL_PYTHON;
+      pip install MySQL-python==$MYSQL_PYTHON unittest2;
     fi
 
 before_script:
@@ -43,3 +43,9 @@ script:
 
 after_success:
   - coveralls
+
+matrix:
+  exclude:
+    # Django 1.7 is not compatible with Python 2.6
+    - python: 2.6
+      env: DJANGO=1.7 PSYCOPG2=2.5.4 MYSQL_PYTHON=1.2.5 DJANGO_REDIS=3.7.1
