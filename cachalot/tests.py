@@ -498,6 +498,10 @@ class WriteTestCase(TestCase):
         self.assertListEqual(data3, [t1, t2, t3])
 
     def test_get_or_create(self):
+        """
+        Tests if the ``SELECT`` query of a ``QuerySet.get_or_create``
+        is cached, but not the ``INSERT`` one.
+        """
         with self.assertNumQueries(1):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
