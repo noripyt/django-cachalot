@@ -1,12 +1,13 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from unittest import skip
+from unittest import skip, expectedFailure
 import datetime
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
+from django.db import transaction
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField,
     DateField, DateTimeField, Count)
@@ -863,3 +864,36 @@ class WriteTestCase(TestCase):
     @skip(NotImplementedError)
     def test_invalidate_extra_order_by(self):
         pass
+
+
+class TransactionTestCase(TestCase):
+    def setUp(self):
+        # TODO: Move this to setUpClass when cachalot will handle transactions.
+        cache.clear()
+
+    def test_successful_read_transaction(self):
+        with self.assertNumQueries(3):
+            with transaction.atomic():
+                data1 = list(Test.objects.all())
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.all())
+        self.assertListEqual(data2, [])
+
+    # TODO: Remove this ``expectedFailure``
+    #       when cachalot will handle transactions
+    @expectedFailure
+    def test_unsuccessful_read_transaction(self):
+        with self.assertNumQueries(3):
+            try:
+                with transaction.atomic():
+                    data1 = list(Test.objects.all())
+                    raise ZeroDivisionError
+            except ZeroDivisionError:
+                pass
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.all())
+        self.assertListEqual(data2, [])
