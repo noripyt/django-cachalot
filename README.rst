@@ -14,8 +14,9 @@ Quick start
 Requirements
 ............
 
-Django-cachalot currently requires Django 1.6
-and `django-redis <https://github.com/niwibe/django-redis>`_ as your default
+Django-cachalot currently requires Django 1.6 or 1.7
+and `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
+or `django-redis <https://github.com/niwibe/django-redis>`_ as your default
 cache backend.  It should work with both Python 2 & 3.
 
 Usage
