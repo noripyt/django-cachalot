@@ -3,7 +3,16 @@ Django-cachalot
 
 Caches your Django ORM queries and automatically invalidates them.
 
-**In alpha, do not use in production**
+Project status:
+
+**Currently in beta, do not use in production**
+
+.. image:: https://travis-ci.org/BertrandBordage/django-cachalot.png
+   :target: https://travis-ci.org/BertrandBordage/django-cachalot
+
+.. image:: https://coveralls.io/repos/BertrandBordage/django-cachalot/badge.png?branch=master
+   :target: https://coveralls.io/r/BertrandBordage/django-cachalot?branch=master
+
 
 .. image:: https://raw.github.com/BertrandBordage/django-cachalot/master/django-cachalot.jpg
 
@@ -14,15 +23,18 @@ Quick start
 Requirements
 ............
 
-Django-cachalot currently requires Django 1.6 or 1.7
-and `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
-or `django-redis <https://github.com/niwibe/django-redis>`_ as your default
-cache backend.  It should work with both Python 2 & 3.
+- Django 1.6 or 1.7
+- Python 2.6, 2.7, 3.2, 3.3, or 3.4
+- `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
+  or `django-redis <https://github.com/niwibe/django-redis>`_
+  (memcached coming soon)
+- SQLite, PostgreSQL or MySQL (it should work with Oracle,
+  but I don’t have 17.5k$ to test)
 
 Usage
 .....
 
-#. `pip install -e git+https://github.com/BertrandBordage/django-cachalot#egg=django-cachalot`
+#. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. Enjoy!
 
@@ -67,17 +79,11 @@ For version 1.0
 
 - Find out if it’s thread-safe and test it
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
-- Add support for other caches like memcached
+- Add memcached support
 - Handle multiple databases
 - Add invalidation on migrations in Django 1.7 (& South?)
 - Add a ``CACHALOT_ENABLED`` setting
 - Add a setting to choose a cache other than ``'default'``
-- Use a continuous integration service to test against:
-
-  - Python 2.7, 3.3, & 3.4
-  - Django 1.6 & 1.7
-  - PostgreSQL, SQLite, & MySQL
-  - Redis, Memcached, LocMem
 
 In a more distant future
 ........................

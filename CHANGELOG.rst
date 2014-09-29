@@ -1,6 +1,16 @@
 What’s new in django-cachalot?
 ==============================
 
+0.4
+---
+
+- Adds Travis CI and adds compatibility for:
+
+  - Django 1.6 & 1.7
+  - Python 2.6, 2.7, 3.2, 3.3, & 3.4
+  - locmem & Redis
+  - SQLite, PostgreSQL, MySQL
+
 0.3
 ---
 
