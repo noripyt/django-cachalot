@@ -1,5 +1,5 @@
-from .monkey_patch import is_patched, monkey_patch_orm
+from .monkey_patch import is_patched, patch
 
 
 if not is_patched():
-    monkey_patch_orm()
+    patch()

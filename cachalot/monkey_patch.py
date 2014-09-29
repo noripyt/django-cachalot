@@ -4,12 +4,13 @@ from __future__ import unicode_literals
 from collections import Iterable
 import re
 
-from django.core.cache import cache
+from django.core.cache import cache as django_cache
 from django.db.models.query import EmptyResultSet
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLAggregateCompiler, SQLDateCompiler, SQLDateTimeCompiler,
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
+from django.db.transaction import Atomic
 
 
 COMPILERS = (SQLCompiler,
@@ -20,7 +21,7 @@ READ_COMPILERS = [c for c in COMPILERS if c not in WRITE_COMPILERS]
 
 
 PATCHED = False
-MISS_VALUE = '[[The cache key was missed]]'
+MISS_VALUE = '[[Missing cache key]]'
 
 
 def _get_tables(query):
@@ -36,7 +37,7 @@ def _get_tables_cache_keys(query):
     return ['%s_queries' % t for t in _get_tables(query)]
 
 
-def _update_tables_queries(query, cache_key):
+def _update_tables_queries(cache, query, cache_key):
     tables_cache_keys = _get_tables_cache_keys(query)
     tables_queries = cache.get_many(tables_cache_keys)
     for k in tables_cache_keys:
@@ -46,7 +47,7 @@ def _update_tables_queries(query, cache_key):
     cache.set_many(tables_queries)
 
 
-def _invalidate_tables(query):
+def _invalidate_tables(cache, query):
     tables_cache_keys = _get_tables_cache_keys(query)
     tables_queries = cache.get_many(tables_cache_keys)
     queries = []
@@ -86,58 +87,166 @@ def _has_extra_select_or_where(query):
     return False
 
 
-def _monkey_patch_orm_read():
-    def patch_execute_sql(method):
+TRANSACTION_CACHES = []
+
+
+class AtomicCache(dict):
+    def __init__(self):
+        super(AtomicCache, self).__init__()
+        self.parent_cache = (TRANSACTION_CACHES[-1] if TRANSACTION_CACHES
+                             else django_cache)
+        self.to_be_deleted = set()
+
+    def get(self, k, default=None):
+        if k in self.to_be_deleted:
+            return default
+        if k in self:
+            return self[k]
+        return self.parent_cache.get(k, default)
+
+    def set(self, k, v):
+        if k in self.to_be_deleted:
+            self.to_be_deleted.remove(k)
+        self[k] = v
+
+    def delete(self, k):
+        self.to_be_deleted.add(k)
+
+    def get_many(self, keys):
+        data = {}
+        for k in keys:
+            v = self.get(k, MISS_VALUE)
+            if v != MISS_VALUE:
+                data[k] = v
+        return data
+
+    def set_many(self, data):
+        self.to_be_deleted.difference_update(set(data))
+        self.update(data)
+
+    def delete_many(self, keys):
+        self.to_be_deleted.update(keys)
+
+    def commit(self):
+        self.parent_cache.set_many(self)
+        self.parent_cache.delete_many(self.to_be_deleted)
+
+    def __repr__(self):
+        return '<AtomicCache (cache=%s, to_be_deleted=%s)>' % (
+            super(AtomicCache, self).__repr__(),
+            self.to_be_deleted)
+
+
+def get_cache():
+    if TRANSACTION_CACHES:
+        return TRANSACTION_CACHES[-1]
+    return django_cache
+
+
+def _patch_orm_read():
+    def patch_execute_sql(original):
         def inner(compiler, *args, **kwargs):
             if isinstance(compiler, WRITE_COMPILERS):
-                return method(compiler, *args, **kwargs)
+                return original(compiler, *args, **kwargs)
 
             query = compiler.query
 
             if _has_extra_select_or_where(query):
-                return method(compiler, *args, **kwargs)
+                return original(compiler, *args, **kwargs)
 
             try:
                 cache_key = compiler.as_sql()
             except EmptyResultSet:
-                return method(compiler, *args, **kwargs)
+                return original(compiler, *args, **kwargs)
 
+            cache = get_cache()
             result = cache.get(cache_key, MISS_VALUE)
 
             if result == MISS_VALUE:
-                result = method(compiler, *args, **kwargs)
+                result = original(compiler, *args, **kwargs)
                 if isinstance(result, Iterable) \
                         and not isinstance(result, (tuple, list)):
                     result = list(result)
 
-                _update_tables_queries(query, cache_key)
+                _update_tables_queries(cache, query, cache_key)
 
                 cache.set(cache_key, result)
 
             return result
 
+        inner.original = original
         return inner
 
     for compiler in READ_COMPILERS:
         compiler.execute_sql = patch_execute_sql(compiler.execute_sql)
 
 
-def _monkey_patch_orm_write():
-    def patch_execute_sql(method):
+def _patch_orm_write():
+    def patch_execute_sql(original):
         def inner(compiler, *args, **kwargs):
-            _invalidate_tables(compiler.query)
-            return method(compiler, *args, **kwargs)
+            _invalidate_tables(get_cache(), compiler.query)
+            return original(compiler, *args, **kwargs)
+
+        inner.original = original
         return inner
 
     for compiler in WRITE_COMPILERS:
         compiler.execute_sql = patch_execute_sql(compiler.execute_sql)
 
 
-def monkey_patch_orm():
+def _patch_atomic():
+    def patch_enter(original):
+        def inner(self):
+            TRANSACTION_CACHES.append(AtomicCache())
+            original(self)
+
+        inner.original = original
+        return inner
+
+    def patch_exit(original):
+        def inner(self, exc_type, exc_value, traceback):
+            atomic_cache = TRANSACTION_CACHES.pop()
+            if exc_type is None:
+                atomic_cache.commit()
+
+            original(self, exc_type, exc_value, traceback)
+
+        inner.original = original
+        return inner
+
+    Atomic.__enter__ = patch_enter(Atomic.__enter__)
+    Atomic.__exit__ = patch_exit(Atomic.__exit__)
+
+
+def _unpatch_orm_read():
+    for compiler in READ_COMPILERS:
+        compiler.execute_sql = compiler.execute_sql.original
+
+
+def _unpatch_orm_write():
+    for compiler in WRITE_COMPILERS:
+        compiler.execute_sql = compiler.execute_sql.original
+
+
+def _unpatch_atomic():
+    Atomic.__enter__ = Atomic.__enter__.original
+    Atomic.__exit__ = Atomic.__exit__.original
+
+
+def patch():
     global PATCHED
-    _monkey_patch_orm_write()
-    _monkey_patch_orm_read()
+    _patch_orm_write()
+    _patch_orm_read()
+    _patch_atomic()
     PATCHED = True
+
+
+def unpatch():
+    global PATCHED
+    _unpatch_orm_read()
+    _unpatch_orm_write()
+    _unpatch_atomic()
+    PATCHED = False
 
 
 def is_patched():
