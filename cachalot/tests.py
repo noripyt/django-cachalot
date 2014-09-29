@@ -897,3 +897,72 @@ class TransactionTestCase(TestCase):
         with self.assertNumQueries(1):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [])
+
+    def test_successful_write_transaction(self):
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.all())
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(3):
+            with transaction.atomic():
+                t1 = Test.objects.create(name='test1')
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.all())
+        self.assertListEqual(data2, [t1])
+
+        with self.assertNumQueries(3):
+            with transaction.atomic():
+                t2 = Test.objects.create(name='test2')
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.all())
+        self.assertListEqual(data3, [t1, t2])
+
+    # TODO: Remove this ``expectedFailure``
+    #       when cachalot will handle transactions
+    @expectedFailure
+    def test_unsuccessful_write_transaction(self):
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.all())
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(3):
+            try:
+                with transaction.atomic():
+                    Test.objects.create(name='test')
+                    raise ZeroDivisionError
+            except ZeroDivisionError:
+                pass
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.all())
+        self.assertListEqual(data2, [])
+        with self.assertNumQueries(1):
+            with self.assertRaises(Test.DoesNotExist):
+                Test.objects.get(name='test')
+
+    def test_cache_inside_transaction(self):
+        with self.assertNumQueries(3):
+            with transaction.atomic():
+                data1 = list(Test.objects.all())
+                data2 = list(Test.objects.all())
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [])
+
+    @skip(NotImplementedError)
+    def test_invalidation_inside_transaction(self):
+        pass
+
+    @skip(NotImplementedError)
+    def test_successful_nested_read_atomic(self):
+        pass
+
+    @skip(NotImplementedError)
+    def test_unsuccessful_nested_read_atomic(self):
+        pass
+
+    @skip(NotImplementedError)
+    def test_successful_nested_write_atomic(self):
+        pass
+
+    @skip(NotImplementedError)
+    def test_unsuccessful_nested_write_atomic(self):
+        pass
