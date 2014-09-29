@@ -1,0 +1,42 @@
+language: python
+
+python:
+  - 2.7
+  - 3.3
+  - 3.4
+
+services:
+  - redis-server
+
+env:
+  - DJANGO=1.6.7 PSYCOPG2=2.5.4 MYSQL=1.2.5 DJANGO_REDIS=3.7.1
+
+install:
+  - pip install Django==$DJANGO psycopg2==$PSYCOPG2 django-redis==$DJANGO_REDIS
+                coveralls
+  - if [[ $TRAVIS_PYTHON_VERSION == 3* ]];
+    then
+      pip install
+        -e git+https://github.com/clelland/MySQL-for-Python-3#egg=MySQL-python;
+    else
+      pip install MySQL-python==$MYSQL;
+    fi
+
+before_script:
+  - psql -c 'CREATE USER cachalot CREATEDB;' -U postgres
+  - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
+  - mysql -u root -e 'CREATE DATABASE cachalot;'
+
+script:
+  # Run against all database and cache backends, accumulating coverage stats.
+  - coverage run --source=cachalot ./runtests.py
+  - CACHE_BACKEND=redis coverage run --source=cachalot ./runtests.py
+  - DB_ENGINE=postgresql coverage run --source=cachalot ./runtests.py
+  - DB_ENGINE=postgresql CACHE_BACKEND=redis
+    coverage run --source=cachalot ./runtests.py
+  - DB_ENGINE=mysql coverage run --source=cachalot ./runtests.py
+  - DB_ENGINE=mysql CACHE_BACKEND=redis
+    coverage run --source=cachalot ./runtests.py
+
+after_success:
+  - coveralls
