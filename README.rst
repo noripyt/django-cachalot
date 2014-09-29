@@ -3,6 +3,8 @@ Django-cachalot
 
 Caches your Django ORM queries and automatically invalidates them.
 
+.. image:: https://raw.github.com/BertrandBordage/django-cachalot/master/django-cachalot.jpg
+
 Project status:
 
 **Currently in beta, do not use in production**
@@ -12,9 +14,6 @@ Project status:
 
 .. image:: https://coveralls.io/repos/BertrandBordage/django-cachalot/badge.png?branch=master
    :target: https://coveralls.io/r/BertrandBordage/django-cachalot?branch=master
-
-
-.. image:: https://raw.github.com/BertrandBordage/django-cachalot/master/django-cachalot.jpg
 
 
 Quick start
