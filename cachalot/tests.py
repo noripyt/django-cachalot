@@ -677,9 +677,43 @@ class WriteTestCase(TestCase):
         with self.assertNumQueries(1):
             self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 1)
 
-    @skip(NotImplementedError)
     def test_invalidate_annotate(self):
-        pass
+        with self.assertNumQueries(1):
+            data1 = list(User.objects.annotate(n=Count('test')))
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test1')
+        with self.assertNumQueries(1):
+            data2 = list(User.objects.annotate(n=Count('test')))
+        self.assertListEqual(data2, [])
+
+        with self.assertNumQueries(2):
+            user1 = User.objects.create_user('user1')
+            user2 = User.objects.create_user('user2')
+        with self.assertNumQueries(1):
+            data3 = list(User.objects.annotate(n=Count('test')))
+        self.assertListEqual(data3, [user1, user2])
+        self.assertListEqual([u.n for u in data3], [0, 0])
+
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test2', owner=user1)
+        with self.assertNumQueries(1):
+            data4 = list(User.objects.annotate(n=Count('test')))
+        self.assertListEqual(data4, [user1, user2])
+        self.assertListEqual([u.n for u in data4], [1, 0])
+
+        with self.assertNumQueries(1):
+            Test.objects.bulk_create([
+                Test(name='test3', owner=user1),
+                Test(name='test4', owner=user2),
+                Test(name='test5', owner=user1),
+                Test(name='test6', owner=user2),
+            ])
+        with self.assertNumQueries(1):
+            data5 = list(User.objects.annotate(n=Count('test')))
+        self.assertListEqual(data5, [user1, user2])
+        self.assertListEqual([u.n for u in data5], [3, 2])
 
     def test_invalidate_subquery(self):
         with self.assertNumQueries(1):
