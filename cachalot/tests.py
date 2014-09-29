@@ -6,7 +6,7 @@ import datetime
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
 from django.core.exceptions import MultipleObjectsReturned
-from django.db import transaction
+from django.db import transaction, connection
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField,
     DateField, DateTimeField, Count)
@@ -380,6 +380,8 @@ class ReadTestCase(TestCase):
         self.assertEqual(t4, self.t1)
 
     def test_prefetch_related(self):
+        is_mysql = connection.vendor == 'mysql'
+
         # Simple prefetch_related
         with self.assertNumQueries(2):
             data1 = list(User.objects.prefetch_related('user_permissions'))
@@ -387,7 +389,7 @@ class ReadTestCase(TestCase):
             permissions1 = []
             for u in data1:
                 permissions1.extend(u.user_permissions.all())
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(1 if is_mysql else 0):
             data2 = list(User.objects.prefetch_related('user_permissions'))
             permissions2 = []
             for u in data2:
@@ -397,14 +399,14 @@ class ReadTestCase(TestCase):
 
         # Prefetch_related through a foreign key where exactly
         # the same prefetch_related SQL request was executed before
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2 if is_mysql else 1):
             data3 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__user_permissions'))
         with self.assertNumQueries(0):
             permissions3 = []
             for t in data3:
                 permissions3.extend(t.owner.user_permissions.all())
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(1 if is_mysql else 0):
             data4 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__user_permissions'))
             permissions4 = []
@@ -423,7 +425,7 @@ class ReadTestCase(TestCase):
             permissions5 = []
             for t in data5:
                 permissions5.extend(t.owner.user_permissions.all())
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(1 if is_mysql else 0):
             data6 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__user_permissions')[:1])
             permissions6 = []
@@ -441,7 +443,7 @@ class ReadTestCase(TestCase):
             for t in data7:
                 for g in t.owner.groups.all():
                     permissions7.extend(g.permissions.all())
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(2 if is_mysql else 0):
             data8 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
             permissions8 = []
@@ -514,8 +516,6 @@ class ReadTestCase(TestCase):
             list(Test.objects.extra(tables=['auth_user']))
         with self.assertNumQueries(0):
             list(Test.objects.extra(tables=['auth_user']))
-        with self.assertNumQueries(0):
-            list(Test.objects.extra(tables=['"auth_user"']))
 
     def test_extra_order_by(self):
         """
