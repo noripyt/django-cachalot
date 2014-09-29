@@ -599,6 +599,13 @@ class WriteTestCase(TestCase):
         self.assertListEqual(data2, [t1, t2])
         self.assertListEqual(data3, [t1, t2, t3])
 
+        with self.assertNumQueries(1):
+            t3_copy = Test.objects.create(name='test3')
+        self.assertNotEqual(t3_copy, t3)
+        with self.assertNumQueries(1):
+            data4 = list(Test.objects.all())
+        self.assertListEqual(data4, [t1, t2, t3, t3_copy])
+
     def test_get_or_create(self):
         """
         Tests if the ``SELECT`` query of a ``QuerySet.get_or_create``
@@ -644,7 +651,7 @@ class WriteTestCase(TestCase):
         self.assertEqual(Test.objects.count(), 10)
 
         with self.assertNumQueries(1):
-            unsaved_tests = [Test(name='test%02d' % i) for i in range(11, 21)]
+            unsaved_tests = [Test(name='test%02d' % i) for i in range(1, 11)]
             Test.objects.bulk_create(unsaved_tests)
         self.assertEqual(Test.objects.count(), 20)
 
@@ -652,7 +659,7 @@ class WriteTestCase(TestCase):
             data2 = list(Test.objects.all())
         self.assertEqual(len(data2), 20)
         self.assertListEqual([t.name for t in data2],
-                             ['test%02d' % i for i in range(1, 21)])
+                             ['test%02d' % (i // 2) for i in range(2, 22)])
 
     def test_update(self):
         with self.assertNumQueries(1):
@@ -978,6 +985,16 @@ class TransactionTestCase(TestCase):
             data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1, t2])
 
+        with self.assertNumQueries(5):
+            with transaction.atomic():
+                data4 = list(Test.objects.all())
+                t3 = Test.objects.create(name='test3')
+                t4 = Test.objects.create(name='test4')
+                data5 = list(Test.objects.all())
+        self.assertListEqual(data4, [t1, t2])
+        self.assertListEqual(data5, [t1, t2, t3, t4])
+        self.assertNotEqual(t4, t3)
+
     # TODO: Remove this ``expectedFailure``
     #       when cachalot will handle transactions
     @expectedFailure
@@ -1008,22 +1025,89 @@ class TransactionTestCase(TestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [])
 
-    @skip(NotImplementedError)
     def test_invalidation_inside_transaction(self):
-        pass
+        with self.assertNumQueries(5):
+            with transaction.atomic():
+                data1 = list(Test.objects.all())
+                t = Test.objects.create(name='test')
+                data2 = list(Test.objects.all())
+        self.assertListEqual(data1, [])
+        self.assertListEqual(data2, [t])
 
-    @skip(NotImplementedError)
     def test_successful_nested_read_atomic(self):
-        pass
+        with self.assertNumQueries(8):
+            with transaction.atomic():
+                list(Test.objects.all())
+                with transaction.atomic():
+                    list(User.objects.all())
+                    with self.assertNumQueries(2):
+                        with transaction.atomic():
+                            list(User.objects.all())
+                with self.assertNumQueries(0):
+                    list(User.objects.all())
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
+            list(User.objects.all())
 
-    @skip(NotImplementedError)
+    # TODO: Remove this ``expectedFailure``
+    #       when cachalot will handle transactions
+    @expectedFailure
     def test_unsuccessful_nested_read_atomic(self):
-        pass
+        with self.assertNumQueries(6):
+            with transaction.atomic():
+                try:
+                    with transaction.atomic():
+                        with self.assertNumQueries(1):
+                            list(Test.objects.all())
+                        raise ZeroDivisionError
+                except ZeroDivisionError:
+                    pass
+                with self.assertNumQueries(1):
+                    list(Test.objects.all())
 
-    @skip(NotImplementedError)
     def test_successful_nested_write_atomic(self):
-        pass
+        with self.assertNumQueries(14):
+            with transaction.atomic():
+                t1 = Test.objects.create(name='test1')
+                with transaction.atomic():
+                    t2 = Test.objects.create(name='test2')
+                data1 = list(Test.objects.all())
+                self.assertListEqual(data1, [t1, t2])
+                with transaction.atomic():
+                    t3 = Test.objects.create(name='test3')
+                    with transaction.atomic():
+                        data2 = list(Test.objects.all())
+                        self.assertListEqual(data2, [t1, t2, t3])
+                        t4 = Test.objects.create(name='test4')
+        data3 = list(Test.objects.all())
+        self.assertListEqual(data3, [t1, t2, t3, t4])
 
-    @skip(NotImplementedError)
+    # TODO: Remove this ``expectedFailure``
+    #       when cachalot will handle transactions
+    @expectedFailure
     def test_unsuccessful_nested_write_atomic(self):
-        pass
+        with self.assertNumQueries(14):
+            with transaction.atomic():
+                t1 = Test.objects.create(name='test1')
+                try:
+                    with transaction.atomic():
+                        t2 = Test.objects.create(name='test2')
+                        data1 = list(Test.objects.all())
+                        self.assertListEqual(data1, [t1, t2])
+                        raise ZeroDivisionError
+                except ZeroDivisionError:
+                    pass
+                data2 = list(Test.objects.all())
+                self.assertListEqual(data2, [t1])
+                try:
+                    with transaction.atomic():
+                        t3 = Test.objects.create(name='test3')
+                        with transaction.atomic():
+                            data2 = list(Test.objects.all())
+                            self.assertListEqual(data2, [t1, t3])
+                            raise ZeroDivisionError
+                        Test.objects.create(name='test4')
+                except ZeroDivisionError:
+                    pass
+        data3 = list(Test.objects.all())
+        self.assertListEqual(data3, [t1])
