@@ -785,27 +785,27 @@ class WriteTestCase(TestCase):
 
     def test_invalidate_annotate(self):
         with self.assertNumQueries(1):
-            data1 = list(User.objects.annotate(n=Count('test')))
+            data1 = list(User.objects.annotate(n=Count('test')).order_by('pk'))
         self.assertListEqual(data1, [])
 
         with self.assertNumQueries(1):
             Test.objects.create(name='test1')
         with self.assertNumQueries(1):
-            data2 = list(User.objects.annotate(n=Count('test')))
+            data2 = list(User.objects.annotate(n=Count('test')).order_by('pk'))
         self.assertListEqual(data2, [])
 
         with self.assertNumQueries(2):
             user1 = User.objects.create_user('user1')
             user2 = User.objects.create_user('user2')
         with self.assertNumQueries(1):
-            data3 = list(User.objects.annotate(n=Count('test')))
+            data3 = list(User.objects.annotate(n=Count('test')).order_by('pk'))
         self.assertListEqual(data3, [user1, user2])
         self.assertListEqual([u.n for u in data3], [0, 0])
 
         with self.assertNumQueries(1):
             Test.objects.create(name='test2', owner=user1)
         with self.assertNumQueries(1):
-            data4 = list(User.objects.annotate(n=Count('test')))
+            data4 = list(User.objects.annotate(n=Count('test')).order_by('pk'))
         self.assertListEqual(data4, [user1, user2])
         self.assertListEqual([u.n for u in data4], [1, 0])
 
@@ -817,7 +817,7 @@ class WriteTestCase(TestCase):
                 Test(name='test6', owner=user2),
             ])
         with self.assertNumQueries(1):
-            data5 = list(User.objects.annotate(n=Count('test')))
+            data5 = list(User.objects.annotate(n=Count('test')).order_by('pk'))
         self.assertListEqual(data5, [user1, user2])
         self.assertListEqual([u.n for u in data5], [3, 2])
 
