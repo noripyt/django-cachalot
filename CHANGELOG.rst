@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+0.3
+---
+
+- Handles transactions
+- Adds lots of tests for complex cases
+
 0.2
 ---
 
