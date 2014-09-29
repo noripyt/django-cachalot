@@ -1,11 +1,10 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from unittest import skip, expectedFailure
+from unittest import skip
 import datetime
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
-from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import transaction
 from django.db.models import (
@@ -57,8 +56,6 @@ class ReadTestCase(TestCase):
         self.t2 = Test.objects.create(
             name='test2', owner=self.admin, public=True,
             date='1944-06-06', datetime='1944-06-06T06:35:00')
-        # TODO: Move this to setUpClass when cachalot will handle transactions.
-        cache.clear()
 
     def test_empty(self):
         with self.assertNumQueries(0):
@@ -494,8 +491,8 @@ class ReadTestCase(TestCase):
         and since it’s unparsed pure SQL, it can’t be reliably invalidated.
         """
 
-        sql_condition = ('owner_id IN '
-                         '(SELECT id FROM auth_user WHERE username = "admin")')
+        sql_condition = ("owner_id IN "
+                         "(SELECT id FROM auth_user WHERE username = 'admin')")
         with self.assertNumQueries(1):
             data1 = list(Test.objects.extra(where=[sql_condition]))
         with self.assertNumQueries(1):
@@ -575,10 +572,6 @@ class WriteTestCase(TestCase):
     Tests if every SQL request writing data is not cached and invalidates the
     implied data.
     """
-
-    def setUp(self):
-        # TODO: Move this to setUpClass when cachalot will handle transactions.
-        cache.clear()
 
     def test_create(self):
         with self.assertNumQueries(1):
@@ -934,12 +927,8 @@ class WriteTestCase(TestCase):
         pass
 
 
-class TransactionTestCase(TestCase):
-    def setUp(self):
-        # TODO: Move this to setUpClass when cachalot will handle transactions.
-        cache.clear()
-
-    def test_successful_read_transaction(self):
+class AtomicTestCase(TestCase):
+    def test_successful_read_atomic(self):
         with self.assertNumQueries(3):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
@@ -949,10 +938,7 @@ class TransactionTestCase(TestCase):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [])
 
-    # TODO: Remove this ``expectedFailure``
-    #       when cachalot will handle transactions
-    @expectedFailure
-    def test_unsuccessful_read_transaction(self):
+    def test_unsuccessful_read_atomic(self):
         with self.assertNumQueries(3):
             try:
                 with transaction.atomic():
@@ -966,7 +952,7 @@ class TransactionTestCase(TestCase):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [])
 
-    def test_successful_write_transaction(self):
+    def test_successful_write_atomic(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
@@ -995,10 +981,7 @@ class TransactionTestCase(TestCase):
         self.assertListEqual(data5, [t1, t2, t3, t4])
         self.assertNotEqual(t4, t3)
 
-    # TODO: Remove this ``expectedFailure``
-    #       when cachalot will handle transactions
-    @expectedFailure
-    def test_unsuccessful_write_transaction(self):
+    def test_unsuccessful_write_atomic(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
@@ -1017,7 +1000,7 @@ class TransactionTestCase(TestCase):
             with self.assertRaises(Test.DoesNotExist):
                 Test.objects.get(name='test')
 
-    def test_cache_inside_transaction(self):
+    def test_cache_inside_atomic(self):
         with self.assertNumQueries(3):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
@@ -1025,7 +1008,7 @@ class TransactionTestCase(TestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [])
 
-    def test_invalidation_inside_transaction(self):
+    def test_invalidation_inside_atomic(self):
         with self.assertNumQueries(5):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
@@ -1049,9 +1032,6 @@ class TransactionTestCase(TestCase):
             list(Test.objects.all())
             list(User.objects.all())
 
-    # TODO: Remove this ``expectedFailure``
-    #       when cachalot will handle transactions
-    @expectedFailure
     def test_unsuccessful_nested_read_atomic(self):
         with self.assertNumQueries(6):
             with transaction.atomic():
@@ -1082,9 +1062,6 @@ class TransactionTestCase(TestCase):
         data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1, t2, t3, t4])
 
-    # TODO: Remove this ``expectedFailure``
-    #       when cachalot will handle transactions
-    @expectedFailure
     def test_unsuccessful_nested_write_atomic(self):
         with self.assertNumQueries(14):
             with transaction.atomic():
