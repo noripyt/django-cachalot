@@ -5,6 +5,7 @@ from collections import Iterable
 import re
 
 from django.core.cache import cache as django_cache
+from django.db import connection
 from django.db.models.query import EmptyResultSet
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLAggregateCompiler, SQLDateCompiler, SQLDateTimeCompiler,
@@ -206,7 +207,7 @@ def _patch_atomic():
     def patch_exit(original):
         def inner(self, exc_type, exc_value, traceback):
             atomic_cache = TRANSACTION_CACHES.pop()
-            if exc_type is None:
+            if exc_type is None and not connection.needs_rollback:
                 atomic_cache.commit()
 
             original(self, exc_type, exc_value, traceback)
