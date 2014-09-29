@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from unittest import skip
 import datetime
 from django.conf import settings
-from django.contrib.auth.models import User, Permission
+from django.contrib.auth.models import User, Permission, Group
 from django.core.cache import cache
 from django.core.exceptions import MultipleObjectsReturned
 from django.db.models import (
@@ -19,6 +19,7 @@ class Test(Model):
     public = BooleanField(default=False)
     date = DateField(null=True, blank=True)
     datetime = DateTimeField(null=True, blank=True)
+    permission = ForeignKey('auth.Permission', null=True, blank=True)
 
     class Meta(object):
         ordering = ('name',)
@@ -37,14 +38,21 @@ class ReadTestCase(TestCase):
     """
 
     def setUp(self):
+        self.group = Group.objects.create(name='test_group')
+        self.group__permissions = list(Permission.objects.all()[:3])
+        self.group.permissions.add(*self.group__permissions)
         self.user = User.objects.create_user('user')
-        self.user__permissions = list(Permission.objects.all()[:3])
+        self.user__permissions = list(Permission.objects.all()[3:6])
+        self.user.groups.add(self.group)
         self.user.user_permissions.add(*self.user__permissions)
         self.admin = User.objects.create_superuser('admin', 'admin@test.me',
                                                    'password')
+        self.t1__permission = (Permission.objects.order_by('?')
+                              .select_related('content_type')[0])
         self.t1 = Test.objects.create(
             name='test1', owner=self.user,
-            date='1789-07-14', datetime='1789-07-14T16:43:27')
+            date='1789-07-14', datetime='1789-07-14T16:43:27',
+            permission=self.t1__permission)
         self.t2 = Test.objects.create(
             name='test2', owner=self.admin, public=True,
             date='1944-06-06', datetime='1944-06-06T06:35:00')
@@ -327,6 +335,7 @@ class ReadTestCase(TestCase):
         self.assertEqual(t2.public, t1.public)
 
     def test_select_related(self):
+        # Simple select_related
         with self.assertNumQueries(1):
             t1 = Test.objects.select_related('owner').get(name='test1')
             self.assertEqual(t1.owner, self.user)
@@ -336,21 +345,91 @@ class ReadTestCase(TestCase):
         self.assertEqual(t2, t1)
         self.assertEqual(t2, self.t1)
 
-    def test_prefetch_related(self):
-        with self.assertNumQueries(2):
-            qs = (Test.objects.select_related('owner')
-                  .prefetch_related('owner__user_permissions'))
-            permissions1 = []
-            for t in qs:
-                permissions1.extend(t.owner.user_permissions.all())
+        # Select_related through a foreign key
+        with self.assertNumQueries(1):
+            t3 = Test.objects.select_related('permission__content_type')[0]
+            self.assertEqual(t3.permission, self.t1.permission)
+            self.assertEqual(t3.permission.content_type,
+                             self.t1__permission.content_type)
         with self.assertNumQueries(0):
-            qs = (Test.objects.select_related('owner')
-                  .prefetch_related('owner__user_permissions'))
+            t4 = Test.objects.select_related('permission__content_type')[0]
+            self.assertEqual(t4.permission, self.t1.permission)
+            self.assertEqual(t4.permission.content_type,
+                             self.t1__permission.content_type)
+        self.assertEqual(t4, t3)
+        self.assertEqual(t4, self.t1)
+
+    def test_prefetch_related(self):
+        # Simple prefetch_related
+        with self.assertNumQueries(2):
+            data1 = list(User.objects.prefetch_related('user_permissions'))
+        with self.assertNumQueries(0):
+            permissions1 = []
+            for u in data1:
+                permissions1.extend(u.user_permissions.all())
+        with self.assertNumQueries(0):
+            data2 = list(User.objects.prefetch_related('user_permissions'))
             permissions2 = []
-            for t in qs:
-                permissions2.extend(t.owner.user_permissions.all())
+            for u in data2:
+                permissions2.extend(u.user_permissions.all())
         self.assertListEqual(permissions2, permissions1)
         self.assertListEqual(permissions2, self.user__permissions)
+
+        # Prefetch_related through a foreign key where exactly
+        # the same prefetch_related SQL request was executed before
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__user_permissions'))
+        with self.assertNumQueries(0):
+            permissions3 = []
+            for t in data3:
+                permissions3.extend(t.owner.user_permissions.all())
+        with self.assertNumQueries(0):
+            data4 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__user_permissions'))
+            permissions4 = []
+            for t in data4:
+                permissions4.extend(t.owner.user_permissions.all())
+        self.assertListEqual(permissions4, permissions3)
+        self.assertListEqual(permissions4, self.user__permissions)
+
+        # Prefetch_related through a foreign key where exactly
+        # the same prefetch_related SQL request was not fetched before
+        with self.assertNumQueries(2):
+            data5 = list(Test.objects.filter(pk=1)
+                         .select_related('owner')
+                         .prefetch_related('owner__user_permissions'))
+        with self.assertNumQueries(0):
+            permissions5 = []
+            for t in data5:
+                permissions5.extend(t.owner.user_permissions.all())
+        with self.assertNumQueries(0):
+            data6 = list(Test.objects.filter(pk=1).select_related('owner')
+                         .prefetch_related('owner__user_permissions'))
+            permissions6 = []
+            for t in data6:
+                permissions6.extend(t.owner.user_permissions.all())
+        self.assertListEqual(permissions6, permissions5)
+        self.assertListEqual(permissions6, self.user__permissions)
+
+        # Prefetch_related through a many to many
+        with self.assertNumQueries(2):
+            data7 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+        with self.assertNumQueries(0):
+            permissions7 = []
+            for t in data7:
+                for g in t.owner.groups.all():
+                    permissions7.extend(g.permissions.all())
+        with self.assertNumQueries(0):
+            data8 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            permissions8 = []
+            for t in data8:
+                for g in t.owner.groups.all():
+                    permissions8.extend(g.permissions.all())
+        self.assertListEqual(permissions8, permissions7)
+        self.assertListEqual(permissions8, self.group__permissions)
 
     @skip(NotImplementedError)
     def test_using(self):
