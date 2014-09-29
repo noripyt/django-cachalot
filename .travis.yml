@@ -3,6 +3,7 @@ language: python
 python:
   - 2.6
   - 2.7
+  - 3.2
   - 3.3
   - 3.4
 
@@ -11,10 +12,11 @@ services:
 
 env:
   - DJANGO=1.6.7 PSYCOPG2=2.5.4 MYSQL-PYTHON=1.2.5 DJANGO_REDIS=3.7.1
+  - DJANGO=1.7 PSYCOPG2=2.5.4 MYSQL-PYTHON=1.2.5 DJANGO_REDIS=3.7.1
 
 install:
   - pip install Django==$DJANGO psycopg2==$PSYCOPG2 django-redis==$DJANGO_REDIS
-                coveralls
+                unittest2 coveralls
   - if [[ $TRAVIS_PYTHON_VERSION == 3* ]];
     then
       pip install

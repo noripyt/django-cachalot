@@ -1,7 +1,10 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from unittest import skip
+try:
+    from unittest import skip
+except ImportError:  # For Python 2.6 & 3.2
+    from unittest2 import skip
 import datetime
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
