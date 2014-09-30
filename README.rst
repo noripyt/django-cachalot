@@ -48,6 +48,23 @@ That’s why ``QuerySet.extra`` with ``select`` or ``where`` arguments,
 ``Model.objects.raw(…)``, & ``cursor.execute(…)`` queries are not cached.
 
 
+Bug reports, questions, discussion, new features
+------------------------------------------------
+
+- If you spotted **a bug**, please file a precise bug report
+  `on GitHub <https://github.com/BertrandBordage/django-cachalot/issues>`_
+- If you have **a question** on how django-cachalot works or to **simply
+  discuss**, `go to our Google group
+  <https://groups.google.com/forum/#!forum/django-cachalot>`_.
+- If you want **to add a feature**:
+
+  - if you have an idea on how to implement it, you can fork the project
+    and send a pull request, but **please open an issue first**, because
+    someone else could already be working on it
+  - if you’re sure that it’s a must-have feature, open an issue
+  - if it’s just a vague idea, please ask on google groups before
+
+
 How django-cachalot works
 -------------------------
 
