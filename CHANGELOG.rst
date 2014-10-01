@@ -6,8 +6,8 @@ What’s new in django-cachalot?
 
 - Fixes ``pip install``.
 
-0.4 (**install broken**)
-------------------------
+0.4.0 (**install broken**)
+--------------------------
 
 - Adds Travis CI and adds compatibility for:
 
@@ -16,22 +16,22 @@ What’s new in django-cachalot?
   - locmem & Redis
   - SQLite, PostgreSQL, MySQL
 
-0.3
----
+0.3.0
+-----
 
 - Handles transactions
 - Adds lots of tests for complex cases
 
-0.2
----
+0.2.0
+-----
 
 - Adds a test suite
 - Fixes invalidation for data creation/deletion
 - Stops caching on queries defining ``select`` or ``where`` arguments
   with ``QuerySet.extra``
 
-0.1
----
+0.1.0
+-----
 
 Prototype simply caching all SQL queries reading the database
 and trying to invalidate them when SQL queries modify the database.
