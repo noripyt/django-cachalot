@@ -1,8 +1,13 @@
 What’s new in django-cachalot?
 ==============================
 
-0.4
----
+0.4.1
+-----
+
+- Fixes ``pip install``.
+
+0.4 (**install broken**)
+------------------------
 
 - Adds Travis CI and adds compatibility for:
 
