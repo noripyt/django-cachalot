@@ -2,9 +2,9 @@
 
 from __future__ import unicode_literals
 try:
-    from unittest import skip
+    from unittest import skip, skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skip
+    from unittest2 import skip, skipIf
 import datetime
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
@@ -1178,3 +1178,22 @@ class AtomicTestCase(TestCase):
                     pass
         data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1])
+
+
+class SettingsTestCase(TestCase):
+    @skipIf(len(settings.CACHES) == 1,
+            'We can’t change the cache used since there’s only one configured')
+    def test_cache(self):
+        with self.settings(CACHALOT_CACHE='default'):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(0):
+                list(Test.objects.all())
+
+        other_cache = [k for k in settings.CACHES if k != 'default'][0]
+
+        with self.settings(CACHALOT_CACHE=other_cache):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(0):
+                list(Test.objects.all())

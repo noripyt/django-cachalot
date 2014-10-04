@@ -37,6 +37,9 @@ CACHES = {
         'LOCATION': '127.0.0.1:6379:0',
     }
 }
+DEFAULT_CACHE_KEY = os.environ.get('CACHE_BACKEND', 'locmem')
+CACHES['default'] = CACHES[DEFAULT_CACHE_KEY]
+del CACHES[DEFAULT_CACHE_KEY]
 
 settings.configure(
     DEBUG=True,
@@ -46,7 +49,7 @@ settings.configure(
         'django.contrib.auth',
         'django.contrib.contenttypes',
     ),
-    CACHES={'default': CACHES[os.environ.get('CACHE_BACKEND', 'locmem')]},
+    CACHES=CACHES,
     MIDDLEWARE_CLASSES=(),
 )
 
