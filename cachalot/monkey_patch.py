@@ -153,11 +153,6 @@ class AtomicCache(dict):
         self.parent_cache.set_many(self)
         self.parent_cache.delete_many(self.to_be_deleted)
 
-    def __repr__(self):
-        return '<AtomicCache (cache=%s, to_be_deleted=%s)>' % (
-            super(AtomicCache, self).__repr__(),
-            self.to_be_deleted)
-
 
 def get_cache():
     cache_name = cachalot_settings.CACHALOT_CACHE

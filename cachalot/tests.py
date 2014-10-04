@@ -27,9 +27,6 @@ class Test(Model):
     class Meta(object):
         ordering = ('name',)
 
-    def __str__(self):
-        return self.name
-
 
 class ReadTestCase(TestCase):
     """
