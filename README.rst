@@ -48,9 +48,15 @@ Setting            Default value Description
                                  django-cachalot
 ================== ============= ==============================================
 
-
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
+
+.. note:: Settings can be changed at any moment during runtime like this:
+
+   .. code:: python
+
+       from cachalot.settings import cachalot_settings
+       cachalot_settings.CACHALOT_CACHE = 'another_cache'
 
 
 Limits
