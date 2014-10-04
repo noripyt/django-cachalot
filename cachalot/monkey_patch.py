@@ -1,9 +1,11 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from collections import Iterable
+from collections import defaultdict, Iterable
 import re
 
+from django.conf import settings
+# TODO: Replace with caches[CACHALOT_CACHE] when we drop Django 1.6 support.
 from django.core.cache import get_cache as get_django_cache
 from django.db import connection
 from django.db.models.query import EmptyResultSet
@@ -12,7 +14,8 @@ from django.db.models.sql.compiler import (
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic
-from .settings import CACHALOT_CACHE
+
+from .settings import cachalot_settings
 
 
 COMPILERS = (SQLCompiler,
@@ -35,8 +38,12 @@ def _get_tables(query):
     return tables
 
 
+def _get_table_cache_key(table):
+    return '%s_queries' % table
+
+
 def _get_tables_cache_keys(query):
-    return ['%s_queries' % t for t in _get_tables(query)]
+    return map(_get_table_cache_key, _get_tables(query))
 
 
 def _update_tables_queries(cache, query, cache_key):
@@ -49,11 +56,28 @@ def _update_tables_queries(cache, query, cache_key):
     cache.set_many(tables_queries)
 
 
-def _invalidate_tables(cache, query):
-    tables_cache_keys = _get_tables_cache_keys(query)
+def _invalidate_tables_cache_keys(cache, tables_cache_keys):
     tables_queries = cache.get_many(tables_cache_keys)
     queries = [q for k in tables_cache_keys for q in tables_queries.get(k, [])]
     cache.delete_many(queries + tables_cache_keys)
+
+
+def _invalidate_tables(cache, query):
+    tables_cache_keys = _get_tables_cache_keys(query)
+    _invalidate_tables_cache_keys(cache, tables_cache_keys)
+
+
+def clear_cache(cache=None):
+    if cache is None:
+        cache = get_cache()
+    tables = connection.introspection.table_names()
+    tables_cache_keys = map(_get_table_cache_key, tables)
+    _invalidate_tables_cache_keys(cache, tables_cache_keys)
+
+
+def clear_all_caches():
+    for cache in settings.CACHES:
+        clear_cache(get_django_cache(cache))
 
 
 COLUMN_RE = re.compile(r'^"(?P<table>[\w_]+)"\."(?P<column>[\w_]+)"$')
@@ -86,7 +110,7 @@ def _has_extra_select_or_where(query):
     return False
 
 
-TRANSACTION_CACHES = []
+NESTED_CACHES = defaultdict(list)
 
 
 class AtomicCache(dict):
@@ -136,11 +160,11 @@ class AtomicCache(dict):
 
 
 def get_cache():
-    if TRANSACTION_CACHES:
-        return TRANSACTION_CACHES[-1]
-    # TODO: Replace with django.core.cache.caches[CACHALOT_CACHE]
-    #       when we drop Django 1.6 support.
-    return get_django_cache(CACHALOT_CACHE)
+    cache_name = cachalot_settings.CACHALOT_CACHE
+    nested_caches = NESTED_CACHES[cache_name]
+    if nested_caches:
+        return nested_caches[-1]
+    return get_django_cache(cache_name)
 
 
 def _patch_orm_read():
@@ -197,7 +221,8 @@ def _patch_orm_write():
 def _patch_atomic():
     def patch_enter(original):
         def inner(self):
-            TRANSACTION_CACHES.append(AtomicCache())
+            nested_caches = NESTED_CACHES[cachalot_settings.CACHALOT_CACHE]
+            nested_caches.append(AtomicCache())
             original(self)
 
         inner.original = original
@@ -205,7 +230,8 @@ def _patch_atomic():
 
     def patch_exit(original):
         def inner(self, exc_type, exc_value, traceback):
-            atomic_cache = TRANSACTION_CACHES.pop()
+            nested_caches = NESTED_CACHES[cachalot_settings.CACHALOT_CACHE]
+            atomic_cache = nested_caches.pop()
             if exc_type is None and not connection.needs_rollback:
                 atomic_cache.commit()
 
@@ -236,8 +262,9 @@ def _unpatch_atomic():
 def _patch_test_db():
     def patch(original):
         def inner(*args, **kwargs):
-            get_cache().clear()
-            return original(*args, **kwargs)
+            out = original(*args, **kwargs)
+            clear_all_caches()
+            return out
 
         inner.original = original
         return inner

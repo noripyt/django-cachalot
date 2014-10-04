@@ -1,4 +1,13 @@
 from django.conf import settings
 
 
-CACHALOT_CACHE = getattr(settings, 'CACHALOT_CACHE', 'default')
+class Settings(object):
+    CACHALOT_CACHE = 'default'
+
+    def __getattribute__(self, item):
+        if hasattr(settings, item):
+            return getattr(settings, item)
+        return super(Settings, self).__getattribute__(item)
+
+
+cachalot_settings = Settings()
