@@ -255,7 +255,7 @@ def _unpatch_atomic():
 
 
 def _patch_test_db():
-    def patch(original):
+    def patch_creation(original):
         def inner(*args, **kwargs):
             out = original(*args, **kwargs)
             clear_all_caches()
@@ -264,9 +264,17 @@ def _patch_test_db():
         inner.original = original
         return inner
 
+    def patch_destruction(original):
+        def inner(*args, **kwargs):
+            clear_all_caches()
+            return original(*args, **kwargs)
+
+        inner.original = original
+        return inner
+
     creation = connection.creation
-    creation.create_test_db = patch(creation.create_test_db)
-    creation.destroy_test_db = patch(creation.destroy_test_db)
+    creation.create_test_db = patch_creation(creation.create_test_db)
+    creation.destroy_test_db = patch_destruction(creation.destroy_test_db)
 
 
 def _unpatch_test_db():
