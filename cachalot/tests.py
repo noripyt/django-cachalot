@@ -389,14 +389,10 @@ class ReadTestCase(TestCase):
         with self.assertNumQueries(2):
             data1 = list(User.objects.prefetch_related('user_permissions'))
         with self.assertNumQueries(0):
-            permissions1 = []
-            for u in data1:
-                permissions1.extend(u.user_permissions.all())
+            permissions1 = [p for u in data1 for p in u.user_permissions.all()]
         with self.assertNumQueries(1 if is_mysql else 0):
             data2 = list(User.objects.prefetch_related('user_permissions'))
-            permissions2 = []
-            for u in data2:
-                permissions2.extend(u.user_permissions.all())
+            permissions2 = [p for u in data2 for p in u.user_permissions.all()]
         self.assertListEqual(permissions2, permissions1)
         self.assertListEqual(permissions2, self.user__permissions)
 
@@ -406,15 +402,13 @@ class ReadTestCase(TestCase):
             data3 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__user_permissions'))
         with self.assertNumQueries(0):
-            permissions3 = []
-            for t in data3:
-                permissions3.extend(t.owner.user_permissions.all())
+            permissions3 = [p for t in data3
+                            for p in t.owner.user_permissions.all()]
         with self.assertNumQueries(1 if is_mysql else 0):
             data4 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__user_permissions'))
-            permissions4 = []
-            for t in data4:
-                permissions4.extend(t.owner.user_permissions.all())
+            permissions4 = [p for t in data4
+                            for p in t.owner.user_permissions.all()]
         self.assertListEqual(permissions4, permissions3)
         self.assertListEqual(permissions4, self.user__permissions)
 
@@ -425,15 +419,13 @@ class ReadTestCase(TestCase):
                          .select_related('owner')
                          .prefetch_related('owner__user_permissions')[:1])
         with self.assertNumQueries(0):
-            permissions5 = []
-            for t in data5:
-                permissions5.extend(t.owner.user_permissions.all())
+            permissions5 = [p for t in data5
+                            for p in t.owner.user_permissions.all()]
         with self.assertNumQueries(1 if is_mysql else 0):
             data6 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__user_permissions')[:1])
-            permissions6 = []
-            for t in data6:
-                permissions6.extend(t.owner.user_permissions.all())
+            permissions6 = [p for t in data6
+                            for p in t.owner.user_permissions.all()]
         self.assertListEqual(permissions6, permissions5)
         self.assertListEqual(permissions6, self.user__permissions)
 
@@ -442,17 +434,15 @@ class ReadTestCase(TestCase):
             data7 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
         with self.assertNumQueries(0):
-            permissions7 = []
-            for t in data7:
-                for g in t.owner.groups.all():
-                    permissions7.extend(g.permissions.all())
+            permissions7 = [p for t in data7
+                            for g in t.owner.groups.all()
+                            for p in g.permissions.all()]
         with self.assertNumQueries(2 if is_mysql else 0):
             data8 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
-            permissions8 = []
-            for t in data8:
-                for g in t.owner.groups.all():
-                    permissions8.extend(g.permissions.all())
+            permissions8 = [p for t in data8
+                            for g in t.owner.groups.all()
+                            for p in g.permissions.all()]
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
 
@@ -909,9 +899,83 @@ class WriteTestCase(TestCase):
             self.assertEqual(data4[0].owner, u2)
             self.assertEqual(data4[1].owner, u1)
 
-    @skip(NotImplementedError)
     def test_invalidate_prefetch_related(self):
-        pass
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(1):
+            t1 = Test.objects.create(name='test1')
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            self.assertListEqual(data2, [t1])
+            self.assertEqual(data2[0].owner, None)
+
+        with self.assertNumQueries(2):
+            u = User.objects.create_user('user')
+            t1.owner = u
+            t1.save()
+        with self.assertNumQueries(2):
+            data3 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            self.assertListEqual(data3, [t1])
+            self.assertEqual(data3[0].owner, u)
+            self.assertListEqual(list(data3[0].owner.groups.all()), [])
+
+        with self.assertNumQueries(6):
+            group = Group.objects.create(name='test_group')
+            permissions = list(Permission.objects.all()[:5])
+            group.permissions.add(*permissions)
+            u.groups.add(group)
+        with self.assertNumQueries(2):
+            data4 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            self.assertListEqual(data4, [t1])
+            owner = data4[0].owner
+            self.assertEqual(owner, u)
+            groups = list(owner.groups.all())
+            self.assertListEqual(groups, [group])
+            self.assertListEqual(list(groups[0].permissions.all()),
+                                 permissions)
+
+        with self.assertNumQueries(1):
+            t2 = Test.objects.create(name='test2')
+        with self.assertNumQueries(1):
+            data5 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            self.assertListEqual(data5, [t1, t2])
+            owners = [t.owner for t in data5 if t.owner is not None]
+            self.assertListEqual(owners, [u])
+            groups = [g for o in owners for g in o.groups.all()]
+            self.assertListEqual(groups, [group])
+            data5_permissions = [p for g in groups
+                                 for p in g.permissions.all()]
+            self.assertListEqual(data5_permissions, permissions)
+
+        with self.assertNumQueries(1):
+            permissions[0].save()
+        with self.assertNumQueries(1):
+            list(Test.objects.select_related('owner')
+                 .prefetch_related('owner__groups__permissions'))
+
+        with self.assertNumQueries(1):
+            group.name = 'modified_test_group'
+            group.save()
+        with self.assertNumQueries(2):
+            data6 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            g = list(data6[0].owner.groups.all())[0]
+            self.assertEqual(g.name, 'modified_test_group')
+
+        with self.assertNumQueries(1):
+            User.objects.update(username='modified_user')
+
+        with self.assertNumQueries(2):
+            data7 = list(Test.objects.select_related('owner')
+                         .prefetch_related('owner__groups__permissions'))
+            self.assertEqual(data7[0].owner.username, 'modified_user')
 
     @skip(NotImplementedError)
     def test_invalidate_extra_select(self):
