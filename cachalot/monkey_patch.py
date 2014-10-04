@@ -43,7 +43,7 @@ def _get_table_cache_key(table):
 
 
 def _get_tables_cache_keys(query):
-    return map(_get_table_cache_key, _get_tables(query))
+    return [_get_table_cache_key(t) for t in _get_tables(query)]
 
 
 def _update_tables_queries(cache, query, cache_key):
@@ -71,7 +71,7 @@ def clear_cache(cache=None):
     if cache is None:
         cache = get_cache()
     tables = connection.introspection.table_names()
-    tables_cache_keys = map(_get_table_cache_key, tables)
+    tables_cache_keys = [_get_table_cache_key(t) for t in  tables]
     _invalidate_tables_cache_keys(cache, tables_cache_keys)
 
 
