@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from collections import Iterable
 import re
 
-from django.core.cache import cache as django_cache
+from django.core.cache import get_cache as get_django_cache
 from django.db import connection
 from django.db.models.query import EmptyResultSet
 from django.db.models.sql.compiler import (
@@ -12,6 +12,7 @@ from django.db.models.sql.compiler import (
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic
+from .settings import CACHALOT_CACHE
 
 
 COMPILERS = (SQLCompiler,
@@ -94,8 +95,7 @@ TRANSACTION_CACHES = []
 class AtomicCache(dict):
     def __init__(self):
         super(AtomicCache, self).__init__()
-        self.parent_cache = (TRANSACTION_CACHES[-1] if TRANSACTION_CACHES
-                             else django_cache)
+        self.parent_cache = get_cache()
         self.to_be_deleted = set()
 
     def get(self, k, default=None):
@@ -141,7 +141,9 @@ class AtomicCache(dict):
 def get_cache():
     if TRANSACTION_CACHES:
         return TRANSACTION_CACHES[-1]
-    return django_cache
+    # TODO: Replace with django.core.cache.caches[CACHALOT_CACHE]
+    #       when we drop Django 1.6 support.
+    return get_django_cache(CACHALOT_CACHE)
 
 
 def _patch_orm_read():
@@ -237,7 +239,7 @@ def _unpatch_atomic():
 def _patch_test_db():
     def patch(original):
         def inner(*args, **kwargs):
-            django_cache.clear()
+            get_cache().clear()
             return original(*args, **kwargs)
 
         inner.original = original

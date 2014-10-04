@@ -38,6 +38,21 @@ Usage
 #. Enjoy!
 
 
+Settings
+........
+
+================== ============= ==============================================
+Setting            Default value Description
+================== ============= ==============================================
+``CACHALOT_CACHE`` ``'default'`` Name of the cache from |CACHES|_ used by
+                                 django-cachalot
+================== ============= ==============================================
+
+
+.. |CACHES| replace:: ``CACHES``
+.. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
+
+
 Limits
 ------
 
@@ -99,7 +114,6 @@ For version 1.0
 - Handle multiple databases
 - Add invalidation on migrations in Django 1.7 (& South?)
 - Add a ``CACHALOT_ENABLED`` setting
-- Add a setting to choose a cache other than ``'default'``
 
 In a more distant future
 ........................
