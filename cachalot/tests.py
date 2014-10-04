@@ -921,9 +921,31 @@ class WriteTestCase(TestCase):
     def test_invalidate_extra_where(self):
         pass
 
-    @skip(NotImplementedError)
     def test_invalidate_extra_tables(self):
-        pass
+        with self.assertNumQueries(1):
+            User.objects.create_user('user1')
+
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.all().extra(tables=['auth_user']))
+        self.assertListEqual(data1, [])
+
+        with self.assertNumQueries(1):
+            t1 = Test.objects.create(name='test1')
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.all().extra(tables=['auth_user']))
+        self.assertListEqual(data2, [t1])
+
+        with self.assertNumQueries(1):
+            t2 = Test.objects.create(name='test2')
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.all().extra(tables=['auth_user']))
+        self.assertListEqual(data3, [t1, t2])
+
+        with self.assertNumQueries(1):
+            User.objects.create_user('user2')
+        with self.assertNumQueries(1):
+            data4 = list(Test.objects.all().extra(tables=['auth_user']))
+        self.assertListEqual(data4, [t1, t1, t2, t2])
 
     @skip(NotImplementedError)
     def test_invalidate_extra_order_by(self):
