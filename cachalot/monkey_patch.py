@@ -52,11 +52,8 @@ def _update_tables_queries(cache, query, cache_key):
 def _invalidate_tables(cache, query):
     tables_cache_keys = _get_tables_cache_keys(query)
     tables_queries = cache.get_many(tables_cache_keys)
-    queries = []
-    for k in tables_cache_keys:
-        queries.extend(tables_queries.get(k, []))
-    cache.delete_many(queries)
-    cache.delete_many(tables_cache_keys)
+    queries = [q for k in tables_cache_keys for q in tables_queries.get(k, [])]
+    cache.delete_many(queries + tables_cache_keys)
 
 
 COLUMN_RE = re.compile(r'^"(?P<table>[\w_]+)"\."(?P<column>[\w_]+)"$')
