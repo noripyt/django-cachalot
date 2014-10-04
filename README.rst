@@ -121,7 +121,7 @@ In a more distant future
 - Add a setting to choose if we cache ``QuerySet.order_by('?')``
 - Cache ``QuerySet.extra`` if none of
   ``set(connection.introspection.table_names())
-  - set(connection.introspection.django_table_name())``
+  - set(connection.introspection.django_table_names())``
   is found in the extra ``select`` and ``where`` queries
 - Add a setting to disable caching on ``QuerySet.extra`` when it has ``select``
   or ``where`` rules because we can’t reliably detect other databases (and
