@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 from collections import defaultdict, Iterable
+from functools import wraps
 import re
 
 from django.conf import settings
@@ -69,7 +70,7 @@ def _invalidate_tables(cache, query):
 
 def clear_cache(cache):
     tables = connection.introspection.table_names()
-    tables_cache_keys = [_get_table_cache_key(t) for t in  tables]
+    tables_cache_keys = [_get_table_cache_key(t) for t in tables]
     _invalidate_tables_cache_keys(cache, tables_cache_keys)
 
 
@@ -162,6 +163,7 @@ def get_cache():
 
 def _patch_orm_read():
     def patch_execute_sql(original):
+        @wraps(original)
         def inner(compiler, *args, **kwargs):
             if not cachalot_settings.CACHALOT_ENABLED \
                     or isinstance(compiler, WRITE_COMPILERS):
@@ -201,6 +203,7 @@ def _patch_orm_read():
 
 def _patch_orm_write():
     def patch_execute_sql(original):
+        @wraps(original)
         def inner(compiler, *args, **kwargs):
             _invalidate_tables(get_cache(), compiler.query)
             return original(compiler, *args, **kwargs)
@@ -214,6 +217,7 @@ def _patch_orm_write():
 
 def _patch_atomic():
     def patch_enter(original):
+        @wraps(original)
         def inner(self):
             nested_caches = NESTED_CACHES[cachalot_settings.CACHALOT_CACHE]
             nested_caches.append(AtomicCache())
@@ -223,6 +227,7 @@ def _patch_atomic():
         return inner
 
     def patch_exit(original):
+        @wraps(original)
         def inner(self, exc_type, exc_value, traceback):
             nested_caches = NESTED_CACHES[cachalot_settings.CACHALOT_CACHE]
             atomic_cache = nested_caches.pop()
@@ -240,6 +245,7 @@ def _patch_atomic():
 
 def _patch_test_db():
     def patch_creation(original):
+        @wraps(original)
         def inner(*args, **kwargs):
             out = original(*args, **kwargs)
             clear_all_caches()
@@ -249,6 +255,7 @@ def _patch_test_db():
         return inner
 
     def patch_destruction(original):
+        @wraps(original)
         def inner(*args, **kwargs):
             clear_all_caches()
             return original(*args, **kwargs)

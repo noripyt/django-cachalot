@@ -1,3 +1,4 @@
+from functools import wraps
 from django.conf import settings
 
 
@@ -16,6 +17,7 @@ class SettingsOverrider(object):
             setattr(self.settings, k, v)
 
     def __call__(self, func):
+        @wraps(func)
         def inner(*args, **kwargs):
             with self:
                 return func(*args, **kwargs)
