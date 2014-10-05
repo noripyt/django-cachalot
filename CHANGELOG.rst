@@ -1,6 +1,13 @@
 What’s new in django-cachalot?
 ==============================
 
+0.5.0
+-----
+
+- Adds ``CACHALOT_ENABLED`` & ``CACHALOT_CACHE`` settings
+- Allows settings to be dynamically overridden using ``cachalot_settings``
+- Adds some missing tests
+
 0.4.1
 -----
 
