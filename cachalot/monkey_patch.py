@@ -240,21 +240,6 @@ def _patch_atomic():
     Atomic.__exit__ = patch_exit(Atomic.__exit__)
 
 
-def _unpatch_orm_read():
-    for compiler in READ_COMPILERS:
-        compiler.execute_sql = compiler.execute_sql.original
-
-
-def _unpatch_orm_write():
-    for compiler in WRITE_COMPILERS:
-        compiler.execute_sql = compiler.execute_sql.original
-
-
-def _unpatch_atomic():
-    Atomic.__enter__ = Atomic.__enter__.original
-    Atomic.__exit__ = Atomic.__exit__.original
-
-
 def _patch_test_db():
     def patch_creation(original):
         def inner(*args, **kwargs):
@@ -278,12 +263,6 @@ def _patch_test_db():
     creation.destroy_test_db = patch_destruction(creation.destroy_test_db)
 
 
-def _unpatch_test_db():
-    creation = connection.creation
-    creation.create_test_db = creation.create_test_db.original
-    creation.destroy_test_db = creation.destroy_test_db.original
-
-
 def patch():
     global PATCHED
     _patch_test_db()
@@ -291,15 +270,6 @@ def patch():
     _patch_orm_read()
     _patch_atomic()
     PATCHED = True
-
-
-def unpatch():
-    global PATCHED
-    _unpatch_test_db()
-    _unpatch_orm_read()
-    _unpatch_orm_write()
-    _unpatch_atomic()
-    PATCHED = False
 
 
 def is_patched():
