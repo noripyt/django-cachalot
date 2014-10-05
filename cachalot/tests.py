@@ -1,14 +1,13 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from cachalot.settings import cachalot_settings
 
-
+import datetime
 try:
     from unittest import skip, skipIf
 except ImportError:  # For Python 2.6
     from unittest2 import skip, skipIf
-import datetime
+
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
 from django.core.exceptions import MultipleObjectsReturned
@@ -17,6 +16,8 @@ from django.db.models import (
     Model, CharField, ForeignKey, BooleanField,
     DateField, DateTimeField, Count)
 from django.test import TestCase
+
+from .settings import cachalot_settings
 
 
 class Test(Model):
