@@ -1178,6 +1178,29 @@ class AtomicTestCase(TestCase):
 
 
 class SettingsTestCase(TestCase):
+    def test_enabled(self):
+        with self.settings(CACHALOT_ENABLED=True):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(0):
+                list(Test.objects.all())
+
+        with self.settings(CACHALOT_ENABLED=False):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
+
+        with self.settings(CACHALOT_ENABLED=False):
+            with self.assertNumQueries(1):
+                t = Test.objects.create(name='test')
+        with self.assertNumQueries(1):
+            data = list(Test.objects.all())
+        self.assertListEqual(data, [t])
+
     @skipIf(len(settings.CACHES) == 1,
             'We can’t change the cache used since there’s only one configured')
     def test_cache(self):

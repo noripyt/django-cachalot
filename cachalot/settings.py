@@ -2,6 +2,7 @@ from django.conf import settings
 
 
 class Settings(object):
+    CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
 
     def __getattribute__(self, item):

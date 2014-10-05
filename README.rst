@@ -41,12 +41,14 @@ Usage
 Settings
 ........
 
-================== ============= ==============================================
-Setting            Default value Description
-================== ============= ==============================================
-``CACHALOT_CACHE`` ``'default'`` Name of the cache from |CACHES|_ used by
-                                 django-cachalot
-================== ============= ==============================================
+==================== ============= ============================================
+Setting              Default value Description
+==================== ============= ============================================
+``CACHALOT_ENABLED`` ``True``      If set to ``False``, disables SQL caching
+                                   but keeps invalidating to avoid stale cache
+``CACHALOT_CACHE``   ``'default'`` Name of the cache from |CACHES|_ used by
+                                   django-cachalot
+==================== ============= ============================================
 
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
@@ -119,7 +121,6 @@ For version 1.0
 - Add memcached support
 - Handle multiple databases
 - Add invalidation on migrations in Django 1.7 (& South?)
-- Add a ``CACHALOT_ENABLED`` setting
 
 In a more distant future
 ........................

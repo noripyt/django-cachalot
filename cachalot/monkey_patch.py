@@ -165,7 +165,8 @@ def get_cache():
 def _patch_orm_read():
     def patch_execute_sql(original):
         def inner(compiler, *args, **kwargs):
-            if isinstance(compiler, WRITE_COMPILERS):
+            if not cachalot_settings.CACHALOT_ENABLED \
+                    or isinstance(compiler, WRITE_COMPILERS):
                 return original(compiler, *args, **kwargs)
 
             query = compiler.query
