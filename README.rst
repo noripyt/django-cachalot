@@ -73,7 +73,8 @@ or simply by changing its attributes:
 
 In tests, you can use
 `Django’s testing tools <https://docs.djangoproject.com/en/1.7/topics/testing/tools/#overriding-settings>`_
-as well as ``cachalot_settings``.  They will both work the same.
+as well as ``cachalot_settings``.  The only difference is that you can’t use
+``cachalot_settings`` to decorate a class.
 
 
 Limits
