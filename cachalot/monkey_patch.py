@@ -67,9 +67,7 @@ def _invalidate_tables(cache, query):
     _invalidate_tables_cache_keys(cache, tables_cache_keys)
 
 
-def clear_cache(cache=None):
-    if cache is None:
-        cache = get_cache()
+def clear_cache(cache):
     tables = connection.introspection.table_names()
     tables_cache_keys = [_get_table_cache_key(t) for t in  tables]
     _invalidate_tables_cache_keys(cache, tables_cache_keys)
