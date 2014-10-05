@@ -71,14 +71,6 @@ or simply by changing its attributes:
     # Globally disables SQL caching until you set it back to True
     cachalot_settings.CACHALOT_ENABLED = False
 
-    from django.test import TestCase
-
-    @cachalot_settings(CACHALOT_ENABLED=True)
-    class YourTestCase(TestCase):
-        # SQL caching is enabled again in every method of this test
-
-    # SQL caching is disabled again because we globally disabled it
-
 In tests, you can use
 `Django’s testing tools <https://docs.djangoproject.com/en/1.7/topics/testing/tools/#overriding-settings>`_
 as well as ``cachalot_settings``.  They will both work the same.

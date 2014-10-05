@@ -1181,23 +1181,14 @@ class AtomicTestCase(TestCase):
         self.assertListEqual(data3, [t1])
 
 
-@cachalot_settings(CACHALOT_ENABLED=False)
-class SettingsDecoratorTestCase(TestCase):
-    def test_class(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
-
-    @cachalot_settings(CACHALOT_ENABLED=True)
-    def test_method(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
-        with self.assertNumQueries(0):
-            list(Test.objects.all())
-
-
 class SettingsTestCase(TestCase):
+    @cachalot_settings(CACHALOT_ENABLED=False)
+    def test_decorator(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+
     def test_enabled(self):
         with cachalot_settings(CACHALOT_ENABLED=True):
             with self.assertNumQueries(1):
