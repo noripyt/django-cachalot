@@ -1,6 +1,27 @@
 from django.conf import settings
 
 
+class SettingsOverrider(object):
+    def __init__(self, settings, overrides):
+        self.settings = settings
+        self.overrides = overrides
+        self.originals = {k: getattr(self.settings, k) for k in self.overrides}
+
+    def __enter__(self):
+        for k, v in self.overrides.items():
+            setattr(self.settings, k, v)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for k, v in self.originals.items():
+            setattr(self.settings, k, v)
+
+    def __call__(self, func):
+        def inner(*args, **kwargs):
+            with self:
+                return func(*args, **kwargs)
+        return inner
+
+
 class Settings(object):
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
@@ -9,6 +30,9 @@ class Settings(object):
         if hasattr(settings, item):
             return getattr(settings, item)
         return super(Settings, self).__getattribute__(item)
+
+    def __call__(self, **kwargs):
+        return SettingsOverrider(self, kwargs)
 
 
 cachalot_settings = Settings()

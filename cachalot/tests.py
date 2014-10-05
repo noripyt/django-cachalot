@@ -1,6 +1,9 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+from cachalot.settings import cachalot_settings
+
+
 try:
     from unittest import skip, skipIf
 except ImportError:  # For Python 2.6
@@ -1178,14 +1181,21 @@ class AtomicTestCase(TestCase):
 
 
 class SettingsTestCase(TestCase):
+    @cachalot_settings(CACHALOT_ENABLED=False)
+    def test_decorator(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+
     def test_enabled(self):
-        with self.settings(CACHALOT_ENABLED=True):
+        with cachalot_settings(CACHALOT_ENABLED=True):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
                 list(Test.objects.all())
 
-        with self.settings(CACHALOT_ENABLED=False):
+        with cachalot_settings(CACHALOT_ENABLED=False):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(1):
@@ -1194,7 +1204,7 @@ class SettingsTestCase(TestCase):
         with self.assertNumQueries(0):
             list(Test.objects.all())
 
-        with self.settings(CACHALOT_ENABLED=False):
+        with cachalot_settings(CACHALOT_ENABLED=False):
             with self.assertNumQueries(1):
                 t = Test.objects.create(name='test')
         with self.assertNumQueries(1):
@@ -1204,7 +1214,7 @@ class SettingsTestCase(TestCase):
     @skipIf(len(settings.CACHES) == 1,
             'We can’t change the cache used since there’s only one configured')
     def test_cache(self):
-        with self.settings(CACHALOT_CACHE='default'):
+        with cachalot_settings(CACHALOT_CACHE='default'):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
@@ -1212,7 +1222,7 @@ class SettingsTestCase(TestCase):
 
         other_cache = [k for k in settings.CACHES if k != 'default'][0]
 
-        with self.settings(CACHALOT_CACHE=other_cache):
+        with cachalot_settings(CACHALOT_CACHE=other_cache):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(0):

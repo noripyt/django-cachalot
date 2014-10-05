@@ -53,12 +53,27 @@ Setting              Default value Description
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
 
-.. note:: Settings can be changed at any moment during runtime like this:
+These settings can be changed whenever you want.
+You have to use ``cachalot_settings`` as a context manager, a decorator,
+or simply by changing its attributes:
 
-   .. code:: python
+.. code:: python
 
-       from cachalot.settings import cachalot_settings
-       cachalot_settings.CACHALOT_CACHE = 'another_cache'
+    from cachalot.settings import cachalot_settings
+
+    with cachalot_settings(CACHALOT_ENABLED=False):
+        # SQL queries are not cached in this block
+
+    @cachalot_settings(CACHALOT_CACHE='another_cache')
+    def your_function():
+        # What’s in this function uses another cache
+
+    # Globally disables SQL caching until you set it back to True
+    cachalot_settings.CACHALOT_ENABLED = False
+
+In tests, you can use
+`Django’s testing tools <https://docs.djangoproject.com/en/1.7/topics/testing/tools/#overriding-settings>`_
+as well as ``cachalot_settings``.  They will both work the same.
 
 
 Limits
