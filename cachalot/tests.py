@@ -95,6 +95,11 @@ class ReadTestCase(TestCase):
 
     def test_first(self):
         with self.assertNumQueries(1):
+            self.assertEqual(Test.objects.filter(name='bad').first(), None)
+        with self.assertNumQueries(0):
+            self.assertEqual(Test.objects.filter(name='bad').first(), None)
+
+        with self.assertNumQueries(1):
             data1 = Test.objects.first()
         with self.assertNumQueries(0):
             data2 = Test.objects.first()
