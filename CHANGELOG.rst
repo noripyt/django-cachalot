@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+0.6.0
+-----
+
+- Adds memcached support
+
+
 0.5.0
 -----
 

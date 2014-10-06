@@ -24,9 +24,9 @@ Requirements
 
 - Django 1.6 or 1.7
 - Python 2.6, 2.7, 3.2, 3.3, or 3.4
-- `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
-  or `django-redis <https://github.com/niwibe/django-redis>`_
-  (memcached coming soon)
+- `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_,
+  `django-redis <https://github.com/niwibe/django-redis>`_ or
+  `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_
 - SQLite, PostgreSQL or MySQL (it should work with Oracle,
   but I don’t have 17.5k$ to test)
 
@@ -134,7 +134,6 @@ For version 1.0
 
 - Find out if it’s thread-safe and test it
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
-- Add memcached support
 - Handle multiple databases
 - Add invalidation on migrations in Django 1.7 (& South?)
 
