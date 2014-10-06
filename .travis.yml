@@ -55,4 +55,4 @@ matrix:
   exclude:
     # Django 1.7 is not compatible with Python 2.6
     - python: 2.6
-      env: DJANGO=1.7 PSYCOPG2=2.5.4 MYSQL_PYTHON=1.2.5 DJANGO_REDIS=3.7.1
+      env: DJANGO=1.7
