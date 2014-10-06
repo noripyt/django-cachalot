@@ -31,8 +31,12 @@ PATCHED = False
 MISS_VALUE = '[[Missing cache key]]'
 
 
+def hash_cache_key(unicode_key):
+    return md5(unicode_key.encode('utf-8')).hexdigest()
+
+
 def _get_query_cache_key(compiler):
-    return md5('%s:%s' % compiler.as_sql()).hexdigest()
+    return hash_cache_key('%s:%s' % compiler.as_sql())
 
 
 def _get_tables(query):
@@ -45,7 +49,7 @@ def _get_tables(query):
 
 
 def _get_table_cache_key(table):
-    return md5('%s_queries' % table).hexdigest()
+    return hash_cache_key('%s_queries' % table)
 
 
 def _get_tables_cache_keys(query):
