@@ -4,9 +4,9 @@ from __future__ import unicode_literals
 
 import datetime
 try:
-    from unittest import skip, skipIf
+    from unittest import skip, skipIf, expectedFailure
 except ImportError:  # For Python 2.6
-    from unittest2 import skip, skipIf
+    from unittest2 import skip, skipIf, expectedFailure
 
 from django.conf import settings
 from django.contrib.auth.models import User, Permission, Group
@@ -545,8 +545,9 @@ class ReadTestCase(TestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t1, self.t2])
 
-    @skip('For an unknown reason, we can’t measure how many requests are '
-          'executed by ``cursor.execute``.')
+    # FIXME: For an unknown reason, we can’t measure how many requests
+    #        are executed by ``cursor.execute``.'
+    @expectedFailure
     def test_cursor_execute(self):
         """
         Tests if queries executed from a DB cursor are not cached.
