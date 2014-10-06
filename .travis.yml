@@ -29,6 +29,8 @@ install:
 
 before_script:
   - psql -c 'CREATE USER cachalot CREATEDB;' -U postgres
+  - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
+  - mysql -u root -e 'CREATE DATABASE cachalot;'
 
 script:
   # Run against all database and cache backends, accumulating coverage stats.
