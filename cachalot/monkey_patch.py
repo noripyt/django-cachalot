@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from collections import defaultdict, Iterable
 from functools import wraps
 from hashlib import md5
+import pickle
 import re
 
 from django.conf import settings
@@ -28,7 +29,7 @@ READ_COMPILERS = [c for c in COMPILERS if c not in WRITE_COMPILERS]
 
 
 PATCHED = False
-MISS_VALUE = '[[Missing cache key]]'
+MISS_VALUE = 'Missing cache key'
 
 
 def hash_cache_key(unicode_key):
@@ -199,7 +200,9 @@ def _patch_orm_read():
 
                 _update_tables_queries(cache, query, cache_key)
 
-                cache.set(cache_key, result)
+                cache.set(cache_key, pickle.dumps(result))
+            else:
+                result = pickle.loads(result)
 
             return result
 
