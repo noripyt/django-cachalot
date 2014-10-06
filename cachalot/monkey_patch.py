@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from collections import defaultdict, Iterable
 from functools import wraps
+from hashlib import md5
 import re
 
 from django.conf import settings
@@ -28,6 +29,10 @@ READ_COMPILERS = [c for c in COMPILERS if c not in WRITE_COMPILERS]
 
 PATCHED = False
 MISS_VALUE = '[[Missing cache key]]'
+
+
+def _get_query_cache_key(compiler):
+    return md5('%s:%s' % compiler.as_sql()).hexdigest()
 
 
 def _get_tables(query):
@@ -175,7 +180,7 @@ def _patch_orm_read():
                 return original(compiler, *args, **kwargs)
 
             try:
-                cache_key = compiler.as_sql()
+                cache_key = _get_query_cache_key(compiler)
             except EmptyResultSet:
                 return original(compiler, *args, **kwargs)
 
