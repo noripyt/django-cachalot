@@ -38,7 +38,7 @@ CACHES = {
     },
     'memcached': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-        'LOCATION': 'unix:/tmp/memcached.sock',
+        'LOCATION': '127.0.0.1:11211',
     },
 }
 DEFAULT_CACHE_KEY = os.environ.get('CACHE_BACKEND', 'locmem')
