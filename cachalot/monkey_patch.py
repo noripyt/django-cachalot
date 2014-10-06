@@ -45,7 +45,7 @@ def _get_tables(query):
 
 
 def _get_table_cache_key(table):
-    return '%s_queries' % table
+    return md5('%s_queries' % table).hexdigest()
 
 
 def _get_tables_cache_keys(query):
