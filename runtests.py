@@ -35,7 +35,11 @@ CACHES = {
     'redis': {
         'BACKEND': 'redis_cache.cache.RedisCache',
         'LOCATION': '127.0.0.1:6379:0',
-    }
+    },
+    'memcached': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': 'unix:/tmp/memcached.sock',
+    },
 }
 DEFAULT_CACHE_KEY = os.environ.get('CACHE_BACKEND', 'locmem')
 CACHES['default'] = CACHES[DEFAULT_CACHE_KEY]
