@@ -35,11 +35,16 @@ script:
   # Run against all database and cache backends, accumulating coverage stats.
   - coverage run --source=cachalot ./runtests.py
   - CACHE_BACKEND=redis coverage run --source=cachalot ./runtests.py
+  - CACHE_BACKEND=memcached coverage run --source=cachalot ./runtests.py
   - DB_ENGINE=postgresql coverage run --source=cachalot ./runtests.py
   - DB_ENGINE=postgresql CACHE_BACKEND=redis
     coverage run --source=cachalot ./runtests.py
+  - DB_ENGINE=postgresql CACHE_BACKEND=memcached
+    coverage run --source=cachalot ./runtests.py
   - DB_ENGINE=mysql coverage run --source=cachalot ./runtests.py
   - DB_ENGINE=mysql CACHE_BACKEND=redis
+    coverage run --source=cachalot ./runtests.py
+  - DB_ENGINE=mysql CACHE_BACKEND=memcached
     coverage run --source=cachalot ./runtests.py
 
 after_success:
