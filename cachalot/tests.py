@@ -555,12 +555,12 @@ class ReadTestCase(TestCase):
         with self.assertNumQueries(1):
             cursor = connection.cursor()
             cursor.execute(sql)
-            data1 = cursor.fetchall()
+            data1 = list(cursor.fetchall())
             cursor.close()
         with self.assertNumQueries(1):
             cursor = connection.cursor()
             cursor.execute(sql)
-            data2 = cursor.fetchall()
+            data2 = list(cursor.fetchall())
             cursor.close()
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, list(Test.objects.values_list()))
