@@ -29,7 +29,6 @@ READ_COMPILERS = [c for c in COMPILERS if c not in WRITE_COMPILERS]
 
 
 PATCHED = False
-MISS_VALUE = 'Missing cache key'
 
 
 def hash_cache_key(unicode_key):
@@ -146,8 +145,8 @@ class AtomicCache(dict):
     def get_many(self, keys):
         data = {}
         for k in keys:
-            v = self.get(k, MISS_VALUE)
-            if v != MISS_VALUE:
+            v = self.get(k)
+            if v is not None:
                 data[k] = v
         return data
 
@@ -190,9 +189,9 @@ def _patch_orm_read():
                 return original(compiler, *args, **kwargs)
 
             cache = get_cache()
-            result = cache.get(cache_key, MISS_VALUE)
+            result = cache.get(cache_key)
 
-            if result == MISS_VALUE:
+            if result is None:
                 result = original(compiler, *args, **kwargs)
                 if isinstance(result, Iterable) \
                         and not isinstance(result, (tuple, list)):
