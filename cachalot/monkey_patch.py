@@ -267,7 +267,10 @@ def _patch_test_teardown():
         inner.original = original
         return inner
 
-    TransactionTestCase._fixture_teardown = patch_teardown(TransactionTestCase._fixture_teardown)
+    TransactionTestCase._fixture_setup = patch_teardown(
+        TransactionTestCase._fixture_setup)
+    TransactionTestCase._fixture_teardown = patch_teardown(
+        TransactionTestCase._fixture_teardown)
 
 
 def patch():
