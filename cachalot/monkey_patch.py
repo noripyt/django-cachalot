@@ -240,12 +240,14 @@ def _patch_atomic():
     def patch_exit(original):
         @wraps(original)
         def inner(self, exc_type, exc_value, traceback):
-            nested_caches = NESTED_CACHES[cachalot_settings.CACHALOT_CACHE]
-            atomic_cache = nested_caches.pop()
-            if exc_type is None and not connection.needs_rollback:
-                atomic_cache.commit()
+            needs_rollback = connection.needs_rollback
 
             original(self, exc_type, exc_value, traceback)
+
+            nested_caches = NESTED_CACHES[cachalot_settings.CACHALOT_CACHE]
+            atomic_cache = nested_caches.pop()
+            if exc_type is None and not needs_rollback:
+                atomic_cache.commit()
 
         inner.original = original
         return inner
