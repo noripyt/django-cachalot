@@ -143,15 +143,15 @@ class AtomicCache(dict):
         self.to_be_deleted.add(k)
 
     def get_many(self, keys):
-        data = {}
-        for k in keys:
-            v = self.get(k)
-            if v is not None:
-                data[k] = v
+        data = dict([(k, self[k]) for k in keys if
+                     k in self and k not in self.to_be_deleted])
+        missing_keys = set(keys)
+        missing_keys.difference_update(data)
+        data.update(self.parent_cache.get_many(missing_keys))
         return data
 
     def set_many(self, data):
-        self.to_be_deleted.difference_update(set(data))
+        self.to_be_deleted.difference_update(data)
         self.update(data)
 
     def delete_many(self, keys):
