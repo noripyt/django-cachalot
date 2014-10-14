@@ -68,6 +68,8 @@ def _update_tables_queries(cache, query, cache_key):
 
 
 def _invalidate_tables_cache_keys(cache, tables_cache_keys):
+    if isinstance(cache, AtomicCache):
+        cache.to_be_invalidated.update(tables_cache_keys)
     tables_queries = cache.get_many(tables_cache_keys)
     queries = [q for k in tables_cache_keys for q in tables_queries.get(k, [])]
     cache.delete_many(queries + tables_cache_keys)
@@ -127,6 +129,7 @@ class AtomicCache(dict):
         super(AtomicCache, self).__init__()
         self.parent_cache = get_cache()
         self.to_be_deleted = set()
+        self.to_be_invalidated = set()
 
     def get(self, k, default=None):
         if k in self.to_be_deleted:
@@ -161,6 +164,8 @@ class AtomicCache(dict):
     def commit(self):
         self.parent_cache.set_many(self)
         self.parent_cache.delete_many(self.to_be_deleted)
+        _invalidate_tables_cache_keys(self.parent_cache,
+                                      list(self.to_be_invalidated))
 
 
 def get_cache():
