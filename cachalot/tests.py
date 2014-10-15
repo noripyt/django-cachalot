@@ -1295,3 +1295,71 @@ class ThreadSafetyTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             data = Test.objects.first()
         self.assertEqual(data, t)
+
+    @skipUnlessDBFeature('test_db_allows_multiple_connections')
+    def test_concurrent_caching_before_and_during_atomic_1(self):
+        self.thread.start()
+        self.thread.wait_for_child()
+
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                self.thread.wait_for_child()
+                t = Test.objects.create(name='test')
+
+        self.assertEqual(self.thread.t1, None)
+        self.assertEqual(self.thread.t2, None)
+
+        with self.assertNumQueries(1):
+            data = Test.objects.first()
+        self.assertEqual(data, t)
+
+    @skipUnlessDBFeature('test_db_allows_multiple_connections')
+    def test_concurrent_caching_before_and_during_atomic_2(self):
+        self.thread.start()
+        self.thread.wait_for_child()
+
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                t = Test.objects.create(name='test')
+                self.thread.wait_for_child()
+
+        self.assertEqual(self.thread.t1, None)
+        self.assertEqual(self.thread.t2, None)
+
+        with self.assertNumQueries(1):
+            data = Test.objects.first()
+        self.assertEqual(data, t)
+
+    @skipUnlessDBFeature('test_db_allows_multiple_connections')
+    def test_concurrent_caching_during_and_after_atomic_1(self):
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                self.thread.start()
+                self.thread.wait_for_child()
+                t = Test.objects.create(name='test')
+
+        self.thread.wait_for_child()
+
+        self.assertEqual(self.thread.t1, None)
+        self.assertEqual(self.thread.t2, t)
+
+        with self.assertNumQueries(0):
+            data = Test.objects.first()
+        self.assertEqual(data, t)
+
+    @skipUnlessDBFeature('test_db_allows_multiple_connections')
+    def test_concurrent_caching_during_and_after_atomic_2(self):
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                t = Test.objects.create(name='test')
+                self.thread.start()
+                self.thread.wait_for_child()
+
+        self.thread.wait_for_child()
+
+        self.assertEqual(self.thread.t1, None)
+        self.assertEqual(self.thread.t2, t)
+
+        with self.assertNumQueries(0):
+            data = Test.objects.first()
+        self.assertEqual(data, t)
