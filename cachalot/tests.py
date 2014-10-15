@@ -1238,23 +1238,25 @@ class SettingsTestCase(TestCase):
 
 
 class TestThread(Thread):
+    def __init__(self):
+        super(TestThread, self).__init__()
+        self.exit = False
+
     def wait_for_main(self):
         self.wait = True
-        while self.wait:
+        while self.wait and not self.exit:
             sleep(0.001)
 
     def wait_for_child(self):
         self.wait = False
-        while not self.wait:
+        while not self.wait and not self.exit:
             sleep(0.001)
 
     def run(self):
-        self.wait_for_main()
         self.t1 = Test.objects.first()
-
         self.wait_for_main()
         self.t2 = Test.objects.first()
-        self.wait = True
+        self.wait_for_main()
 
         connection.close()
 
@@ -1265,12 +1267,12 @@ class ThreadSafetyTestCase(TransactionTestCase):
 
     def tearDown(self):
         if self.thread.is_alive():
-            self.thread.join(0)
+            self.thread.exit = True
+            self.thread.join()
 
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching(self):
         self.thread.start()
-
         self.thread.wait_for_child()
         t = Test.objects.create(name='test')
         self.thread.wait_for_child()
@@ -1280,11 +1282,11 @@ class ThreadSafetyTestCase(TransactionTestCase):
 
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_during_atomic(self):
-        self.thread.start()
         with self.assertNumQueries(1):
             with transaction.atomic():
+                self.thread.start()
                 self.thread.wait_for_child()
-                t = Test.objects.create(name='test2')
+                t = Test.objects.create(name='test')
                 self.thread.wait_for_child()
 
         self.assertEqual(self.thread.t1, None)
