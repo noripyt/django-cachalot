@@ -24,11 +24,11 @@ Requirements
 
 - Django 1.6 or 1.7
 - Python 2.6, 2.7, 3.2, 3.3, or 3.4
-- `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_,
-  `django-redis <https://github.com/niwibe/django-redis>`_ or
+- `django-redis <https://github.com/niwibe/django-redis>`_,
   `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_
-- SQLite, PostgreSQL or MySQL (it should work with Oracle,
-  but I don’t have 17.5k$ to test)
+  (or `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_,
+  but it’s not shared between processes, so don’t use it with RQ or Celery)
+- PostgreSQL, MySQL or SQLite
 
 Usage
 .....
@@ -80,9 +80,18 @@ as well as ``cachalot_settings``.  The only difference is that you can’t use
 Limits
 ------
 
+Locmem
+......
+
+Locmem is a just a dict stored in a single Python process.
+It’s not shared between processes, so don’t use django-cachalot in a
+multi-processes project, if you use RQ or Celery for instance.
+
+``QuerySet.extra``
+..................
+
 Django-cachalot doesn’t cache queries it can’t reliably invalidate.
 If a SQL query or a part of it is written in pure SQL, it won’t be cached.
-
 That’s why ``QuerySet.extra`` with ``select`` or ``where`` arguments,
 ``Model.objects.raw(…)``, & ``cursor.execute(…)`` queries are not cached.
 
@@ -132,25 +141,16 @@ What still needs to be done
 For version 1.0
 ...............
 
-- Find out if it’s thread-safe and test it
-- Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
 - Handle multiple databases
+- Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
 - Add invalidation on migrations in Django 1.7 (& South?)
 
 In a more distant future
 ........................
 
 - Add a setting to choose if we cache ``QuerySet.order_by('?')``
-- Cache ``QuerySet.extra`` if none of
-  ``set(connection.introspection.table_names())
-  - set(connection.introspection.django_table_names())``
-  is found in the extra ``select`` and ``where`` queries
-- Add a setting to disable caching on ``QuerySet.extra`` when it has ``select``
-  or ``where`` rules because we can’t reliably detect other databases (and
-  meta databases like ``information_schema``) on every database backend
-- Maybe parse ``QuerySet.extra`` with ``select`` or ``where`` arguments
-  in order to find which tables are implied, and therefore be able
-  to cache them
+- Use ``connection.introspection.table_names()`` to detect which tables
+  are implied in a ``QuerySet.extra``
 
 
 Legacy
