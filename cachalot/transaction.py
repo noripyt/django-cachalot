@@ -43,7 +43,7 @@ class AtomicCache(dict):
         self.to_be_deleted.update(keys)
 
     def commit(self):
-        self.parent_cache.set_many(self)
-        self.parent_cache.delete_many(self.to_be_deleted)
         _invalidate_tables_cache_keys(self.parent_cache,
                                       list(self.to_be_invalidated))
+        self.parent_cache.set_many(self)
+        self.parent_cache.delete_many(self.to_be_deleted)
