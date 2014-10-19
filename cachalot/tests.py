@@ -17,7 +17,7 @@ from django.db import transaction, connection
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField,
     DateField, DateTimeField, Count)
-from django.test import TestCase, TransactionTestCase, skipUnlessDBFeature
+from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .settings import cachalot_settings
 
@@ -568,7 +568,7 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, list(Test.objects.values_list()))
 
 
-class WriteTestCase(TestCase):
+class WriteTestCase(TransactionTestCase):
     """
     Tests if every SQL request writing data is not cached and invalidates the
     implied data.
@@ -611,8 +611,8 @@ class WriteTestCase(TestCase):
 
         # get_or_create has to try to find the object, then create it
         # inside a transaction.
-        # This triggers 4 queries: SELECT, BEGIN, UPDATE, & COMMIT
-        with self.assertNumQueries(4):
+        # This triggers 2 queries: SELECT & UPDATE
+        with self.assertNumQueries(2):
             t, created = Test.objects.get_or_create(name='test')
         self.assertTrue(created)
 
@@ -1026,9 +1026,9 @@ class WriteTestCase(TestCase):
         pass
 
 
-class AtomicTestCase(TestCase):
+class AtomicTestCase(TransactionTestCase):
     def test_successful_read_atomic(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
@@ -1038,7 +1038,7 @@ class AtomicTestCase(TestCase):
         self.assertListEqual(data2, [])
 
     def test_unsuccessful_read_atomic(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             try:
                 with transaction.atomic():
                     data1 = list(Test.objects.all())
@@ -1056,21 +1056,21 @@ class AtomicTestCase(TestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
         with self.assertNumQueries(1):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [t1])
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 t2 = Test.objects.create(name='test2')
         with self.assertNumQueries(1):
             data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1, t2])
 
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(3):
             with transaction.atomic():
                 data4 = list(Test.objects.all())
                 t3 = Test.objects.create(name='test3')
@@ -1085,7 +1085,7 @@ class AtomicTestCase(TestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             try:
                 with transaction.atomic():
                     Test.objects.create(name='test')
@@ -1100,7 +1100,7 @@ class AtomicTestCase(TestCase):
                 Test.objects.get(name='test')
 
     def test_cache_inside_atomic(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
                 data2 = list(Test.objects.all())
@@ -1108,7 +1108,7 @@ class AtomicTestCase(TestCase):
         self.assertListEqual(data2, [])
 
     def test_invalidation_inside_atomic(self):
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(3):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
                 t = Test.objects.create(name='test')
@@ -1117,7 +1117,7 @@ class AtomicTestCase(TestCase):
         self.assertListEqual(data2, [t])
 
     def test_successful_nested_read_atomic(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(6):
             with transaction.atomic():
                 list(Test.objects.all())
                 with transaction.atomic():
@@ -1132,7 +1132,7 @@ class AtomicTestCase(TestCase):
             list(User.objects.all())
 
     def test_unsuccessful_nested_read_atomic(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             with transaction.atomic():
                 try:
                     with transaction.atomic():
@@ -1145,7 +1145,7 @@ class AtomicTestCase(TestCase):
                     list(Test.objects.all())
 
     def test_successful_nested_write_atomic(self):
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(12):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
                 with transaction.atomic():
@@ -1162,7 +1162,7 @@ class AtomicTestCase(TestCase):
         self.assertListEqual(data3, [t1, t2, t3, t4])
 
     def test_unsuccessful_nested_write_atomic(self):
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(12):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
                 try:
@@ -1188,7 +1188,7 @@ class AtomicTestCase(TestCase):
         self.assertListEqual(data3, [t1])
 
 
-class SettingsTestCase(TestCase):
+class SettingsTestCase(TransactionTestCase):
     @cachalot_settings(CACHALOT_ENABLED=False)
     def test_decorator(self):
         with self.assertNumQueries(1):
