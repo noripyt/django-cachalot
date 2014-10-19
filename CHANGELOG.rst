@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+0.7.0
+-----
+
+- Adds thread-safety
+- Optimizes the amount of cache queries during transaction
+
 0.6.0
 -----
 
