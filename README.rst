@@ -87,8 +87,8 @@ Locmem is a just a dict stored in a single Python process.
 It’s not shared between processes, so don’t use django-cachalot in a
 multi-processes project, if you use RQ or Celery for instance.
 
-``QuerySet.extra``
-..................
+Raw queries
+...........
 
 Django-cachalot doesn’t cache queries it can’t reliably invalidate.
 If a SQL query or a part of it is written in pure SQL, it won’t be cached.
