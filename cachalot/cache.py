@@ -13,15 +13,12 @@ from .transaction import AtomicCache
 from .utils import _get_table_cache_key, _invalidate_tables_cache_keys
 
 
-class CacheHandler(object):
-    def __init__(self):
-        self.thread_data = local()
-
+class CacheHandler(local):
     @property
     def atomic_caches(self):
-        if not hasattr(self.thread_data, 'atomic_caches'):
-            self.thread_data.atomic_caches = []
-        return self.thread_data.atomic_caches
+        if not hasattr(self, '_atomic_caches'):
+            self._atomic_caches = []
+        return self._atomic_caches
 
     def get_atomic_cache(self, cache_name, level):
         if cache_name not in self.atomic_caches[level]:
