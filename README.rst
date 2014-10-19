@@ -84,8 +84,8 @@ Locmem
 ......
 
 Locmem is a just a dict stored in a single Python process.
-It’s not shared between processes, so don’t use django-cachalot in a
-multi-processes project, if you use RQ or Celery for instance.
+It’s not shared between processes, so don’t use locmem with django-cachalot
+in a multi-processes project, if you use RQ or Celery for instance.
 
 Raw queries
 ...........
