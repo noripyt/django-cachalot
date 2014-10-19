@@ -13,7 +13,7 @@ from django.db.models.sql.compiler import (
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic
-from django.test import TransactionTestCase, TestCase
+from django.test import TransactionTestCase
 
 from .cache import cachalot_caches
 from .settings import cachalot_settings
