@@ -3,10 +3,11 @@
 from __future__ import unicode_literals
 import datetime
 try:
-    from unittest import skip
+    from unittest import skip, skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skip
+    from unittest2 import skip, skipIf
 
+from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
 from django.db import connection, transaction
 from django.db.models import Count
@@ -436,9 +437,17 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
 
-    @skip(NotImplementedError)
+    @skipIf(len(settings.CACHES) == 1,
+            'We can’t change the cache used since there’s only one configured')
     def test_using(self):
-        pass
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.all())
+            self.assertListEqual(data1, [self.t1, self.t2])
+
+        other_cache = [k for k in settings.DATABASES if k != 'default'][0]
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.using(other_cache))
+            self.assertListEqual(data2, [])
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_select_for_update(self):
