@@ -444,9 +444,11 @@ class ReadTestCase(TransactionTestCase):
             data1 = list(Test.objects.all())
             self.assertListEqual(data1, [self.t1, self.t2])
 
-        other_cache = [k for k in settings.DATABASES if k != 'default'][0]
-        with self.assertNumQueries(1):
-            data2 = list(Test.objects.using(other_cache))
+        other_cache_alias = [alias for alias in settings.DATABASES
+                             if alias != 'default'][0]
+
+        with self.assertNumQueries(1, using=other_cache_alias):
+            data2 = list(Test.objects.using(other_cache_alias))
             self.assertListEqual(data2, [])
 
     @skipUnlessDBFeature('has_select_for_update')

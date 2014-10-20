@@ -6,13 +6,14 @@ from functools import wraps
 import pickle
 import re
 
-from django.db import connection
+from django.conf import settings
+from django.db import connections
 from django.db.models.query import EmptyResultSet
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLAggregateCompiler, SQLDateCompiler, SQLDateTimeCompiler,
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
-from django.db.transaction import Atomic
+from django.db.transaction import Atomic, get_connection
 from django.test import TransactionTestCase
 
 from .cache import cachalot_caches
@@ -89,7 +90,7 @@ def _patch_orm_read():
                         and not isinstance(result, (tuple, list)):
                     result = list(result)
 
-                _update_tables_queries(cache, query, cache_key)
+                _update_tables_queries(cache, compiler, cache_key)
 
                 cache.set(cache_key, pickle.dumps(result))
             else:
@@ -108,7 +109,7 @@ def _patch_orm_write():
     def patch_execute_sql(original):
         @wraps(original)
         def inner(compiler, *args, **kwargs):
-            _invalidate_tables(cachalot_caches.get_cache(), compiler.query)
+            _invalidate_tables(cachalot_caches.get_cache(), compiler)
             return original(compiler, *args, **kwargs)
 
         inner.original = original
@@ -131,7 +132,7 @@ def _patch_atomic():
     def patch_exit(original):
         @wraps(original)
         def inner(self, exc_type, exc_value, traceback):
-            needs_rollback = connection.needs_rollback
+            needs_rollback = get_connection(self.using).needs_rollback
             original(self, exc_type, exc_value, traceback)
             cachalot_caches.exit_atomic(exc_type is None
                                         and not needs_rollback)
@@ -144,16 +145,33 @@ def _patch_atomic():
 
 
 def _patch_tests():
-    def patch_before(original):
+    def patch_create_test_db(original, db_alias):
         @wraps(original)
         def inner(*args, **kwargs):
-            cachalot_caches.clear_all()
+            out = original(*args, **kwargs)
+            cachalot_caches.clear_all_for_db(db_alias)
+            return out
+
+        inner.original = original
+        return inner
+
+    def patch_destroy_test_db(original, db_alias):
+        @wraps(original)
+        def inner(*args, **kwargs):
+            cachalot_caches.clear_all_for_db(db_alias)
             return original(*args, **kwargs)
 
         inner.original = original
         return inner
 
-    def patch_after(original):
+    for db_alias in settings.DATABASES:
+        creation = connections[db_alias].creation
+        creation.create_test_db = patch_create_test_db(
+            creation.create_test_db, db_alias)
+        creation.destroy_test_db = patch_destroy_test_db(
+            creation.destroy_test_db, db_alias)
+
+    def patch_transaction_test_case(original):
         @wraps(original)
         def inner(*args, **kwargs):
             out = original(*args, **kwargs)
@@ -163,12 +181,9 @@ def _patch_tests():
         inner.original = original
         return inner
 
-    creation = connection.creation
-    creation.create_test_db = patch_after(creation.create_test_db)
-    creation.destroy_test_db = patch_before(creation.destroy_test_db)
-    TransactionTestCase._fixture_setup = patch_after(
+    TransactionTestCase._fixture_setup = patch_transaction_test_case(
         TransactionTestCase._fixture_setup)
-    TransactionTestCase._fixture_teardown = patch_after(
+    TransactionTestCase._fixture_teardown = patch_transaction_test_case(
         TransactionTestCase._fixture_teardown)
 
 

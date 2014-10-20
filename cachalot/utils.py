@@ -9,7 +9,8 @@ def hash_cache_key(unicode_key):
 
 
 def _get_query_cache_key(compiler):
-    return hash_cache_key('%s:%s' % compiler.as_sql())
+    sql, params = compiler.as_sql()
+    return hash_cache_key('%s:%s:%s' % (compiler.using, sql, params))
 
 
 def _get_tables(query):
@@ -21,16 +22,17 @@ def _get_tables(query):
     return tables
 
 
-def _get_table_cache_key(table):
-    return hash_cache_key('%s_queries' % table)
+def _get_table_cache_key(db_alias, table):
+    return hash_cache_key('%s:%s:queries' % (db_alias, table))
 
 
-def _get_tables_cache_keys(query):
-    return [_get_table_cache_key(t) for t in _get_tables(query)]
+def _get_tables_cache_keys(compiler):
+    return [_get_table_cache_key(compiler.using, t)
+            for t in _get_tables(compiler.query)]
 
 
-def _update_tables_queries(cache, query, cache_key):
-    tables_cache_keys = _get_tables_cache_keys(query)
+def _update_tables_queries(cache, compiler, cache_key):
+    tables_cache_keys = _get_tables_cache_keys(compiler)
     tables_queries = cache.get_many(tables_cache_keys)
     for k in tables_cache_keys:
         queries = tables_queries.get(k, [])
@@ -47,6 +49,6 @@ def _invalidate_tables_cache_keys(cache, tables_cache_keys):
     cache.delete_many(queries + tables_cache_keys)
 
 
-def _invalidate_tables(cache, query):
-    tables_cache_keys = _get_tables_cache_keys(query)
+def _invalidate_tables(cache, compiler):
+    tables_cache_keys = _get_tables_cache_keys(compiler)
     _invalidate_tables_cache_keys(cache, tables_cache_keys)

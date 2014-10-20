@@ -55,7 +55,7 @@ Setting              Default value Description
 ==================== ============= ============================================
 ``CACHALOT_ENABLED`` ``True``      If set to ``False``, disables SQL caching
                                    but keeps invalidating to avoid stale cache
-``CACHALOT_CACHE``   ``'default'`` Name of the cache from |CACHES|_ used by
+``CACHALOT_CACHE``   ``'default'`` Alias of the cache from |CACHES|_ used by
                                    django-cachalot
 ==================== ============= ============================================
 
@@ -73,7 +73,7 @@ or simply by changing its attributes:
     with cachalot_settings(CACHALOT_ENABLED=False):
         # SQL queries are not cached in this block
 
-    @cachalot_settings(CACHALOT_CACHE='another_cache')
+    @cachalot_settings(CACHALOT_CACHE='another_alias')
     def your_function():
         # What’s in this function uses another cache
 
@@ -150,7 +150,7 @@ What still needs to be done
 For version 1.0
 ...............
 
-- Handle multiple databases
+- Write tests for complex multi-databases scenarii
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
 - Add invalidation on migrations in Django 1.7 (& South?)
 
