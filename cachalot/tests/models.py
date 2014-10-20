@@ -16,4 +16,5 @@ class Test(Model):
     permission = ForeignKey('auth.Permission', null=True, blank=True)
 
     class Meta(object):
+        app_label = 'cachalot'
         ordering = ('name',)
