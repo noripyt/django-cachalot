@@ -65,3 +65,15 @@ class SettingsTestCase(TransactionTestCase):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
                 list(Test.objects.all())
+
+    def test_django_override(self):
+        with self.settings(CACHALOT_ENABLED=False):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.settings(CACHALOT_ENABLED=True):
+                with self.assertNumQueries(1):
+                    list(Test.objects.all())
+                with self.assertNumQueries(0):
+                    list(Test.objects.all())

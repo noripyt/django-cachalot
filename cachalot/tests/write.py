@@ -2,10 +2,11 @@
 
 from __future__ import unicode_literals
 try:
-    from unittest import skip
+    from unittest import skip, skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skip
+    from unittest2 import skip, skipIf
 
+from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import connection
@@ -78,9 +79,39 @@ class WriteTestCase(TransactionTestCase):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [t])
 
-    @skip(NotImplementedError)
+    @skipIf(django_version < (1, 7),
+            'QuerySet.update_or_create is not implemented in Django < 1.7')
     def test_update_or_create(self):
-        pass
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [])
+
+        is_sqlite = connection.vendor == 'sqlite'
+
+        with self.assertNumQueries(3 if is_sqlite else 2):
+            t, created = Test.objects.update_or_create(
+                name='test', defaults={'public': True})
+            self.assertTrue(created)
+            self.assertEqual(t.name, 'test')
+            self.assertEqual(t.public, True)
+
+        with self.assertNumQueries(3 if is_sqlite else 2):
+            t, created = Test.objects.update_or_create(
+                name='test', defaults={'public': False})
+            self.assertFalse(created)
+            self.assertEqual(t.name, 'test')
+            self.assertEqual(t.public, False)
+
+        # The number of SQL queries doesn’t decrease because update_or_create
+        # always calls an UPDATE, even when data wasn’t changed.
+        with self.assertNumQueries(3 if is_sqlite else 2):
+            t, created = Test.objects.update_or_create(
+                name='test', defaults={'public': False})
+            self.assertFalse(created)
+            self.assertEqual(t.name, 'test')
+            self.assertEqual(t.public, False)
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [t])
 
     def test_bulk_create(self):
         with self.assertNumQueries(1):
