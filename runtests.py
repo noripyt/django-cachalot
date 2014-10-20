@@ -26,7 +26,9 @@ DATABASES = {
         'USER': 'root',
     },
 }
-
+DEFAULT_DATABASE_KEY = os.environ.get('DB_ENGINE', 'sqlite3')
+DATABASES['default'] = DATABASES[DEFAULT_DATABASE_KEY]
+del DATABASES[DEFAULT_DATABASE_KEY]
 
 CACHES = {
     'locmem': {
@@ -47,12 +49,12 @@ del CACHES[DEFAULT_CACHE_KEY]
 
 settings.configure(
     DEBUG=True,
-    DATABASES={'default': DATABASES[os.environ.get('DB_ENGINE', 'sqlite3')]},
     INSTALLED_APPS=(
         'cachalot',
         'django.contrib.auth',
         'django.contrib.contenttypes',
     ),
+    DATABASES=DATABASES,
     CACHES=CACHES,
     MIDDLEWARE_CLASSES=(),
 )
