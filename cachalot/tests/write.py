@@ -9,9 +9,9 @@ except ImportError:  # For Python 2.6
 from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
 from django.core.exceptions import MultipleObjectsReturned
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test
 
@@ -480,6 +480,27 @@ class WriteTestCase(TransactionTestCase):
             data7 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
             self.assertEqual(data7[0].owner.username, 'modified_user')
+
+    @skipUnlessDBFeature('has_select_for_update')
+    def test_invalidate_select_for_update(self):
+        with self.assertNumQueries(1):
+            Test.objects.bulk_create([Test(name='test1'), Test(name='test2')])
+
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                data1 = list(Test.objects.select_for_update())
+                self.assertListEqual([t.name for t in data1],
+                                     ['test1', 'test2'])
+
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                qs = Test.objects.select_for_update()
+                qs.update(name='test3')
+
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                data2 = list(Test.objects.select_for_update())
+                self.assertListEqual([t.name for t in data2], ['test3'] * 2)
 
     @skip(NotImplementedError)
     def test_invalidate_extra_select(self):

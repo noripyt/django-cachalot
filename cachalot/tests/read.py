@@ -8,9 +8,10 @@ except ImportError:  # For Python 2.6
     from unittest2 import skip
 
 from django.contrib.auth.models import Group, Permission, User
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count
-from django.test import TransactionTestCase
+from django.db.transaction import TransactionManagementError
+from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test
 
@@ -439,9 +440,24 @@ class ReadTestCase(TransactionTestCase):
     def test_using(self):
         pass
 
-    @skip(NotImplementedError)
+    @skipUnlessDBFeature('has_select_for_update')
     def test_select_for_update(self):
-        pass
+        with self.assertRaises(TransactionManagementError):
+            list(Test.objects.select_for_update())
+
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                data1 = list(Test.objects.select_for_update())
+                self.assertListEqual(data1, [self.t1, self.t2])
+                self.assertListEqual([t.name for t in data1],
+                                     ['test1', 'test2'])
+
+        with self.assertNumQueries(0):
+            with transaction.atomic():
+                data2 = list(Test.objects.select_for_update())
+                self.assertListEqual(data2, [self.t1, self.t2])
+                self.assertListEqual([t.name for t in data2],
+                                     ['test1', 'test2'])
 
     def test_extra_select(self):
         """
