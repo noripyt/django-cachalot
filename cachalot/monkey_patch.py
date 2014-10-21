@@ -68,12 +68,8 @@ def _patch_orm_read():
         @wraps(original)
         def inner(compiler, *args, **kwargs):
             if not cachalot_settings.CACHALOT_ENABLED \
-                    or isinstance(compiler, WRITE_COMPILERS):
-                return original(compiler, *args, **kwargs)
-
-            query = compiler.query
-
-            if _has_extra_select_or_where(query):
+                    or isinstance(compiler, WRITE_COMPILERS) \
+                    or _has_extra_select_or_where(compiler.query):
                 return original(compiler, *args, **kwargs)
 
             try:
