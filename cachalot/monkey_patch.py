@@ -18,6 +18,7 @@ from django.db.models.sql.compiler import (
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic, get_connection
+from django.test import TransactionTestCase
 
 from .cache import cachalot_caches
 from .settings import cachalot_settings
@@ -143,6 +144,21 @@ def _patch_atomic():
     Atomic.__exit__ = patch_exit(Atomic.__exit__)
 
 
+def _patch_tests():
+    def patch_transaction_test_case(original):
+        @wraps(original)
+        def inner(*args, **kwargs):
+            out = original(*args, **kwargs)
+            cachalot_caches.clear_all()
+            return out
+
+        inner.original = original
+        return inner
+
+    TransactionTestCase._fixture_setup = patch_transaction_test_case(
+        TransactionTestCase._fixture_setup)
+
+
 def _invalidate_on_migration(sender, **kwargs):
     db_alias = kwargs['using'] if django_version >= (1, 7) else kwargs['db']
     cachalot_caches.clear_all_for_db(db_alias)
@@ -156,9 +172,10 @@ def patch():
         from south.signals import post_migrate as south_post_migrate
         south_post_migrate.connect(_invalidate_on_migration)
 
+    _patch_tests()
+    _patch_atomic()
     _patch_orm_write()
     _patch_orm_read()
-    _patch_atomic()
 
     PATCHED = True
 
