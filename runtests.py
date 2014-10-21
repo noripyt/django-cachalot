@@ -48,7 +48,6 @@ CACHES['default'] = CACHES[DEFAULT_CACHE_KEY]
 del CACHES[DEFAULT_CACHE_KEY]
 
 settings.configure(
-    DEBUG=True,
     INSTALLED_APPS=(
         'cachalot',
         'django.contrib.auth',
@@ -57,6 +56,7 @@ settings.configure(
     DATABASES=DATABASES,
     CACHES=CACHES,
     MIDDLEWARE_CLASSES=(),
+    PASSWORD_HASHERS=('django.contrib.auth.hashers.MD5PasswordHasher',),
 )
 
 
