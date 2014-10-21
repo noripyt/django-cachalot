@@ -6,15 +6,18 @@ from functools import wraps
 import pickle
 import re
 
+from django import VERSION as django_version
 from django.conf import settings
-from django.db import connections
 from django.db.models.query import EmptyResultSet
+if django_version >= (1, 7):
+    from django.db.models.signals import post_migrate
+else:
+    from django.db.models.signals import post_syncdb as post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLAggregateCompiler, SQLDateCompiler, SQLDateTimeCompiler,
     SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic, get_connection
-from django.test import TransactionTestCase
 
 from .cache import cachalot_caches
 from .settings import cachalot_settings
@@ -140,55 +143,23 @@ def _patch_atomic():
     Atomic.__exit__ = patch_exit(Atomic.__exit__)
 
 
-def _patch_tests():
-    def patch_create_test_db(original, db_alias):
-        @wraps(original)
-        def inner(*args, **kwargs):
-            out = original(*args, **kwargs)
-            cachalot_caches.clear_all_for_db(db_alias)
-            return out
-
-        inner.original = original
-        return inner
-
-    def patch_destroy_test_db(original, db_alias):
-        @wraps(original)
-        def inner(*args, **kwargs):
-            cachalot_caches.clear_all_for_db(db_alias)
-            return original(*args, **kwargs)
-
-        inner.original = original
-        return inner
-
-    for db_alias in settings.DATABASES:
-        creation = connections[db_alias].creation
-        creation.create_test_db = patch_create_test_db(
-            creation.create_test_db, db_alias)
-        creation.destroy_test_db = patch_destroy_test_db(
-            creation.destroy_test_db, db_alias)
-
-    def patch_transaction_test_case(original):
-        @wraps(original)
-        def inner(*args, **kwargs):
-            out = original(*args, **kwargs)
-            cachalot_caches.clear_all()
-            return out
-
-        inner.original = original
-        return inner
-
-    TransactionTestCase._fixture_setup = patch_transaction_test_case(
-        TransactionTestCase._fixture_setup)
-    TransactionTestCase._fixture_teardown = patch_transaction_test_case(
-        TransactionTestCase._fixture_teardown)
+def _invalidate_on_migration(sender, **kwargs):
+    db_alias = kwargs['using'] if django_version >= (1, 7) else kwargs['db']
+    cachalot_caches.clear_all_for_db(db_alias)
 
 
 def patch():
     global PATCHED
-    _patch_tests()
+
+    post_migrate.connect(_invalidate_on_migration)
+    if 'south' in settings.INSTALLED_APPS:
+        from south.signals import post_migrate as south_post_migrate
+        south_post_migrate.connect(_invalidate_on_migration)
+
     _patch_orm_write()
     _patch_orm_read()
     _patch_atomic()
+
     PATCHED = True
 
 

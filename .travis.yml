@@ -16,7 +16,7 @@ env:
   - DJANGO=1.7
 
 install:
-  - pip install Django==$DJANGO psycopg2 django-redis
+  - pip install Django==$DJANGO psycopg2 django-redis South
                 coveralls
   - if [[ $TRAVIS_PYTHON_VERSION == 3* ]];
     then

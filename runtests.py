@@ -52,6 +52,7 @@ settings.configure(
         'cachalot',
         'django.contrib.auth',
         'django.contrib.contenttypes',
+        'south',
     ),
     DATABASES=DATABASES,
     CACHES=CACHES,
