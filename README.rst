@@ -150,9 +150,7 @@ What still needs to be done
 For version 1.0
 ...............
 
-- Write tests for complex multi-databases scenarii
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
-- Add invalidation on migrations in Django 1.7 (& South?)
 
 In a more distant future
 ........................

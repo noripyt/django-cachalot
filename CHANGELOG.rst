@@ -1,6 +1,16 @@
 What’s new in django-cachalot?
 ==============================
 
+0.8.0
+-----
+
+- Adds multi-database support
+- Adds invalidation when altering the DB schema using `migrate`, `syncdb`,
+  `flush`, `loaddata` commands (also invalidates South, if you use it)
+- Small optimizations & simplifications
+- Adds several tests
+
+
 0.7.0
 -----
 
