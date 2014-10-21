@@ -47,13 +47,16 @@ DEFAULT_CACHE_KEY = os.environ.get('CACHE_BACKEND', 'locmem')
 CACHES['default'] = CACHES[DEFAULT_CACHE_KEY]
 del CACHES[DEFAULT_CACHE_KEY]
 
+INSTALLED_APPS = [
+    'cachalot',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+]
+if django.VERSION < (1, 7):
+    INSTALLED_APPS.append('south')
+
 settings.configure(
-    INSTALLED_APPS=(
-        'cachalot',
-        'django.contrib.auth',
-        'django.contrib.contenttypes',
-        'south',
-    ),
+    INSTALLED_APPS=INSTALLED_APPS,
     DATABASES=DATABASES,
     CACHES=CACHES,
     MIDDLEWARE_CLASSES=(),
