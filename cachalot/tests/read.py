@@ -437,8 +437,8 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
 
-    @skipIf(len(settings.CACHES) == 1,
-            'We can’t change the cache used since there’s only one configured')
+    @skipIf(len(settings.DATABASES) == 1,
+            'We can’t change the DB used since there’s only one configured')
     def test_using(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.all())
