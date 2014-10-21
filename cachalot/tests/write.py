@@ -9,6 +9,7 @@ except ImportError:  # For Python 2.6
 from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
 from django.core.exceptions import MultipleObjectsReturned
+from django.core.management import call_command
 from django.db import connection, transaction
 from django.db.models import Count
 from django.test import TransactionTestCase, skipUnlessDBFeature
@@ -541,3 +542,28 @@ class WriteTestCase(TransactionTestCase):
     @skip(NotImplementedError)
     def test_invalidate_extra_order_by(self):
         pass
+
+
+class DatabaseCommandTestCase(TransactionTestCase):
+    def setUp(self):
+        self.t = Test.objects.create(name='test1')
+
+    def test_flush(self):
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [self.t])
+
+        call_command('flush', verbosity=0, interactive=False)
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [])
+
+    def test_loaddata(self):
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [self.t])
+
+        call_command('loaddata', 'cachalot/tests/loaddata_fixture.json',
+                     verbosity=0, interactive=False)
+
+        with self.assertNumQueries(1):
+            self.assertListEqual([t.name for t in Test.objects.all()],
+                                 ['test1', 'test2'])

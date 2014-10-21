@@ -1,5 +1,5 @@
 from .read import ReadTestCase
-from .write import WriteTestCase
+from .write import WriteTestCase, DatabaseCommandTestCase
 from .transaction import AtomicTestCase
 from .thread_safety import ThreadSafetyTestCase
 from .multi_db import MultiDatabaseTestCase
