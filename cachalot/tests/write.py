@@ -554,6 +554,11 @@ class DatabaseCommandTestCase(TransactionTestCase):
 
         call_command('flush', verbosity=0, interactive=False)
 
+        if django_version >= (1, 7) and connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
+
         with self.assertNumQueries(1):
             self.assertListEqual(list(Test.objects.all()), [])
 
@@ -563,6 +568,11 @@ class DatabaseCommandTestCase(TransactionTestCase):
 
         call_command('loaddata', 'cachalot/tests/loaddata_fixture.json',
                      verbosity=0, interactive=False)
+
+        if django_version >= (1, 7) and connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
 
         with self.assertNumQueries(1):
             self.assertListEqual([t.name for t in Test.objects.all()],
