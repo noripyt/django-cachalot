@@ -1,14 +1,13 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from django.conf import settings
-
-
 try:
     from unittest import skipIf
 except ImportError:  # For Python 2.6
     from unittest2 import skipIf
 
+from django.conf import settings
+from django.core.cache import DEFAULT_CACHE_ALIAS
 from django.db import connection
 from django.test import TransactionTestCase
 
@@ -59,7 +58,7 @@ class SettingsTestCase(TransactionTestCase):
                 list(Test.objects.all())
 
         other_cache_alias = [alias for alias in settings.CACHES
-                             if alias != 'default'][0]
+                             if alias != DEFAULT_CACHE_ALIAS][0]
 
         with cachalot_settings(CACHALOT_CACHE=other_cache_alias):
             with self.assertNumQueries(1):
