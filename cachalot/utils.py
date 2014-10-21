@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+from collections import defaultdict
 from hashlib import md5
 
 
@@ -27,17 +28,17 @@ def _get_table_cache_key(db_alias, table):
 
 
 def _get_tables_cache_keys(compiler):
-    return [_get_table_cache_key(compiler.using, t)
+    using = compiler.using
+    return [_get_table_cache_key(using, t)
             for t in _get_tables(compiler.query)]
 
 
 def _update_tables_queries(cache, compiler, cache_key):
     tables_cache_keys = _get_tables_cache_keys(compiler)
-    tables_queries = cache.get_many(tables_cache_keys)
+    tables_queries = defaultdict(list)
+    tables_queries.update(cache.get_many(tables_cache_keys))
     for k in tables_cache_keys:
-        queries = tables_queries.get(k, [])
-        queries.append(cache_key)
-        tables_queries[k] = queries
+        tables_queries[k].append(cache_key)
     cache.set_many(tables_queries)
 
 
@@ -45,7 +46,7 @@ def _invalidate_tables_cache_keys(cache, tables_cache_keys):
     if hasattr(cache, 'to_be_invalidated'):
         cache.to_be_invalidated.update(tables_cache_keys)
     tables_queries = cache.get_many(tables_cache_keys)
-    queries = [q for k in tables_cache_keys for q in tables_queries.get(k, [])]
+    queries = [q for q_list in tables_queries.values() for q in q_list]
     cache.delete_many(queries + tables_cache_keys)
 
 
