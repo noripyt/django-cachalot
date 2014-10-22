@@ -12,8 +12,8 @@ services:
   - redis-server
 
 env:
-  - DJANGO=1.6.7
-  - DJANGO=1.7
+  - DJANGO=1.6.8
+  - DJANGO=1.7.1
 
 install:
   - pip install Django==$DJANGO psycopg2 django-redis South
