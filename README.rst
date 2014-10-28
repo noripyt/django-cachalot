@@ -150,6 +150,8 @@ What still needs to be done
 For version 1.0
 ...............
 
+- Add a lock around SQL query executions to avoid a stale cache issue if an
+  invalidation of the same table(s) occurs concurrently
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
 
 In a more distant future
