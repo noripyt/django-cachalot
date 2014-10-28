@@ -5,8 +5,6 @@ Caches your Django ORM queries and automatically invalidates them.
 
 .. image:: https://raw.github.com/BertrandBordage/django-cachalot/master/django-cachalot.jpg
 
-Project status:
-
 **Currently in beta, do not use in production**
 
 .. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square
