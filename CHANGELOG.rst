@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+0.8.1
+-----
+
+- Fixes an issue with pip if Django is not yet installed
+
+
 0.8.0
 -----
 
