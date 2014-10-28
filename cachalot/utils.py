@@ -5,13 +5,13 @@ from collections import defaultdict
 from hashlib import md5
 
 
-def hash_cache_key(unicode_key):
+def _hash_cache_key(unicode_key):
     return md5(unicode_key.encode('utf-8')).hexdigest()
 
 
-def _get_query_cache_key(compiler):
+def get_query_cache_key(compiler):
     sql, params = compiler.as_sql()
-    return hash_cache_key('%s:%s:%s' % (compiler.using, sql, params))
+    return _hash_cache_key('%s:%s:%s' % (compiler.using, sql, params))
 
 
 def _get_tables(query):
@@ -23,13 +23,13 @@ def _get_tables(query):
     return tables
 
 
-def _get_table_cache_key(db_alias, table):
-    return hash_cache_key('%s:%s:queries' % (db_alias, table))
+def get_table_cache_key(db_alias, table):
+    return _hash_cache_key('%s:%s' % (db_alias, table))
 
 
 def _get_tables_cache_keys(compiler):
     using = compiler.using
-    return [_get_table_cache_key(using, t)
+    return [get_table_cache_key(using, t)
             for t in _get_tables(compiler.query)]
 
 

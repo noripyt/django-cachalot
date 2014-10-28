@@ -20,10 +20,11 @@ from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic, get_connection
 from django.test import TransactionTestCase
 
+from .api import clear
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_tables, _get_query_cache_key, _update_tables_queries,
+    _get_tables, get_query_cache_key, _update_tables_queries,
     _invalidate_tables, _get_tables_cache_keys)
 
 
@@ -77,7 +78,7 @@ def _patch_orm_read():
                 return original(compiler, *args, **kwargs)
 
             try:
-                cache_key = _get_query_cache_key(compiler)
+                cache_key = get_query_cache_key(compiler)
             except EmptyResultSet:
                 return original(compiler, *args, **kwargs)
 
@@ -152,7 +153,7 @@ def _patch_tests():
         @wraps(original)
         def inner(*args, **kwargs):
             out = original(*args, **kwargs)
-            cachalot_caches.clear_all()
+            clear()
             return out
 
         inner.original = original
@@ -164,7 +165,7 @@ def _patch_tests():
 
 def _invalidate_on_migration(sender, **kwargs):
     db_alias = kwargs['using'] if django_version >= (1, 7) else kwargs['db']
-    cachalot_caches.clear_all_for_db(db_alias)
+    clear(db_alias=db_alias)
 
 
 def patch():

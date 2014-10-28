@@ -3,14 +3,13 @@
 from __future__ import unicode_literals
 from threading import local
 
-from django.conf import settings
 # TODO: Replace with caches[CACHALOT_CACHE] when we drop Django 1.6 support.
 from django.core.cache import get_cache as get_django_cache
 from django.db import connections
 
 from .settings import cachalot_settings
 from .transaction import AtomicCache
-from .utils import _get_table_cache_key, _invalidate_tables_cache_keys
+from .utils import get_table_cache_key, _invalidate_tables_cache_keys
 
 
 class CacheHandler(local):
@@ -46,19 +45,9 @@ class CacheHandler(local):
 
     def clear(self, cache_alias, db_alias):
         tables = connections[db_alias].introspection.table_names()
-        tables_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
-
-        for atomic_level in range(-(len(self.atomic_caches)+1), 0):
-            cache = self.get_cache(cache_alias, atomic_level)
-            _invalidate_tables_cache_keys(cache, tables_cache_keys)
-
-    def clear_all_for_db(self, db_alias):
-        for cache_alias in settings.CACHES:
-            self.clear(cache_alias, db_alias)
-
-    def clear_all(self):
-        for db_alias in settings.DATABASES:
-            self.clear_all_for_db(db_alias)
+        tables_cache_keys = [get_table_cache_key(db_alias, t) for t in tables]
+        _invalidate_tables_cache_keys(cachalot_caches.get_cache(cache_alias),
+                                      tables_cache_keys)
 
 
 cachalot_caches = CacheHandler()
