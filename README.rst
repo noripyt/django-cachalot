@@ -68,7 +68,7 @@ or simply by changing its attributes:
 
 .. code:: python
 
-    from cachalot import cachalot_settings
+    from cachalot.settings import cachalot_settings
 
     with cachalot_settings(CACHALOT_ENABLED=False):
         # SQL queries are not cached in this block
