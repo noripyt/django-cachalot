@@ -150,9 +150,11 @@ What still needs to be done
 For version 1.0
 ...............
 
-- Add a lock around SQL query executions to avoid a stale cache issue if an
-  invalidation of the same table(s) occurs concurrently
+- Test if a stale cache issue happens when a table is invalidated
+  exactly during a SQL read query
 - Write tests for `multi-table inheritance <https://docs.djangoproject.com/en/1.7/topics/db/models/#multi-table-inheritance>`_
+- Test if code injections can occur when unpickling query results
+  (or use a safer serialization tool)
 
 In a more distant future
 ........................

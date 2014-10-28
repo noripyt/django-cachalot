@@ -33,12 +33,10 @@ def _get_tables_cache_keys(compiler):
             for t in _get_tables(compiler.query)]
 
 
-def _update_tables_queries(cache, compiler, cache_key):
-    tables_cache_keys = _get_tables_cache_keys(compiler)
-    tables_queries = defaultdict(list)
-    tables_queries.update(cache.get_many(tables_cache_keys))
+def _update_tables_queries(cache, tables_cache_keys, cache_key):
+    tables_queries = defaultdict(set, **cache.get_many(tables_cache_keys))
     for k in tables_cache_keys:
-        tables_queries[k].append(cache_key)
+        tables_queries[k].add(cache_key)
     cache.set_many(tables_queries)
 
 

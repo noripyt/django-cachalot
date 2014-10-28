@@ -24,7 +24,7 @@ from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
     _get_tables, _get_query_cache_key, _update_tables_queries,
-    _invalidate_tables)
+    _invalidate_tables, _get_tables_cache_keys)
 
 
 COMPILERS = (SQLCompiler,
@@ -85,14 +85,17 @@ def _patch_orm_read():
             result = cache.get(cache_key)
 
             if result is None:
+                tables_cache_keys = _get_tables_cache_keys(compiler)
+                _update_tables_queries(cache, tables_cache_keys, cache_key)
+
                 result = original(compiler, *args, **kwargs)
                 if isinstance(result, Iterable) \
                         and not isinstance(result, (tuple, list)):
                     result = list(result)
 
-                _update_tables_queries(cache, compiler, cache_key)
-
-                cache.set(cache_key, pickle.dumps(result))
+                tables_queries = cache.get_many(tables_cache_keys).values()
+                if all(cache_key in queries for queries in tables_queries):
+                    cache.set(cache_key, pickle.dumps(result))
             else:
                 result = pickle.loads(result)
 
