@@ -6,3 +6,4 @@ dist/
 sdist/
 *.egg-info/
 .coverage
+docs/_*/

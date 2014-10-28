@@ -63,11 +63,11 @@ settings.configure(
     PASSWORD_HASHERS=('django.contrib.auth.hashers.MD5PasswordHasher',),
 )
 
+if django.VERSION[:2] >= (1, 7):
+    django.setup()
+
 
 if __name__ == '__main__':
-    if django.VERSION[:2] >= (1, 7):
-        django.setup()
-
     from django.test.runner import DiscoverRunner
     test_runner = DiscoverRunner()
     failures = test_runner.run_tests(['cachalot.tests'])
