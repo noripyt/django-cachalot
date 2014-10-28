@@ -5,7 +5,7 @@ Caches your Django ORM queries and automatically invalidates them.
 
 .. image:: https://raw.github.com/BertrandBordage/django-cachalot/master/django-cachalot.jpg
 
-**Currently in beta, do not use in production**
+----
 
 .. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square
    :target: https://pypi.python.org/pypi/django-cachalot
@@ -21,6 +21,8 @@ Caches your Django ORM queries and automatically invalidates them.
 
 .. image:: http://img.shields.io/gratipay/BertrandBordage.svg?style=flat-square
    :target: https://gratipay.com/BertrandBordage/
+
+**Currently in beta, do not use in production**
 
 
 Documentation
