@@ -403,7 +403,6 @@ class WriteTestCase(TransactionTestCase):
 
     def test_invalidate_prefetch_related(self):
         is_sqlite = connection.vendor == 'sqlite'
-        is_mysql = connection.vendor == 'mysql'
 
         with self.assertNumQueries(1):
             data1 = list(Test.objects.select_related('owner')
@@ -447,7 +446,7 @@ class WriteTestCase(TransactionTestCase):
 
         with self.assertNumQueries(2 if is_sqlite else 1):
             t2 = Test.objects.create(name='test2')
-        with self.assertNumQueries(3 if is_mysql else 1):
+        with self.assertNumQueries(1):
             data5 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
             self.assertListEqual(data5, [t1, t2])
@@ -461,7 +460,7 @@ class WriteTestCase(TransactionTestCase):
 
         with self.assertNumQueries(2 if is_sqlite else 1):
             permissions[0].save()
-        with self.assertNumQueries(2 if is_mysql else 1):
+        with self.assertNumQueries(1):
             list(Test.objects.select_related('owner')
                  .prefetch_related('owner__groups__permissions'))
 
@@ -477,7 +476,7 @@ class WriteTestCase(TransactionTestCase):
         with self.assertNumQueries(2 if is_sqlite else 1):
             User.objects.update(username='modified_user')
 
-        with self.assertNumQueries(3 if is_mysql else 2):
+        with self.assertNumQueries(2):
             data7 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
             self.assertEqual(data7[0].owner.username, 'modified_user')
