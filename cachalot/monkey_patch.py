@@ -14,8 +14,7 @@ if django_version >= (1, 7):
 else:
     from django.db.models.signals import post_syncdb as post_migrate
 from django.db.models.sql.compiler import (
-    SQLCompiler, SQLAggregateCompiler, SQLDateCompiler, SQLDateTimeCompiler,
-    SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
+    SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic, get_connection
 from django.test import TransactionTestCase
@@ -28,11 +27,7 @@ from .utils import (
     _invalidate_tables, _get_tables_cache_keys)
 
 
-COMPILERS = (SQLCompiler,
-             SQLAggregateCompiler, SQLDateCompiler, SQLDateTimeCompiler,
-             SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
-READ_COMPILERS = [c for c in COMPILERS if c not in WRITE_COMPILERS]
 
 
 PATCHED = False
@@ -107,8 +102,7 @@ def _patch_orm_read():
         inner.original = original
         return inner
 
-    for compiler in READ_COMPILERS:
-        compiler.execute_sql = patch_execute_sql(compiler.execute_sql)
+    SQLCompiler.execute_sql = patch_execute_sql(SQLCompiler.execute_sql)
 
 
 def _patch_orm_write():
