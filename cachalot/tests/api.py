@@ -38,7 +38,7 @@ class APITestCase(TransactionTestCase):
             self.assertListEqual(data1, ['test1'])
 
         self.cursor.execute(
-            "INSERT INTO cachalot_test (name, public) VALUES ('test2', true);")
+            "INSERT INTO cachalot_test (name, public) VALUES ('test2', 1);")
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))
