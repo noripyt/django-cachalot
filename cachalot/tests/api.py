@@ -13,6 +13,7 @@ class APITestCase(TransactionTestCase):
     def setUp(self):
         self.t1 = Test.objects.create(name='test1')
         self.cursor = connection.cursor()
+        self.is_sqlite = connection.vendor == 'sqlite'
 
     def test_invalidate_tables(self):
         with self.assertNumQueries(1):
@@ -20,7 +21,8 @@ class APITestCase(TransactionTestCase):
             self.assertListEqual(data1, ['test1'])
 
         self.cursor.execute(
-            "INSERT INTO cachalot_test (name, public) VALUES ('test2', 1);")
+            "INSERT INTO cachalot_test (name, public) VALUES ('test2', %s);",
+            [1 if self.is_sqlite else 'true'])
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))
@@ -38,7 +40,8 @@ class APITestCase(TransactionTestCase):
             self.assertListEqual(data1, ['test1'])
 
         self.cursor.execute(
-            "INSERT INTO cachalot_test (name, public) VALUES ('test2', 1);")
+            "INSERT INTO cachalot_test (name, public) VALUES ('test2', %s);",
+            [1 if self.is_sqlite else 'true'])
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))
