@@ -1,6 +1,16 @@
 What’s new in django-cachalot?
 ==============================
 
+master
+------
+
+- Adds a simple API containing:
+  ``invalidate_tables``, ``invalidate_models``, ``clear``
+- Fixes an stale cache issue occurring when an invalidation is done
+  exactly during a SQL request on the invalidated table(s)
+- Uses infinite timeout
+
+
 0.8.1
 -----
 
