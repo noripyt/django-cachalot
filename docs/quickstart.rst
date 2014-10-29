@@ -32,8 +32,8 @@ Setting                   Default value Description
                                         stale cache
 ``CACHALOT_CACHE``        ``'default'`` Alias of the cache from |CACHES|_ used
                                         by django-cachalot
-``CACHALOT_CACHE_RANDOM`` ``False``     If set to True, caches random queries
-                                        (those with ``order_by('?')``)
+``CACHALOT_CACHE_RANDOM`` ``False``     If set to ``True``, caches random
+                                        queries (those with ``order_by('?')``)
 ========================= ============= =======================================
 
 .. |CACHES| replace:: ``CACHES``
