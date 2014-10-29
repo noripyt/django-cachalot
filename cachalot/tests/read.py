@@ -3,9 +3,9 @@
 from __future__ import unicode_literals
 import datetime
 try:
-    from unittest import skip, skipIf
+    from unittest import skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skip, skipIf
+    from unittest2 import skipIf
 
 from django.contrib.auth.models import Group, Permission, User
 from django.db import connection, transaction
@@ -462,10 +462,6 @@ class ReadTestCase(TransactionTestCase):
                                      ['test1', 'test2'])
 
     def test_extra_select(self):
-        """
-        Tests if ``QuerySet.extra(select=…)`` is not cached.
-        """
-
         username_length_sql = """
         SELECT LENGTH(%(user_table)s.username)
         FROM %(user_table)s
@@ -476,61 +472,37 @@ class ReadTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.extra(
                 select={'username_length': username_length_sql}))
-        with self.assertNumQueries(1):
+            self.assertListEqual(data1, [self.t1, self.t2])
+            self.assertListEqual([o.username_length for o in data1], [4, 5])
+        with self.assertNumQueries(0):
             data2 = list(Test.objects.extra(
                 select={'username_length': username_length_sql}))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual([o.username_length for o in data2],
-                             [o.username_length for o in data1])
-        self.assertListEqual([o.username_length for o in data2],
-                             [4, 5])
+            self.assertListEqual(data2, [self.t1, self.t2])
+            self.assertListEqual([o.username_length for o in data2], [4, 5])
 
     def test_extra_where(self):
-        """
-        Tests if ``QuerySet.extra(where=…)`` is not cached.
-
-        The ``where`` list of a ``QuerySet.extra`` can contain subqueries,
-        and since it’s unparsed pure SQL, it can’t be reliably invalidated.
-        """
-
         sql_condition = ("owner_id IN "
                          "(SELECT id FROM auth_user WHERE username = 'admin')")
         with self.assertNumQueries(1):
             data1 = list(Test.objects.extra(where=[sql_condition]))
-        with self.assertNumQueries(1):
+            self.assertListEqual(data1, [self.t2])
+        with self.assertNumQueries(0):
             data2 = list(Test.objects.extra(where=[sql_condition]))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2])
+            self.assertListEqual(data2, [self.t2])
 
     def test_extra_tables(self):
-        """
-        Tests if ``QuerySet.extra(tables=…)`` is cached.
-
-        ``tables`` can only define table names, so we can reliably invalidate
-        such queries.
-        """
-
-        # QUESTION: Is there a way to access extra tables data without
-        #           an extra select?
         with self.assertNumQueries(1):
             list(Test.objects.extra(tables=['auth_user']))
         with self.assertNumQueries(0):
             list(Test.objects.extra(tables=['auth_user']))
 
     def test_extra_order_by(self):
-        """
-        Tests if ``QuerySet.extra(order_by=…)`` is cached.
-
-        As far as I know, the ``order_by`` list of a ``QuerySet.extra``
-        can’t select data from other tables.
-        """
-
         with self.assertNumQueries(1):
             data1 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
+            self.assertListEqual(data1, [self.t2, self.t1])
         with self.assertNumQueries(0):
             data2 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2, self.t1])
+            self.assertListEqual(data2, [self.t2, self.t1])
 
     def test_table_inheritance(self):
         is_sqlite = connection.vendor == 'sqlite'

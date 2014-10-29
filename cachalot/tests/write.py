@@ -2,9 +2,9 @@
 
 from __future__ import unicode_literals
 try:
-    from unittest import skip, skipIf
+    from unittest import skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skip, skipIf
+    from unittest2 import skipIf
 
 from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
@@ -503,13 +503,74 @@ class WriteTestCase(TransactionTestCase):
                 data2 = list(Test.objects.select_for_update())
                 self.assertListEqual([t.name for t in data2], ['test3'] * 2)
 
-    @skip(NotImplementedError)
     def test_invalidate_extra_select(self):
-        pass
+        user = User.objects.create_user('user')
+        t1 = Test.objects.create(name='test1', owner=user, public=True)
 
-    @skip(NotImplementedError)
+        username_length_sql = """
+            SELECT LENGTH(%(user_table)s.username)
+            FROM %(user_table)s
+            WHERE %(user_table)s.id = %(test_table)s.owner_id
+            """ % {'user_table': User._meta.db_table,
+                   'test_table': Test._meta.db_table}
+
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.extra(
+                select={'username_length': username_length_sql}))
+            self.assertListEqual(data1, [t1])
+            self.assertListEqual([o.username_length for o in data1], [4])
+
+        Test.objects.update(public=False)
+
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.extra(
+                select={'username_length': username_length_sql}))
+            self.assertListEqual(data2, [t1])
+            self.assertListEqual([o.username_length for o in data2], [4])
+
+        admin = User.objects.create_superuser('admin',
+                                              'admin@test.me', 'password')
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.extra(
+                select={'username_length': username_length_sql}))
+            self.assertListEqual(data3, [t1])
+            self.assertListEqual([o.username_length for o in data3], [4])
+
+        t2 = Test.objects.create(name='test2', owner=admin)
+
+        with self.assertNumQueries(1):
+            data4 = list(Test.objects.extra(
+                select={'username_length': username_length_sql}))
+            self.assertListEqual(data4, [t1, t2])
+            self.assertListEqual([o.username_length for o in data4], [4, 5])
+
     def test_invalidate_extra_where(self):
-        pass
+        sql_condition = ("owner_id IN "
+                         "(SELECT id FROM auth_user WHERE username = 'admin')")
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.extra(where=[sql_condition]))
+            self.assertListEqual(data1, [])
+
+        admin = User.objects.create_superuser('admin',
+                                              'admin@test.me', 'password')
+
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.extra(where=[sql_condition]))
+            self.assertListEqual(data2, [])
+
+        t = Test.objects.create(name='test', owner=admin)
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.extra(where=[sql_condition]))
+            self.assertListEqual(data3, [t])
+
+        admin.username = 'modified'
+        admin.save()
+
+        with self.assertNumQueries(1):
+            data4 = list(Test.objects.extra(where=[sql_condition]))
+            self.assertListEqual(data4, [])
 
     def test_invalidate_extra_tables(self):
         is_sqlite = connection.vendor == 'sqlite'
@@ -539,9 +600,18 @@ class WriteTestCase(TransactionTestCase):
             data4 = list(Test.objects.all().extra(tables=['auth_user']))
         self.assertListEqual(data4, [t1, t1, t2, t2])
 
-    @skip(NotImplementedError)
     def test_invalidate_extra_order_by(self):
-        pass
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
+            self.assertListEqual(data1, [])
+        t1 = Test.objects.create(name='test1')
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
+            self.assertListEqual(data2, [t1])
+        t2 = Test.objects.create(name='test2')
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
+            self.assertListEqual(data2, [t2, t1])
 
     def test_invalidate_table_inheritance(self):
         with self.assertNumQueries(1):

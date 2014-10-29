@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from hashlib import md5
 
+from django.db import connections
+from django.db.models.sql.where import ExtraWhere
+
 
 def _hash_cache_key(unicode_key):
     return md5(unicode_key.encode('utf-8')).hexdigest()
@@ -14,12 +17,21 @@ def get_query_cache_key(compiler):
     return _hash_cache_key('%s:%s:%s' % (compiler.using, sql, params))
 
 
-def _get_tables(query):
+def _get_tables(compiler):
     """
     Returns a ``set`` of all database table names used by ``query``.
     """
+    query = compiler.query
     tables = set(query.tables)
     tables.add(query.model._meta.db_table)
+    if query.extra_select or any(isinstance(c, ExtraWhere)
+                                 for c in query.where.children):
+        sql, params = compiler.as_sql()
+        full_sql = sql % params
+        connection = connections[compiler.using]
+        for table in connection.introspection.django_table_names():
+            if table in full_sql:
+                tables.add(table)
     return tables
 
 
@@ -29,8 +41,7 @@ def get_table_cache_key(db_alias, table):
 
 def _get_tables_cache_keys(compiler):
     using = compiler.using
-    return [get_table_cache_key(using, t)
-            for t in _get_tables(compiler.query)]
+    return [get_table_cache_key(using, t) for t in _get_tables(compiler)]
 
 
 def _update_tables_queries(cache, tables_cache_keys, cache_key):

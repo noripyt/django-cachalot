@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from collections import Iterable
 from functools import wraps
 import pickle
-import re
 
 from django import VERSION as django_version
 from django.conf import settings
@@ -15,7 +14,6 @@ else:
     from django.db.models.signals import post_syncdb as post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
-from django.db.models.sql.where import ExtraWhere
 from django.db.transaction import Atomic, get_connection
 from django.test import TransactionTestCase
 
@@ -23,7 +21,7 @@ from .api import clear
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_tables, get_query_cache_key, _update_tables_queries,
+    get_query_cache_key, _update_tables_queries,
     _invalidate_tables, _get_tables_cache_keys)
 
 
@@ -33,43 +31,12 @@ WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 PATCHED = False
 
 
-COLUMN_RE = re.compile(r'^"(?P<table>[\w_]+)"\."(?P<column>[\w_]+)"$')
-
-
-def _has_extra_select_or_where(query):
-    """
-    Returns True if ``query`` contains a ``QuerySet.extra`` with ``select``
-    or ``where`` arguments.
-
-    We also have to check for ``prefetch_related``, as it internally uses a
-    ``QuerySet.extra(select={'_prefetch_related_val_…': '"table"."column"'})``.
-
-    For more details on how prefetch_related uses ``QuerySet.extra``, see:
-    https://github.com/django/django/blob/1.6.7/django/db/models/fields/related.py#L553-L577
-    """
-
-    # Checks if there’s an extra where
-    if any(isinstance(child, ExtraWhere) for child in query.where.children):
-        return True
-
-    # Checks if there’s an extra select
-    if query.extra_select and query.extra_select_mask is None:
-        tables = _get_tables(query)
-        # Checks if extra subqueries are something else than one or several
-        # ``prefetch_related``.
-        for subquery, params in query.extra_select.values():
-            match = COLUMN_RE.match(subquery)
-            return match is None or match.group('table') not in tables
-    return False
-
-
 def _patch_orm_read():
     def patch_execute_sql(original):
         @wraps(original)
         def inner(compiler, *args, **kwargs):
             if not cachalot_settings.CACHALOT_ENABLED \
                     or isinstance(compiler, WRITE_COMPILERS) \
-                    or _has_extra_select_or_where(compiler.query) \
                     or (not cachalot_settings.CACHALOT_CACHE_RANDOM
                         and '?' in compiler.query.order_by):
                 return original(compiler, *args, **kwargs)
