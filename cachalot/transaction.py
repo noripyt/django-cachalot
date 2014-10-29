@@ -19,7 +19,7 @@ class AtomicCache(dict):
             return self[k]
         return self.parent_cache.get(k, default)
 
-    def set(self, k, v):
+    def set(self, k, v, timeout):
         if k in self.deleted:
             self.deleted.remove(k)
         self[k] = v
@@ -32,7 +32,7 @@ class AtomicCache(dict):
         data.update(self.parent_cache.get_many(missing_keys))
         return data
 
-    def set_many(self, data):
+    def set_many(self, data, timeout):
         self.deleted.difference_update(data)
         self.update(data)
 
@@ -45,4 +45,4 @@ class AtomicCache(dict):
     def commit(self):
         _invalidate_tables_cache_keys(self.parent_cache,
                                       list(self.to_be_invalidated))
-        self.parent_cache.set_many(self)
+        self.parent_cache.set_many(self, None)

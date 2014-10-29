@@ -96,7 +96,7 @@ def _patch_orm_read():
 
                 tables_queries = cache.get_many(tables_cache_keys).values()
                 if all(cache_key in queries for queries in tables_queries):
-                    cache.set(cache_key, pickle.dumps(result))
+                    cache.set(cache_key, pickle.dumps(result), None)
             else:
                 result = pickle.loads(result)
 

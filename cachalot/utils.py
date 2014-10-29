@@ -37,7 +37,7 @@ def _update_tables_queries(cache, tables_cache_keys, cache_key):
     tables_queries = defaultdict(set, **cache.get_many(tables_cache_keys))
     for k in tables_cache_keys:
         tables_queries[k].add(cache_key)
-    cache.set_many(tables_queries)
+    cache.set_many(tables_queries, None)
 
 
 def _invalidate_tables_cache_keys(cache, tables_cache_keys):
