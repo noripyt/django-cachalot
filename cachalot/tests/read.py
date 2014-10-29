@@ -13,7 +13,7 @@ from django.db.models import Count
 from django.db.transaction import TransactionManagementError
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
-from .models import Test
+from .models import Test, TestChild
 
 
 class ReadTestCase(TransactionTestCase):
@@ -525,6 +525,16 @@ class ReadTestCase(TransactionTestCase):
             data2 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t2, self.t1])
+
+    def test_table_inheritance(self):
+        with self.assertNumQueries(2):
+            t_child = TestChild.objects.create(name='test_child')
+
+        with self.assertNumQueries(1):
+            self.assertEqual(TestChild.objects.get(), t_child)
+
+        with self.assertNumQueries(0):
+            self.assertEqual(TestChild.objects.get(), t_child)
 
     def test_raw(self):
         """

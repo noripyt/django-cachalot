@@ -18,3 +18,11 @@ class Test(Model):
     class Meta(object):
         app_label = 'cachalot'
         ordering = ('name',)
+
+
+class TestParent(Model):
+    name = CharField(max_length=20)
+
+
+class TestChild(TestParent):
+    public = BooleanField(default=False)

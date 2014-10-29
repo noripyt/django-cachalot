@@ -14,7 +14,7 @@ from django.db import connection, transaction
 from django.db.models import Count
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
-from .models import Test
+from .models import Test, TestParent, TestChild
 
 
 class WriteTestCase(TransactionTestCase):
@@ -542,6 +542,25 @@ class WriteTestCase(TransactionTestCase):
     @skip(NotImplementedError)
     def test_invalidate_extra_order_by(self):
         pass
+
+    def test_invalidate_table_inheritance(self):
+        with self.assertNumQueries(1):
+            with self.assertRaises(TestChild.DoesNotExist):
+                TestChild.objects.get()
+
+        with self.assertNumQueries(2):
+            t_child = TestChild.objects.create(name='test_child')
+
+        with self.assertNumQueries(1):
+            self.assertEqual(TestChild.objects.get(), t_child)
+
+        with self.assertNumQueries(1):
+            TestParent.objects.filter(pk=t_child.pk).update(name='modified')
+
+        with self.assertNumQueries(1):
+            modified_t_child = TestChild.objects.get()
+            self.assertEqual(modified_t_child.pk, t_child.pk)
+            self.assertEqual(modified_t_child.name, 'modified')
 
 
 class DatabaseCommandTestCase(TransactionTestCase):
