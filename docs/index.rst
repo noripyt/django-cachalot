@@ -36,3 +36,4 @@ Caches your Django ORM queries and automatically invalidates them.
    reporting
    how
    legacy
+   changelog
