@@ -23,6 +23,12 @@ class Test(Model):
 class TestParent(Model):
     name = CharField(max_length=20)
 
+    class Meta(object):
+        app_label = 'cachalot'
+
 
 class TestChild(TestParent):
     public = BooleanField(default=False)
+
+    class Meta(object):
+        app_label = 'cachalot'
