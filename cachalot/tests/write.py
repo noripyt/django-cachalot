@@ -555,7 +555,7 @@ class WriteTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             self.assertEqual(TestChild.objects.get(), t_child)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2 if is_sqlite else 1):
             TestParent.objects.filter(pk=t_child.pk).update(name='modified')
 
         with self.assertNumQueries(1):
