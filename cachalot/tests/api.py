@@ -53,7 +53,7 @@ class APITestCase(TransactionTestCase):
             data3 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data3, ['test1', 'test2'])
 
-    def clear(self):
+    def test_clear(self):
         with self.assertNumQueries(1):
             Test.objects.get()
 
@@ -65,7 +65,7 @@ class APITestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             Test.objects.get()
 
-    def clear_in_atomic(self):
+    def test_clear_in_atomic(self):
         with transaction.atomic():
             with self.assertNumQueries(1):
                 Test.objects.get()
