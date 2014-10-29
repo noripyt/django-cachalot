@@ -548,7 +548,8 @@ class WriteTestCase(TransactionTestCase):
             with self.assertRaises(TestChild.DoesNotExist):
                 TestChild.objects.get()
 
-        with self.assertNumQueries(2):
+        is_sqlite = connection.vendor == 'sqlite'
+        with self.assertNumQueries(3 if is_sqlite else 2):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):
