@@ -24,14 +24,17 @@ Usage
 Settings
 ........
 
-==================== ============= ============================================
-Setting              Default value Description
-==================== ============= ============================================
-``CACHALOT_ENABLED`` ``True``      If set to ``False``, disables SQL caching
-                                   but keeps invalidating to avoid stale cache
-``CACHALOT_CACHE``   ``'default'`` Alias of the cache from |CACHES|_ used by
-                                   django-cachalot
-==================== ============= ============================================
+========================= ============= =======================================
+Setting                   Default value Description
+========================= ============= =======================================
+``CACHALOT_ENABLED``      ``True``      If set to ``False``, disables SQL
+                                        caching but keeps invalidating to avoid
+                                        stale cache
+``CACHALOT_CACHE``        ``'default'`` Alias of the cache from |CACHES|_ used
+                                        by django-cachalot
+``CACHALOT_CACHE_RANDOM`` ``False``     If set to True, caches random queries
+                                        (those with ``order_by('?')``)
+========================= ============= =======================================
 
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES

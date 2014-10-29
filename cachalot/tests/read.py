@@ -169,6 +169,12 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t2, self.t1])
 
+    def test_random_order_by(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.order_by('?'))
+        with self.assertNumQueries(1):
+            list(Test.objects.order_by('?'))
+
     def test_reverse(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.reverse())

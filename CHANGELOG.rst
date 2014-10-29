@@ -9,6 +9,7 @@ master
 - Fixes an stale cache issue occurring when an invalidation is done
   exactly during a SQL request on the invalidated table(s)
 - Uses infinite timeout
+- Adds a setting to choose if random queries must be cached
 
 
 0.8.1

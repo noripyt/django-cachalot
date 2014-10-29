@@ -12,6 +12,5 @@ For version 1.0
 In a more distant future
 ........................
 
-- Add a setting to choose if we cache ``QuerySet.order_by('?')``
 - Use ``connection.introspection.table_names()`` to detect which tables
   are implied in a ``QuerySet.extra``

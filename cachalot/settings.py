@@ -27,6 +27,7 @@ class SettingsOverrider(object):
 class Settings(object):
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
+    CACHALOT_CACHE_RANDOM = False
 
     def __getattribute__(self, item):
         if hasattr(settings, item):

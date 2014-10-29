@@ -23,6 +23,18 @@ class SettingsTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             list(Test.objects.all())
 
+    def test_django_override(self):
+        with self.settings(CACHALOT_ENABLED=False):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.settings(CACHALOT_ENABLED=True):
+                with self.assertNumQueries(1):
+                    list(Test.objects.all())
+                with self.assertNumQueries(0):
+                    list(Test.objects.all())
+
     def test_enabled(self):
         with cachalot_settings(CACHALOT_ENABLED=True):
             with self.assertNumQueries(1):
@@ -66,14 +78,14 @@ class SettingsTestCase(TransactionTestCase):
             with self.assertNumQueries(0):
                 list(Test.objects.all())
 
-    def test_django_override(self):
-        with self.settings(CACHALOT_ENABLED=False):
+    def test_cache_random(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.order_by('?'))
+        with self.assertNumQueries(1):
+            list(Test.objects.order_by('?'))
+
+        with cachalot_settings(CACHALOT_CACHE_RANDOM=True):
             with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.settings(CACHALOT_ENABLED=True):
-                with self.assertNumQueries(1):
-                    list(Test.objects.all())
-                with self.assertNumQueries(0):
-                    list(Test.objects.all())
+                list(Test.objects.order_by('?'))
+            with self.assertNumQueries(0):
+                list(Test.objects.order_by('?'))

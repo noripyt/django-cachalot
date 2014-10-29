@@ -74,7 +74,9 @@ def _patch_orm_read():
         def inner(compiler, *args, **kwargs):
             if not cachalot_settings.CACHALOT_ENABLED \
                     or isinstance(compiler, WRITE_COMPILERS) \
-                    or _has_extra_select_or_where(compiler.query):
+                    or _has_extra_select_or_where(compiler.query) \
+                    or (not cachalot_settings.CACHALOT_CACHE_RANDOM
+                        and '?' in compiler.query.order_by):
                 return original(compiler, *args, **kwargs)
 
             try:
