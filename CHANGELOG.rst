@@ -11,6 +11,7 @@ master
 - Uses infinite timeout
 - Adds a setting to choose if random queries must be cached
 - Caches all queries implying ``Queryset.extra``
+- Adds 2 settings to customize how cache keys are generated
 
 
 0.8.1
