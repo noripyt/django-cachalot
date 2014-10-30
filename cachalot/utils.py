@@ -4,9 +4,13 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from hashlib import md5
 
+import django
 from django.db import connections
 from django.db.models.sql.where import ExtraWhere
-from django.utils.module_loading import import_string
+if django.VERSION[:2] >= (1, 7):
+    from django.utils.module_loading import import_string
+else:
+    from django.utils.module_loading import import_by_path as import_string
 
 from .settings import cachalot_settings
 
