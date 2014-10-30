@@ -6,6 +6,9 @@ from hashlib import md5
 
 from django.db import connections
 from django.db.models.sql.where import ExtraWhere
+from django.utils.module_loading import import_string
+
+from .settings import cachalot_settings
 
 
 def _hash_cache_key(unicode_key):
@@ -15,6 +18,18 @@ def _hash_cache_key(unicode_key):
 def get_query_cache_key(compiler):
     sql, params = compiler.as_sql()
     return _hash_cache_key('%s:%s:%s' % (compiler.using, sql, params))
+
+
+def get_table_cache_key(db_alias, table):
+    return _hash_cache_key('%s:%s' % (db_alias, table))
+
+
+def _get_query_cache_key(compiler):
+    return import_string(cachalot_settings.CACHALOT_QUERY_KEYGEN)(compiler)
+
+
+def _get_table_cache_key(db_alias, table):
+    return import_string(cachalot_settings.CACHALOT_TABLE_KEYGEN)(db_alias, table)
 
 
 def _get_tables(compiler):
@@ -35,13 +50,9 @@ def _get_tables(compiler):
     return tables
 
 
-def get_table_cache_key(db_alias, table):
-    return _hash_cache_key('%s:%s' % (db_alias, table))
-
-
 def _get_tables_cache_keys(compiler):
     using = compiler.using
-    return [get_table_cache_key(using, t) for t in _get_tables(compiler)]
+    return [_get_table_cache_key(using, t) for t in _get_tables(compiler)]
 
 
 def _update_tables_queries(cache, tables_cache_keys, cache_key):

@@ -24,23 +24,49 @@ Usage
 Settings
 ........
 
-========================= ============= =======================================
-Setting                   Default value Description
-========================= ============= =======================================
-``CACHALOT_ENABLED``      ``True``      If set to ``False``, disables SQL
-                                        caching but keeps invalidating to avoid
-                                        stale cache
-``CACHALOT_CACHE``        ``'default'`` Alias of the cache from |CACHES|_ used
-                                        by django-cachalot
-``CACHALOT_CACHE_RANDOM`` ``False``     If set to ``True``, caches random
-                                        queries (those with ``order_by('?')``)
-========================= ============= =======================================
+``CACHALOT_ENABLED``
+~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``True``
+:Description: If set to ``False``, disables SQL caching but keeps invalidating
+              to avoid stale cache
+
+``CACHALOT_CACHE``
+~~~~~~~~~~~~~~~~~~
+
+:Default: ``'default'``
+:Description: Alias of the cache from |CACHES|_ used by django-cachalot
 
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
 
-These settings can be changed whenever you want.
-You have to use ``cachalot_settings`` as a context manager, a decorator,
+``CACHALOT_CACHE_RANDOM``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``False``
+:Description: If set to ``True``, caches random queries
+              (those with ``order_by('?')``)
+
+``CACHALOT_QUERY_KEYGEN``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``'cachalot.utils.get_query_cache_key'``
+:Description: Python module path to the function that will be used to generate
+              the cache key of a SQL query
+
+``CACHALOT_TABLE_KEYGEN``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``'cachalot.utils.get_table_cache_key'``
+:Description: Python module path to the function that will be used to generate
+              the cache key of a SQL table
+
+Dynamic overriding
+~~~~~~~~~~~~~~~~~~
+
+Obviously, you can set these settings in your Django settings.
+But you can also change them whenever you want!
+Simply use ``cachalot_settings`` as a context manager, a decorator,
 or simply by changing its attributes:
 
 .. code:: python

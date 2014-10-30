@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import connection
 
 from .cache import cachalot_caches
-from .utils import get_table_cache_key, _invalidate_tables_cache_keys
+from .utils import _get_table_cache_key, _invalidate_tables_cache_keys
 
 
 __all__ = ('invalidate_tables', 'invalidate_models', 'clear')
@@ -36,7 +36,7 @@ def invalidate_tables(tables, cache_alias=None, db_alias=None):
     if db_alias is None:
         db_alias = connection.alias
 
-    tables_cache_keys = [get_table_cache_key(db_alias, table)
+    tables_cache_keys = [_get_table_cache_key(db_alias, table)
                          for table in tables]
     cache = cachalot_caches.get_cache(cache_alias)
     _invalidate_tables_cache_keys(cache, tables_cache_keys)

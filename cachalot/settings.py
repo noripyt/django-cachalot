@@ -28,6 +28,8 @@ class Settings(object):
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
     CACHALOT_CACHE_RANDOM = False
+    CACHALOT_QUERY_KEYGEN = 'cachalot.utils.get_query_cache_key'
+    CACHALOT_TABLE_KEYGEN = 'cachalot.utils.get_table_cache_key'
 
     def __getattribute__(self, item):
         if hasattr(settings, item):

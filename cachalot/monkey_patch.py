@@ -21,7 +21,7 @@ from .api import clear
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    get_query_cache_key, _update_tables_queries,
+    _get_query_cache_key, _update_tables_queries,
     _invalidate_tables, _get_tables_cache_keys)
 
 
@@ -42,7 +42,7 @@ def _patch_orm_read():
                 return original(compiler, *args, **kwargs)
 
             try:
-                cache_key = get_query_cache_key(compiler)
+                cache_key = _get_query_cache_key(compiler)
             except EmptyResultSet:
                 return original(compiler, *args, **kwargs)
 
