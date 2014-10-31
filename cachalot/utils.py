@@ -20,11 +20,33 @@ def _hash_cache_key(unicode_key):
 
 
 def get_query_cache_key(compiler):
+    """
+    Generates a cache key from a SQLCompiler.
+
+    This cache key is specific to the SQL query and its context
+    (which database is used).  The same query in the same context
+    (= the same database) must generate the same cache key.
+
+    :arg compiler: A SQLCompiler that will generate the SQL query
+    :type compiler: django.db.models.sql.compiler.SQLCompiler
+    :return: A cache key
+    :rtype: str or unicode
+    """
     sql, params = compiler.as_sql()
     return _hash_cache_key('%s:%s:%s' % (compiler.using, sql, params))
 
 
 def get_table_cache_key(db_alias, table):
+    """
+    Generates a cache key from a SQL table.
+
+    :arg db_alias: Alias of the used database
+    :type db_alias: str or unicode
+    :arg table: Name of the SQL table
+    :type table: str or unicode
+    :return: A cache key
+    :rtype: str or unicode
+    """
     return _hash_cache_key('%s:%s' % (db_alias, table))
 
 
@@ -38,7 +60,12 @@ def _get_table_cache_key(db_alias, table):
 
 def _get_tables(compiler):
     """
-    Returns a ``set`` of all database table names used by ``query``.
+    Returns a ``set`` of all SQL table names used by ``compiler``.
+
+    :arg compiler: A SQLCompiler that will generate the SQL query
+    :type compiler: django.db.models.sql.compiler.SQLCompiler
+    :return: All the SQL table names
+    :rtype: set
     """
     query = compiler.query
     tables = set(query.tables)
