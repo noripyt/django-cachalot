@@ -6,7 +6,7 @@ master
 
 - Adds a simple API containing:
   ``invalidate_tables``, ``invalidate_models``, ``clear``
-- Fixes an stale cache issue occurring when an invalidation is done
+- Fixes a stale cache issue occurring when an invalidation is done
   exactly during a SQL request on the invalidated table(s)
 - Uses infinite timeout
 - Adds a setting to choose if random queries must be cached
