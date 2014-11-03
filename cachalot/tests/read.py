@@ -535,12 +535,14 @@ class ReadTestCase(TransactionTestCase):
         sql = 'SELECT * FROM %s;' % Test._meta.db_table
 
         with self.assertNumQueries(1):
-            with connection.cursor() as cursor:
-                cursor.execute(sql)
-                data1 = list(cursor.fetchall())
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            data1 = list(cursor.fetchall())
+            cursor.close()
         with self.assertNumQueries(1):
-            with connection.cursor() as cursor:
-                cursor.execute(sql)
-                data2 = list(cursor.fetchall())
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            data2 = list(cursor.fetchall())
+            cursor.close()
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, list(Test.objects.values_list()))
