@@ -1,7 +1,7 @@
 How django-cachalot works
 -------------------------
 
-**(If you don’t care/understand, just pretend it’s magic)**
+.. note:: If you don’t understand, just pretend it’s magic.
 
 Reverse engineering
 ...................
