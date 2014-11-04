@@ -7,7 +7,10 @@ import pickle
 
 from django import VERSION as django_version
 from django.conf import settings
-from django.db.backends.utils import CursorWrapper
+if django_version >= (1, 7):
+    from django.db.backends.utils import CursorWrapper
+else:
+    from django.db.backends.util import CursorWrapper
 from django.db.models.query import EmptyResultSet
 if django_version >= (1, 7):
     from django.db.models.signals import post_migrate
