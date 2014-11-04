@@ -58,6 +58,11 @@ def _get_table_cache_key(db_alias, table):
     return import_string(cachalot_settings.CACHALOT_TABLE_KEYGEN)(db_alias, table)
 
 
+def _get_tables_from_sql(connection, lowercased_sql):
+    return [t for t in connection.introspection.django_table_names()
+            if t in lowercased_sql]
+
+
 def _get_tables(compiler):
     """
     Returns a ``set`` of all SQL table names used by ``compiler``.
@@ -73,11 +78,9 @@ def _get_tables(compiler):
     if query.extra_select or any(isinstance(c, ExtraWhere)
                                  for c in query.where.children):
         sql, params = compiler.as_sql()
-        full_sql = sql % params
         connection = connections[compiler.using]
-        for table in connection.introspection.django_table_names():
-            if table in full_sql:
-                tables.add(table)
+        full_sql = (sql % params)
+        tables.update(_get_tables_from_sql(connection, full_sql))
     return tables
 
 

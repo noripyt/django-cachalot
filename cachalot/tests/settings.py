@@ -2,9 +2,9 @@
 
 from __future__ import unicode_literals
 try:
-    from unittest import skipIf
+    from unittest import skipIf, skip
 except ImportError:  # For Python 2.6
-    from unittest2 import skipIf
+    from unittest2 import skipIf, skip
 
 from django.conf import settings
 from django.core.cache import DEFAULT_CACHE_ALIAS
@@ -89,3 +89,7 @@ class SettingsTestCase(TransactionTestCase):
                 list(Test.objects.order_by('?'))
             with self.assertNumQueries(0):
                 list(Test.objects.order_by('?'))
+
+    @skip(NotImplementedError)
+    def test_invalidate_raw(self):
+        pass

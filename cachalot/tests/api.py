@@ -20,9 +20,10 @@ class APITestCase(TransactionTestCase):
             data1 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data1, ['test1'])
 
-        self.cursor.execute(
-            "INSERT INTO cachalot_test (name, public) VALUES ('test2', %s);",
-            [1 if self.is_sqlite else 'true'])
+        with self.settings(CACHALOT_INVALIDATE_RAW=False):
+            self.cursor.execute(
+                "INSERT INTO cachalot_test (name, public) "
+                "VALUES ('test2', %s);", [1 if self.is_sqlite else 'true'])
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))
@@ -39,9 +40,10 @@ class APITestCase(TransactionTestCase):
             data1 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data1, ['test1'])
 
-        self.cursor.execute(
-            "INSERT INTO cachalot_test (name, public) VALUES ('test2', %s);",
-            [1 if self.is_sqlite else 'true'])
+        with self.settings(CACHALOT_INVALIDATE_RAW=False):
+            self.cursor.execute(
+                "INSERT INTO cachalot_test (name, public) "
+                "VALUES ('test2', %s);", [1 if self.is_sqlite else 'true'])
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))

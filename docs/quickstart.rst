@@ -47,6 +47,15 @@ Settings
 :Description: If set to ``True``, caches random queries
               (those with ``order_by('?')``)
 
+.. _CACHALOT_INVALIDATE_RAW:
+
+``CACHALOT_INVALIDATE_RAW``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``True``
+:Description: If set to ``False``, disables automatic invalidation on raw
+              SQL queries – read :ref:`Raw queries limits` for more info
+
 ``CACHALOT_QUERY_KEYGEN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -60,6 +69,8 @@ Settings
 :Default: ``'cachalot.utils.get_table_cache_key'``
 :Description: Python module path to the function that will be used to generate
               the cache key of a SQL table
+
+.. _Dynamic overriding:
 
 Dynamic overriding
 ~~~~~~~~~~~~~~~~~~
