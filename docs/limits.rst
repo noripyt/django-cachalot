@@ -26,7 +26,7 @@ and then invalidates the tables contained in that query by comparing
 with models registered by Django.
 
 This is quite robust, so if a query is not invalidated automatically
-by this system, please send a bug report.
+by this system, please :ref:`send a bug report <reporting>`.
 In the meantime, you can use :ref:`the API <API>` to manually invalidate
 the tables where data has changed.
 

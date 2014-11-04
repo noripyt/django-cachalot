@@ -1,3 +1,5 @@
+.. _reporting:
+
 Bug reports, questions, discussion, new features
 ------------------------------------------------
 
