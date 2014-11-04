@@ -4,7 +4,11 @@ What still needs to be done
 For version 1.0
 ...............
 
-- Test if a stale cache issue happens when a table is invalidated
-  exactly during a SQL read query
-- Test if code injections can occur when unpickling query results
-  (or use a safer serialization tool)
+- Cache raw queries
+
+Weaknesses to be tested
+.......................
+
+- A stale cache issue should never happen when a table is invalidated
+  exactly during a SQL read query (fixed, but never tested in the test suite)
+- It should be impossible to inject code when unpickling query results
