@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 from collections import Iterable
 from functools import wraps
-import pickle
 
 from django import VERSION as django_version
 from django.conf import settings
@@ -64,22 +63,22 @@ def _patch_compiler(original):
             return original(compiler, *args, **kwargs)
 
         cache = cachalot_caches.get_cache()
-        result = cache.get(cache_key)
+        data = cache.get_many((cache_key,))
 
-        if result is None:
-            tables_cache_keys = _get_tables_cache_keys(compiler)
-            _update_tables_queries(cache, tables_cache_keys, cache_key)
+        if cache_key in data:
+            return data[cache_key]
 
-            result = original(compiler, *args, **kwargs)
-            if isinstance(result, Iterable) \
-                    and not isinstance(result, (tuple, list)):
-                result = list(result)
+        tables_cache_keys = _get_tables_cache_keys(compiler)
+        _update_tables_queries(cache, tables_cache_keys, cache_key)
 
-            tables_queries = cache.get_many(tables_cache_keys).values()
-            if all(cache_key in queries for queries in tables_queries):
-                cache.set(cache_key, pickle.dumps(result), None)
-        else:
-            result = pickle.loads(result)
+        result = original(compiler, *args, **kwargs)
+        if isinstance(result, Iterable) \
+                and not isinstance(result, (tuple, list)):
+            result = list(result)
+
+        tables_queries = cache.get_many(tables_cache_keys).values()
+        if all(cache_key in queries for queries in tables_queries):
+            cache.set(cache_key, result, None)
 
         return result
 
