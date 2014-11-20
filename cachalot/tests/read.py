@@ -8,11 +8,13 @@ except ImportError:  # For Python 2.6
     from unittest2 import skipIf
 
 from django.contrib.auth.models import Group, Permission, User
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
 from django.db.transaction import TransactionManagementError
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
+from ..utils import _get_table_cache_key
 from .models import Test, TestChild
 
 
@@ -546,3 +548,16 @@ class ReadTestCase(TransactionTestCase):
             cursor.close()
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, list(Test.objects.values_list()))
+
+    def test_missing_table_cache_key(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
+
+        table_cache_key = _get_table_cache_key(connection.alias,
+                                               Test._meta.db_table)
+        cache.delete(table_cache_key)
+
+        with self.assertNumQueries(1):
+            list(Test.objects.all())

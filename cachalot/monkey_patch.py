@@ -24,8 +24,8 @@ from .api import clear, invalidate_tables
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_query_cache_key, _update_tables_queries,
-    _invalidate_tables, _get_tables_cache_keys, _get_tables_from_sql)
+    _get_query_cache_key, _update_tables_queries, _invalidate_tables,
+    _get_tables_cache_keys, _get_tables_from_sql, _still_in_cache)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -63,21 +63,25 @@ def _patch_compiler(original):
             return original(compiler, *args, **kwargs)
 
         cache = cachalot_caches.get_cache()
-        data = cache.get_many((cache_key,))
-
-        if cache_key in data:
-            return data[cache_key]
-
         tables_cache_keys = _get_tables_cache_keys(compiler)
-        _update_tables_queries(cache, tables_cache_keys, cache_key)
+        tables_queries = cache.get_many(tables_cache_keys + [cache_key])
+
+        if cache_key in tables_queries:
+            result = tables_queries[cache_key]
+            del tables_queries[cache_key]
+            if _still_in_cache(tables_cache_keys, tables_queries, cache_key):
+                return result
+
+        _update_tables_queries(cache, tables_cache_keys, tables_queries,
+                               cache_key)
 
         result = original(compiler, *args, **kwargs)
         if isinstance(result, Iterable) \
                 and not isinstance(result, (tuple, list)):
             result = list(result)
 
-        tables_queries = cache.get_many(tables_cache_keys).values()
-        if all(cache_key in queries for queries in tables_queries):
+        tables_queries = cache.get_many(tables_cache_keys)
+        if _still_in_cache(tables_cache_keys, tables_queries, cache_key):
             cache.set(cache_key, result, None)
 
         return result

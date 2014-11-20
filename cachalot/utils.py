@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from collections import defaultdict
 from hashlib import md5
 
 import django
@@ -89,11 +88,13 @@ def _get_tables_cache_keys(compiler):
     return [_get_table_cache_key(using, t) for t in _get_tables(compiler)]
 
 
-def _update_tables_queries(cache, tables_cache_keys, cache_key):
-    tables_queries = defaultdict(set, **cache.get_many(tables_cache_keys))
+def _update_tables_queries(cache, tables_cache_keys, tables_queries,
+                           cache_key):
+    new_tables_queries = {}
     for k in tables_cache_keys:
-        tables_queries[k].add(cache_key)
-    cache.set_many(tables_queries, None)
+        new_tables_queries[k] = tables_queries.get(k, set())
+        new_tables_queries[k].add(cache_key)
+    cache.set_many(new_tables_queries, None)
 
 
 def _invalidate_tables_cache_keys(cache, tables_cache_keys):
@@ -107,3 +108,9 @@ def _invalidate_tables_cache_keys(cache, tables_cache_keys):
 def _invalidate_tables(cache, compiler):
     tables_cache_keys = _get_tables_cache_keys(compiler)
     _invalidate_tables_cache_keys(cache, tables_cache_keys)
+
+
+def _still_in_cache(tables_cache_keys, tables_queries, cache_key):
+    return (
+        frozenset(tables_queries) == frozenset(tables_cache_keys)
+        and all(cache_key in queries for queries in tables_queries.values()))
