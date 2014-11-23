@@ -48,8 +48,10 @@ class Benchmark(object):
         self.n = n
         self.data = []
 
-    def bench_once(self, context, num_queries, invalidate_after=False):
+    def bench_once(self, context, num_queries, invalidate_before=False):
         for _ in range(self.n):
+            if invalidate_before:
+                clear(db_alias=self.db_alias)
             with AssertNumQueries(num_queries, using=self.db_alias):
                 start = time()
                 self.query_function(self.db_alias)
@@ -60,8 +62,6 @@ class Benchmark(object):
                  'context': context,
                  'db': self.db_vendor,
                  'cache': self.cache_name})
-            if invalidate_after:
-                clear(db_alias=self.db_alias)
 
     def benchmark(self, query_str, to_list=True, num_queries=1):
         self.query_name = query_str
@@ -73,9 +73,7 @@ class Benchmark(object):
         with cachalot_settings(CACHALOT_ENABLED=False):
             self.bench_once(CONTEXTS[0], num_queries)
 
-        self.bench_once(CONTEXTS[1], num_queries, invalidate_after=True)
-
-        self.query_function(self.db_alias)
+        self.bench_once(CONTEXTS[1], num_queries, invalidate_before=True)
 
         self.bench_once(CONTEXTS[2], 0)
 
