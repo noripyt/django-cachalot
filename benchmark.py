@@ -104,7 +104,11 @@ class Benchmark(object):
             os.mkdir(RESULTS_PATH)
         self.df.to_csv(os.path.join(RESULTS_PATH, 'data.csv'))
 
-        gp = self.df.groupby(('context', 'query', 'db'))['time']
+        self.output('db')
+        self.output('cache')
+
+    def output(self, param):
+        gp = self.df.groupby(('context', 'query', param))['time']
         self.means = gp.mean().unstack().unstack().reindex(CONTEXTS[::-1])
         self.stds = gp.std().unstack().unstack().reindex(CONTEXTS[::-1])
 
@@ -112,27 +116,27 @@ class Benchmark(object):
         self.plot()
 
     def get_perfs(self):
-        for db in self.means.columns.levels[0]:
-            g = self.means[db].mean(axis=1)
+        for v in self.means.columns.levels[0]:
+            g = self.means[v].mean(axis=1)
             print('%s is %.1f× slower then %.1f× faster'
-                  % (db.ljust(11), g[CONTEXTS[1]] / g[CONTEXTS[0]],
+                  % (v.ljust(10), g[CONTEXTS[1]] / g[CONTEXTS[0]],
                      g[CONTEXTS[0]] / g[CONTEXTS[2]]))
 
     def plot(self):
         xlim = (0, (self.means + self.stds).unstack().max() * 1.05)
-        for db in self.means.columns.levels[0]:
+        for v in self.means.columns.levels[0]:
             plt.figure()
-            self.means[db].plot(
-                kind='barh', xerr=self.stds[db], title=db,
+            self.means[v].plot(
+                kind='barh', xerr=self.stds[v], title=v,
                 xlim=xlim, figsize=(15, 10), subplots=True, layout=(4, 2),
                 sharey=True, legend=False)
-            plt.savefig(os.path.join(RESULTS_PATH, '%s_detail.svg' % db))
+            plt.savefig(os.path.join(RESULTS_PATH, '%s_detail.svg' % v))
 
             plt.figure()
-            self.means[db].mean(axis=1).plot(
-                kind='barh', xerr=self.stds[db].mean(axis=1), title=db,
+            self.means[v].mean(axis=1).plot(
+                kind='barh', xerr=self.stds[v].mean(axis=1), title=v,
                 xlim=xlim)
-            plt.savefig(os.path.join(RESULTS_PATH, '%s.svg' % db))
+            plt.savefig(os.path.join(RESULTS_PATH, '%s.svg' % v))
 
 
 def create_data(using):
