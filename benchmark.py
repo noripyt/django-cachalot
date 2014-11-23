@@ -125,14 +125,15 @@ class Benchmark(object):
         for db in self.means.columns.levels[0]:
             plt.figure()
             self.means[db].plot(
-                kind='barh', xerr=self.stds[db], title=db, xlim=xlim,
-                figsize=(15, 10), subplots=True, layout=(4, 2),
+                kind='barh', xerr=self.stds[db], title=db,
+                xlim=xlim, figsize=(15, 10), subplots=True, layout=(4, 2),
                 sharey=True, legend=False)
             plt.savefig(os.path.join(RESULTS_PATH, '%s_detail.svg' % db))
 
             plt.figure()
             self.means[db].mean(axis=1).plot(
-                kind='barh', xerr=self.stds[db], title=db, xlim=xlim)
+                kind='barh', xerr=self.stds[db].mean(axis=1), title=db,
+                xlim=xlim)
             plt.savefig(os.path.join(RESULTS_PATH, '%s.svg' % db))
 
 
