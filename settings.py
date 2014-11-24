@@ -33,8 +33,7 @@ for alias in DATABASES:
         DATABASES[alias]['TEST'] = {'NAME': test_db_name}
 
 DEFAULT_DATABASE_KEY = os.environ.get('DB_ENGINE', 'sqlite3')
-DATABASES['default'] = DATABASES[DEFAULT_DATABASE_KEY]
-del DATABASES[DEFAULT_DATABASE_KEY]
+DATABASES['default'] = DATABASES.pop(DEFAULT_DATABASE_KEY)
 
 CACHES = {
     'locmem': {
@@ -50,8 +49,7 @@ CACHES = {
     },
 }
 DEFAULT_CACHE_KEY = os.environ.get('CACHE_BACKEND', 'locmem')
-CACHES['default'] = CACHES[DEFAULT_CACHE_KEY]
-del CACHES[DEFAULT_CACHE_KEY]
+CACHES['default'] = CACHES.pop(DEFAULT_CACHE_KEY)
 
 INSTALLED_APPS = [
     'cachalot',

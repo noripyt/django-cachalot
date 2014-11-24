@@ -73,8 +73,7 @@ def _patch_compiler(original):
             for table_cache_key in new_table_cache_keys:
                 cache.add(table_cache_key, time(), None)
         elif cache_key in data:
-            timestamp, result = data[cache_key]
-            del data[cache_key]
+            timestamp, result = data.pop(cache_key)
             if timestamp > max(data.values()):
                 return result
 

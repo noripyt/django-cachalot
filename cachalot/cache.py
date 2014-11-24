@@ -47,7 +47,7 @@ class CacheHandler(local):
         tables = connections[db_alias].introspection.table_names()
         table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
         _invalidate_table_cache_keys(cachalot_caches.get_cache(cache_alias),
-                                      table_cache_keys)
+                                     table_cache_keys)
 
 
 cachalot_caches = CacheHandler()
