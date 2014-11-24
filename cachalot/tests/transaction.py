@@ -187,5 +187,6 @@ class AtomicTestCase(TransactionTestCase):
                             raise ZeroDivisionError
                 except ZeroDivisionError:
                     pass
-        data3 = list(Test.objects.all())
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1])

@@ -80,5 +80,5 @@ class APITestCase(TransactionTestCase):
             with self.assertNumQueries(1):
                 Test.objects.get()
 
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(1):
             Test.objects.get()
