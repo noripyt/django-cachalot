@@ -55,19 +55,19 @@ class APITestCase(TransactionTestCase):
             data3 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data3, ['test1', 'test2'])
 
-    def test_clear(self):
+    def test_invalidate_all(self):
         with self.assertNumQueries(1):
             Test.objects.get()
 
         with self.assertNumQueries(0):
             Test.objects.get()
 
-        clear()
+        invalidate_all()
 
         with self.assertNumQueries(1):
             Test.objects.get()
 
-    def test_clear_in_atomic(self):
+    def test_invalidate_all_in_atomic(self):
         with transaction.atomic():
             with self.assertNumQueries(1):
                 Test.objects.get()
@@ -75,7 +75,7 @@ class APITestCase(TransactionTestCase):
             with self.assertNumQueries(0):
                 Test.objects.get()
 
-            clear()
+            invalidate_all()
 
             with self.assertNumQueries(1):
                 Test.objects.get()
