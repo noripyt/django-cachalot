@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 
-from .utils import _invalidate_tables_cache_keys
+from .utils import _invalidate_table_cache_keys
 
 
 class AtomicCache(dict):
@@ -24,6 +24,10 @@ class AtomicCache(dict):
             self.deleted.remove(k)
         self[k] = v
 
+    def add(self, k, v, timeout):
+        if k not in self:
+            self.set(k, v, timeout)
+
     def get_many(self, keys):
         data = dict([(k, self[k]) for k in keys if k in self])
         missing_keys = set(keys)
@@ -43,6 +47,6 @@ class AtomicCache(dict):
                 del self[k]
 
     def commit(self):
-        _invalidate_tables_cache_keys(self.parent_cache,
+        _invalidate_table_cache_keys(self.parent_cache,
                                       list(self.to_be_invalidated))
         self.parent_cache.set_many(self, None)

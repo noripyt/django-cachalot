@@ -5,7 +5,7 @@ master
 ------
 
 - Adds a simple API containing:
-  ``invalidate_tables``, ``invalidate_models``, ``clear``
+  ``invalidate_tables``, ``invalidate_models``, ``invalidate_all``
 - Fixes a stale cache issue occurring when an invalidation is done
   exactly during a SQL request on the invalidated table(s)
 - Uses infinite timeout
@@ -13,6 +13,7 @@ master
 - Caches all queries implying ``Queryset.extra``
 - Invalidates raw queries
 - Adds 2 settings to customize how cache keys are generated
+- Rewrites invalidation for a better speed & memory performance
 
 
 0.8.1

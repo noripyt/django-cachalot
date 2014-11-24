@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 from hashlib import md5
+from time import time
 
 import django
 from django.db import connections
@@ -83,34 +84,18 @@ def _get_tables(compiler):
     return tables
 
 
-def _get_tables_cache_keys(compiler):
+def _get_table_cache_keys(compiler):
     using = compiler.using
     return [_get_table_cache_key(using, t) for t in _get_tables(compiler)]
 
 
-def _update_tables_queries(cache, tables_cache_keys, tables_queries,
-                           cache_key):
-    new_tables_queries = {}
-    for k in tables_cache_keys:
-        new_tables_queries[k] = tables_queries.get(k, set())
-        new_tables_queries[k].add(cache_key)
-    cache.set_many(new_tables_queries, None)
-
-
-def _invalidate_tables_cache_keys(cache, tables_cache_keys):
+def _invalidate_table_cache_keys(cache, table_cache_keys):
     if hasattr(cache, 'to_be_invalidated'):
-        cache.to_be_invalidated.update(tables_cache_keys)
-    tables_queries = cache.get_many(tables_cache_keys)
-    queries = [q for q_list in tables_queries.values() for q in q_list]
-    cache.delete_many(queries + tables_cache_keys)
+        cache.to_be_invalidated.update(table_cache_keys)
+    now = time()
+    cache.set_many(dict((k, now) for k in table_cache_keys), None)
 
 
 def _invalidate_tables(cache, compiler):
-    tables_cache_keys = _get_tables_cache_keys(compiler)
-    _invalidate_tables_cache_keys(cache, tables_cache_keys)
-
-
-def _still_in_cache(tables_cache_keys, tables_queries, cache_key):
-    return (
-        frozenset(tables_queries) == frozenset(tables_cache_keys)
-        and all(cache_key in queries for queries in tables_queries.values()))
+    table_cache_keys = _get_table_cache_keys(compiler)
+    _invalidate_table_cache_keys(cache, table_cache_keys)

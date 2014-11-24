@@ -17,7 +17,7 @@ from django.test.utils import CaptureQueriesContext
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from cachalot.api import clear
+from cachalot.api import invalidate_all
 from cachalot.settings import cachalot_settings
 from cachalot.tests.models import Test
 

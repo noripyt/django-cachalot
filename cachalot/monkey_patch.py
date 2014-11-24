@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from collections import Iterable
 from functools import wraps
+from time import time
 
 from django import VERSION as django_version
 from django.conf import settings
@@ -20,12 +21,12 @@ from django.db.models.sql.compiler import (
 from django.db.transaction import Atomic, get_connection
 from django.test import TransactionTestCase
 
-from .api import clear, invalidate_tables
+from .api import invalidate_all, invalidate_tables
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_query_cache_key, _update_tables_queries, _invalidate_tables,
-    _get_tables_cache_keys, _get_tables_from_sql, _still_in_cache)
+    _get_query_cache_key, _invalidate_tables,
+    _get_table_cache_keys, _get_tables_from_sql)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -63,26 +64,26 @@ def _patch_compiler(original):
             return original(compiler, *args, **kwargs)
 
         cache = cachalot_caches.get_cache()
-        tables_cache_keys = _get_tables_cache_keys(compiler)
-        tables_queries = cache.get_many(tables_cache_keys + [cache_key])
+        table_cache_keys = _get_table_cache_keys(compiler)
+        data = cache.get_many(table_cache_keys + [cache_key])
 
-        if cache_key in tables_queries:
-            result = tables_queries[cache_key]
-            del tables_queries[cache_key]
-            if _still_in_cache(tables_cache_keys, tables_queries, cache_key):
+        new_table_cache_keys = frozenset(table_cache_keys) - frozenset(data)
+
+        if new_table_cache_keys:
+            for table_cache_key in new_table_cache_keys:
+                cache.add(table_cache_key, time(), None)
+        elif cache_key in data:
+            timestamp, result = data[cache_key]
+            del data[cache_key]
+            if timestamp > max(data.values()):
                 return result
-
-        _update_tables_queries(cache, tables_cache_keys, tables_queries,
-                               cache_key)
 
         result = original(compiler, *args, **kwargs)
         if isinstance(result, Iterable) \
                 and not isinstance(result, (tuple, list)):
             result = list(result)
 
-        tables_queries = cache.get_many(tables_cache_keys)
-        if _still_in_cache(tables_cache_keys, tables_queries, cache_key):
-            cache.set(cache_key, result, None)
+        cache.set(cache_key, (time(), result), None)
 
         return result
 
@@ -159,7 +160,7 @@ def _patch_tests():
         @wraps(original)
         def inner(*args, **kwargs):
             out = original(*args, **kwargs)
-            clear()
+            invalidate_all()
             return out
 
         inner.original = original
@@ -171,7 +172,7 @@ def _patch_tests():
 
 def _invalidate_on_migration(sender, **kwargs):
     db_alias = kwargs['using'] if django_version >= (1, 7) else kwargs['db']
-    clear(db_alias=db_alias)
+    invalidate_all(db_alias=db_alias)
 
 
 def patch():

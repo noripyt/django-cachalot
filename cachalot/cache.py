@@ -9,7 +9,7 @@ from django.db import connections
 
 from .settings import cachalot_settings
 from .transaction import AtomicCache
-from .utils import _get_table_cache_key, _invalidate_tables_cache_keys
+from .utils import _get_table_cache_key, _invalidate_table_cache_keys
 
 
 class CacheHandler(local):
@@ -43,11 +43,11 @@ class CacheHandler(local):
             for atomic_cache in atomic_caches:
                 atomic_cache.commit()
 
-    def clear(self, cache_alias, db_alias):
+    def invalidate_all(self, cache_alias, db_alias):
         tables = connections[db_alias].introspection.table_names()
-        tables_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
-        _invalidate_tables_cache_keys(cachalot_caches.get_cache(cache_alias),
-                                      tables_cache_keys)
+        table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
+        _invalidate_table_cache_keys(cachalot_caches.get_cache(cache_alias),
+                                      table_cache_keys)
 
 
 cachalot_caches = CacheHandler()

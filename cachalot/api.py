@@ -6,10 +6,10 @@ from django.conf import settings
 from django.db import connection
 
 from .cache import cachalot_caches
-from .utils import _get_table_cache_key, _invalidate_tables_cache_keys
+from .utils import _get_table_cache_key, _invalidate_table_cache_keys
 
 
-__all__ = ('invalidate_tables', 'invalidate_models', 'clear')
+__all__ = ('invalidate_tables', 'invalidate_models', 'invalidate_all')
 
 
 def invalidate_tables(tables, cache_alias=None, db_alias=None):
@@ -36,10 +36,9 @@ def invalidate_tables(tables, cache_alias=None, db_alias=None):
     if db_alias is None:
         db_alias = connection.alias
 
-    tables_cache_keys = [_get_table_cache_key(db_alias, table)
-                         for table in tables]
+    table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
     cache = cachalot_caches.get_cache(cache_alias)
-    _invalidate_tables_cache_keys(cache, tables_cache_keys)
+    _invalidate_table_cache_keys(cache, table_cache_keys)
 
 
 def invalidate_models(models, cache_alias=None, db_alias=None):
@@ -61,7 +60,7 @@ def invalidate_models(models, cache_alias=None, db_alias=None):
                       cache_alias, db_alias)
 
 
-def clear(cache_alias=None, db_alias=None):
+def invalidate_all(cache_alias=None, db_alias=None):
     """
     Clears everything that was cached by django-cachalot.
 
@@ -83,4 +82,4 @@ def clear(cache_alias=None, db_alias=None):
     db_aliases = settings.DATABASES if db_alias is None else (db_alias,)
     for cache_alias in cache_aliases:
         for db_alias in db_aliases:
-            cachalot_caches.clear(cache_alias, db_alias)
+            cachalot_caches.invalidate_all(cache_alias, db_alias)
