@@ -30,7 +30,7 @@ from .utils import (
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
-
+TIMEOUT = getattr(cachalot_settings, 'CACHALOT_TIMEOUT', None)
 
 PATCHED = False
 
@@ -82,7 +82,7 @@ def _patch_compiler(original):
                 and not isinstance(result, (tuple, list)):
             result = list(result)
 
-        cache.set(cache_key, (time(), result), None)
+        cache.set(cache_key, (time(), result), TIMEOUT)
 
         return result
 

@@ -14,6 +14,7 @@ else:
 
 from .settings import cachalot_settings
 
+TIMEOUT = getattr(cachalot_settings, 'CACHALOT_TIMEOUT', None)
 
 def _hash_cache_key(unicode_key):
     return md5(unicode_key.encode('utf-8')).hexdigest()
@@ -93,7 +94,7 @@ def _invalidate_table_cache_keys(cache, table_cache_keys):
     if hasattr(cache, 'to_be_invalidated'):
         cache.to_be_invalidated.update(table_cache_keys)
     now = time()
-    cache.set_many(dict((k, now) for k in table_cache_keys), None)
+    cache.set_many(dict((k, now) for k in table_cache_keys), TIMEOUT)
 
 
 def _invalidate_tables(cache, compiler):

@@ -3,7 +3,9 @@
 from __future__ import unicode_literals
 
 from .utils import _invalidate_table_cache_keys
+from .settings import cachalot_settings
 
+TIMEOUT = getattr(cachalot_settings, 'CACHALOT_TIMEOUT', None)
 
 class AtomicCache(dict):
     def __init__(self, parent_cache):
@@ -34,7 +36,7 @@ class AtomicCache(dict):
         self.update(data)
 
     def commit(self):
-        self.parent_cache.set_many(self, None)
+        self.parent_cache.set_many(self, TIMEOUT)
         # The previous `set_many` is not enough.  The parent cache needs to be
         # invalidated in case another transaction occurred in the meantime.
         _invalidate_table_cache_keys(self.parent_cache, self.to_be_invalidated)
