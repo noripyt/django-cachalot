@@ -1,8 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from time import sleep
-from threading import Thread
+from threading import Thread, Event
 
 from django.db import connection, transaction
 from django.test import TransactionTestCase, skipUnlessDBFeature
@@ -13,17 +12,18 @@ from .models import Test
 class TestThread(Thread):
     def __init__(self):
         super(TestThread, self).__init__()
-        self.exit = False
+        self.event0 = Event()
+        self.event1 = Event()
 
     def wait_for_main(self):
-        self.wait = True
-        while self.wait and not self.exit:
-            sleep(0.001)
+        self.event1.set()
+        self.event1.clear()
+        self.event0.wait(0.5)
 
     def wait_for_child(self):
-        self.wait = False
-        while not self.wait and not self.exit:
-            sleep(0.001)
+        self.event0.set()
+        self.event0.clear()
+        self.event1.wait(0.5)
 
     def start(self, n=2):
         self.n = n
@@ -40,11 +40,6 @@ class TestThread(Thread):
 class ThreadSafetyTestCase(TransactionTestCase):
     def setUp(self):
         self.thread = TestThread()
-
-    def tearDown(self):
-        if self.thread.is_alive():
-            self.thread.exit = True
-            self.thread.join()
 
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching(self):
