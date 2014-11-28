@@ -7,3 +7,4 @@ sdist/
 *.egg-info/
 .coverage
 docs/_*/
+.tox/
