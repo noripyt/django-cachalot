@@ -48,43 +48,55 @@ def _unset_raw_connection(original):
     return inner
 
 
+def _get_result_or_execute_query(execute_query_func, cache_key,
+                                 table_cache_keys):
+    cache = cachalot_caches.get_cache()
+    data = cache.get_many(table_cache_keys + [cache_key])
+
+    new_table_cache_keys = frozenset(table_cache_keys) - frozenset(data)
+
+    if new_table_cache_keys:
+        cache.clear()
+        for table_cache_key in new_table_cache_keys:
+            cache.add(table_cache_key, time(), None)
+    elif cache_key in data:
+        try:
+            timestamp, result = data.pop(cache_key)
+        except TypeError:  # Occurs when None is unexpectedly found
+            pass
+        else:
+            table_times = data.values()
+            if table_times and timestamp > max(table_times):
+                return result
+
+    result = execute_query_func()
+    if isinstance(result, Iterable) \
+            and not isinstance(result, (tuple, list)):
+        result = list(result)
+
+    cache.set(cache_key, (time(), result), None)
+
+    return result
+
+
 def _patch_compiler(original):
     @wraps(original)
     @_unset_raw_connection
     def inner(compiler, *args, **kwargs):
+        execute_query_func = lambda: original(compiler, *args, **kwargs)
         if not cachalot_settings.CACHALOT_ENABLED \
                 or isinstance(compiler, WRITE_COMPILERS) \
                 or (not cachalot_settings.CACHALOT_CACHE_RANDOM
                     and '?' in compiler.query.order_by):
-            return original(compiler, *args, **kwargs)
+            return execute_query_func()
 
         try:
             cache_key = _get_query_cache_key(compiler)
         except EmptyResultSet:
-            return original(compiler, *args, **kwargs)
+            return execute_query_func()
 
-        cache = cachalot_caches.get_cache()
-        table_cache_keys = _get_table_cache_keys(compiler)
-        data = cache.get_many(table_cache_keys + [cache_key])
-
-        new_table_cache_keys = frozenset(table_cache_keys) - frozenset(data)
-
-        if new_table_cache_keys:
-            for table_cache_key in new_table_cache_keys:
-                cache.add(table_cache_key, time(), None)
-        elif cache_key in data:
-            timestamp, result = data.pop(cache_key)
-            if timestamp > max(data.values()):
-                return result
-
-        result = original(compiler, *args, **kwargs)
-        if isinstance(result, Iterable) \
-                and not isinstance(result, (tuple, list)):
-            result = list(result)
-
-        cache.set(cache_key, (time(), result), None)
-
-        return result
+        return _get_result_or_execute_query(
+            execute_query_func, cache_key, _get_table_cache_keys(compiler))
 
     inner.original = original
     return inner
