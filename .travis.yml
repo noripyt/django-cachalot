@@ -22,6 +22,7 @@ before_script:
     - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
     - mysql -u root -e 'CREATE DATABASE cachalot;'
     # Caches pip downloads
+    - mkdir ~/.pip
     - printf '[global]\ndownload_cache = ~/.cache/pip\n' >> ~/.pip/pip.conf
 
 script:
