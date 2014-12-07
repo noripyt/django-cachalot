@@ -109,17 +109,13 @@ def _patch_orm():
 def _patch_cursor():
     def _patch_cursor_execute(original):
         @wraps(original)
-        def inner(cursor, sql, params=None):
-            out = original(cursor, sql, params)
+        def inner(cursor, sql, *args, **kwargs):
+            out = original(cursor, sql, *args, **kwargs)
             if getattr(cursor.db, 'raw', True) \
                     and cachalot_settings.CACHALOT_INVALIDATE_RAW:
-                full_sql = sql
-                if params:
-                    full_sql %= tuple(params)
-                full_sql = full_sql.lower()
-                if 'update' in full_sql or 'insert' in full_sql \
-                        or 'delete' in full_sql:
-                    tables = _get_tables_from_sql(cursor.db, full_sql)
+                sql = sql.lower()
+                if 'update' in sql or 'insert' in sql or 'delete' in sql:
+                    tables = _get_tables_from_sql(cursor.db, sql)
                     invalidate_tables(tables, db_alias=cursor.db.alias)
             return out
 
@@ -127,6 +123,7 @@ def _patch_cursor():
         return inner
 
     CursorWrapper.execute = _patch_cursor_execute(CursorWrapper.execute)
+    CursorWrapper.executemany = _patch_cursor_execute(CursorWrapper.executemany)
 
 
 def _patch_atomic():
