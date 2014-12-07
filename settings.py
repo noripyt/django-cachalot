@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import os
 
 import django
-from django.conf import settings
 
 
 DATABASES = {
@@ -32,8 +31,8 @@ for alias in DATABASES:
     else:
         DATABASES[alias]['TEST'] = {'NAME': test_db_name}
 
-DEFAULT_DATABASE_KEY = os.environ.get('DB_ENGINE', 'sqlite3')
-DATABASES['default'] = DATABASES.pop(DEFAULT_DATABASE_KEY)
+DATABASES['default'] = DATABASES.pop(os.environ.get('DB_ENGINE', 'sqlite3'))
+
 
 CACHES = {
     'locmem': {
@@ -48,8 +47,9 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     },
 }
-DEFAULT_CACHE_KEY = os.environ.get('CACHE_BACKEND', 'locmem')
-CACHES['default'] = CACHES.pop(DEFAULT_CACHE_KEY)
+
+CACHES['default'] = CACHES.pop(os.environ.get('CACHE_BACKEND', 'locmem'))
+
 
 INSTALLED_APPS = [
     'cachalot',
@@ -60,14 +60,5 @@ if django.VERSION < (1, 7):
     INSTALLED_APPS.append('south')
 
 
-def configure():
-    settings.configure(
-        INSTALLED_APPS=INSTALLED_APPS,
-        DATABASES=DATABASES,
-        CACHES=CACHES,
-        MIDDLEWARE_CLASSES=(),
-        PASSWORD_HASHERS=('django.contrib.auth.hashers.MD5PasswordHasher',),
-    )
-
-    if django.VERSION[:2] >= (1, 7):
-        django.setup()
+PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
+SECRET_KEY = 'it’s not important but we have to set it'

@@ -1,9 +1,4 @@
--r requirements.txt
-psycopg2
-MySQL-python
-django-redis
-python-memcached
-South
+-r runtests_requirements.txt
 
 pandas
 matplotlib

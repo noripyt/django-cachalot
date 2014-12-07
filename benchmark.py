@@ -5,9 +5,7 @@ import os
 from random import choice
 from time import time
 
-if __name__ == '__main__':
-    from settings import configure
-    configure()
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group

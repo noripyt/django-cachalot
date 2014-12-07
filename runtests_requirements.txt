@@ -1,0 +1,6 @@
+-r requirements.txt
+psycopg2
+MySQL-python
+django-redis
+python-memcached
+South
