@@ -26,9 +26,9 @@ def invalidate_tables(tables, cache_alias=None, db_alias=None):
     :arg tables: SQL tables names
     :type tables: iterable of strings
     :arg cache_alias: Alias from the Django ``CACHES`` setting
-    :type cache_alias: string or None
+    :type cache_alias: string or NoneType
     :arg db_alias: Alias from the Django ``DATABASES`` setting
-    :type db_alias: string or None
+    :type db_alias: string or NoneType
     :returns: Nothing
     :rtype: NoneType
     """
@@ -49,9 +49,9 @@ def invalidate_models(models, cache_alias=None, db_alias=None):
     :arg models: Django models
     :type models: iterable of ``django.db.models.Model`` subclasses
     :arg cache_alias: Alias from the Django ``CACHES`` setting
-    :type cache_alias: string or None
+    :type cache_alias: string or NoneType
     :arg db_alias: Alias from the Django ``DATABASES`` setting
-    :type db_alias: string or None
+    :type db_alias: string or NoneType
     :returns: Nothing
     :rtype: NoneType
     """
@@ -71,9 +71,9 @@ def invalidate_all(cache_alias=None, db_alias=None):
     on this database, otherwise queries from all databases are cleared.
 
     :arg cache_alias: Alias from the Django ``CACHES`` setting
-    :type cache_alias: string or None
+    :type cache_alias: string or NoneType
     :arg db_alias: Alias from the Django ``DATABASES`` setting
-    :type cache_alias: string or None
+    :type cache_alias: string or NoneType
     :returns: Nothing
     :rtype: NoneType
     """
