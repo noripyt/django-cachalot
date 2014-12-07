@@ -45,7 +45,7 @@ CACHES = {
         }
     },
     'redis': {
-        'BACKEND': 'redis_cache.cache.RedisCache',
+        'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': '127.0.0.1:6379:0',
     },
     'memcached': {
