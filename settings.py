@@ -37,6 +37,12 @@ DATABASES['default'] = DATABASES.pop(os.environ.get('DB_ENGINE', 'sqlite3'))
 CACHES = {
     'locmem': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'OPTIONS': {
+            # We want that limit to be infinite, otherwise we can’t
+            # reliably count the number of SQL queries executed in tests.
+            # In this context, 10e9 is enough to be considered infinite.
+            'MAX_ENTRIES': 10e9,
+        }
     },
     'redis': {
         'BACKEND': 'redis_cache.cache.RedisCache',
