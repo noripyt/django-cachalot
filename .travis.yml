@@ -21,6 +21,8 @@ before_script:
     - psql -c 'CREATE USER cachalot CREATEDB;' -U postgres
     - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
     - mysql -u root -e 'CREATE DATABASE cachalot;'
+    # Caches pip downloads
+    - printf '[global]\ndownload_cache = ~/.cache/pip\n' >> ~/.pip/pip.conf
 
 script:
    - tox -e $TOXENV-sqlite3-locmem
