@@ -5,95 +5,32 @@ services:
   - redis-server
 
 env:
-    - TOXENV=py2.6-django1.6-sqlite3-locmem
-    - TOXENV=py2.6-django1.6-sqlite3-redis
-    - TOXENV=py2.6-django1.6-sqlite3-memcached
-    - TOXENV=py2.6-django1.6-postgresql-locmem
-    - TOXENV=py2.6-django1.6-postgresql-redis
-    - TOXENV=py2.6-django1.6-postgresql-memcached
-    - TOXENV=py2.6-django1.6-mysql-locmem
-    - TOXENV=py2.6-django1.6-mysql-redis
-    - TOXENV=py2.6-django1.6-mysql-memcached
-    - TOXENV=py2.7-django1.6-sqlite3-locmem
-    - TOXENV=py2.7-django1.6-sqlite3-redis
-    - TOXENV=py2.7-django1.6-sqlite3-memcached
-    - TOXENV=py2.7-django1.6-postgresql-locmem
-    - TOXENV=py2.7-django1.6-postgresql-redis
-    - TOXENV=py2.7-django1.6-postgresql-memcached
-    - TOXENV=py2.7-django1.6-mysql-locmem
-    - TOXENV=py2.7-django1.6-mysql-redis
-    - TOXENV=py2.7-django1.6-mysql-memcached
-    - TOXENV=py2.7-django1.7-sqlite3-locmem
-    - TOXENV=py2.7-django1.7-sqlite3-redis
-    - TOXENV=py2.7-django1.7-sqlite3-memcached
-    - TOXENV=py2.7-django1.7-postgresql-locmem
-    - TOXENV=py2.7-django1.7-postgresql-redis
-    - TOXENV=py2.7-django1.7-postgresql-memcached
-    - TOXENV=py2.7-django1.7-mysql-locmem
-    - TOXENV=py2.7-django1.7-mysql-redis
-    - TOXENV=py2.7-django1.7-mysql-memcached
-    - TOXENV=py3.2-django1.6-sqlite3-locmem
-    - TOXENV=py3.2-django1.6-sqlite3-redis
-    - TOXENV=py3.2-django1.6-sqlite3-memcached
-    - TOXENV=py3.2-django1.6-postgresql-locmem
-    - TOXENV=py3.2-django1.6-postgresql-redis
-    - TOXENV=py3.2-django1.6-postgresql-memcached
-    - TOXENV=py3.2-django1.6-mysql-locmem
-    - TOXENV=py3.2-django1.6-mysql-redis
-    - TOXENV=py3.2-django1.6-mysql-memcached
-    - TOXENV=py3.2-django1.7-sqlite3-locmem
-    - TOXENV=py3.2-django1.7-sqlite3-redis
-    - TOXENV=py3.2-django1.7-sqlite3-memcached
-    - TOXENV=py3.2-django1.7-postgresql-locmem
-    - TOXENV=py3.2-django1.7-postgresql-redis
-    - TOXENV=py3.2-django1.7-postgresql-memcached
-    - TOXENV=py3.2-django1.7-mysql-locmem
-    - TOXENV=py3.2-django1.7-mysql-redis
-    - TOXENV=py3.2-django1.7-mysql-memcached
-    - TOXENV=py3.3-django1.6-sqlite3-locmem
-    - TOXENV=py3.3-django1.6-sqlite3-redis
-    - TOXENV=py3.3-django1.6-sqlite3-memcached
-    - TOXENV=py3.3-django1.6-postgresql-locmem
-    - TOXENV=py3.3-django1.6-postgresql-redis
-    - TOXENV=py3.3-django1.6-postgresql-memcached
-    - TOXENV=py3.3-django1.6-mysql-locmem
-    - TOXENV=py3.3-django1.6-mysql-redis
-    - TOXENV=py3.3-django1.6-mysql-memcached
-    - TOXENV=py3.3-django1.7-sqlite3-locmem
-    - TOXENV=py3.3-django1.7-sqlite3-redis
-    - TOXENV=py3.3-django1.7-sqlite3-memcached
-    - TOXENV=py3.3-django1.7-postgresql-locmem
-    - TOXENV=py3.3-django1.7-postgresql-redis
-    - TOXENV=py3.3-django1.7-postgresql-memcached
-    - TOXENV=py3.3-django1.7-mysql-locmem
-    - TOXENV=py3.3-django1.7-mysql-redis
-    - TOXENV=py3.3-django1.7-mysql-memcached
-    - TOXENV=py3.4-django1.6-sqlite3-locmem
-    - TOXENV=py3.4-django1.6-sqlite3-redis
-    - TOXENV=py3.4-django1.6-sqlite3-memcached
-    - TOXENV=py3.4-django1.6-postgresql-locmem
-    - TOXENV=py3.4-django1.6-postgresql-redis
-    - TOXENV=py3.4-django1.6-postgresql-memcached
-    - TOXENV=py3.4-django1.6-mysql-locmem
-    - TOXENV=py3.4-django1.6-mysql-redis
-    - TOXENV=py3.4-django1.6-mysql-memcached
-    - TOXENV=py3.4-django1.7-sqlite3-locmem
-    - TOXENV=py3.4-django1.7-sqlite3-redis
-    - TOXENV=py3.4-django1.7-sqlite3-memcached
-    - TOXENV=py3.4-django1.7-postgresql-locmem
-    - TOXENV=py3.4-django1.7-postgresql-redis
-    - TOXENV=py3.4-django1.7-postgresql-memcached
-    - TOXENV=py3.4-django1.7-mysql-locmem
-    - TOXENV=py3.4-django1.7-mysql-redis
-    - TOXENV=py3.4-django1.7-mysql-memcached
+    - TOXENV=py2.6-django1.6
+    - TOXENV=py2.7-django1.6
+    - TOXENV=py2.7-django1.7
+    - TOXENV=py3.2-django1.6
+    - TOXENV=py3.2-django1.7
+    - TOXENV=py3.3-django1.6
+    - TOXENV=py3.3-django1.7
+    - TOXENV=py3.4-django1.6
+    - TOXENV=py3.4-django1.7
 
 install: pip install tox coveralls
 
 before_script:
-  - psql -c 'CREATE USER cachalot CREATEDB;' -U postgres
-  - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
-  - mysql -u root -e 'CREATE DATABASE cachalot;'
+    - psql -c 'CREATE USER cachalot CREATEDB;' -U postgres
+    - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
+    - mysql -u root -e 'CREATE DATABASE cachalot;'
 
-script: tox -e $TOXENV
+script:
+   - tox -e $TOXENV-sqlite3-locmem
+   - tox -e $TOXENV-sqlite3-redis
+   - tox -e $TOXENV-sqlite3-memcached
+   - tox -e $TOXENV-postgresql-locmem
+   - tox -e $TOXENV-postgresql-redis
+   - tox -e $TOXENV-postgresql-memcached
+   - tox -e $TOXENV-mysql-locmem
+   - tox -e $TOXENV-mysql-redis
+   - tox -e $TOXENV-mysql-memcached
 
 after_success: coveralls
