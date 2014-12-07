@@ -640,6 +640,19 @@ class WriteTestCase(TransactionTestCase):
                 list(Test.objects.values_list('name', flat=True)),
                 ['test1', 'test2'])
 
+        with self.assertNumQueries(1):
+            cursor = connection.cursor()
+            cursor.executemany(
+                "INSERT INTO cachalot_test (name, public) "
+                "VALUES ('test3', %s)", [[1 if self.is_sqlite else 'true']])
+            cursor.close()
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(
+                list(Test.objects.values_list('name', flat=True)),
+                ['test1', 'test2', 'test3'])
+
+
     @skip(NotImplementedError)
     def test_raw_update(self):
         pass

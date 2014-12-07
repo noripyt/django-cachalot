@@ -549,6 +549,23 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, list(Test.objects.values_list()))
 
+    def test_cursor_executemany(self):
+        sql = 'SELECT * FROM %s WHERE name = %%s;' % Test._meta.db_table
+
+        param_list = [('test1',)]
+        with self.assertNumQueries(1):
+            cursor = connection.cursor()
+            cursor.executemany(sql, param_list)
+            data1 = list(cursor.fetchall())
+            cursor.close()
+        with self.assertNumQueries(1):
+            cursor = connection.cursor()
+            cursor.executemany(sql, param_list)
+            data2 = list(cursor.fetchall())
+            cursor.close()
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, list(Test.objects.filter(name='test1').values_list()))
+
     def test_missing_table_cache_key(self):
         with self.assertNumQueries(1):
             list(Test.objects.all())
