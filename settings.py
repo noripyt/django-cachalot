@@ -47,6 +47,12 @@ CACHES = {
     'redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': '127.0.0.1:6379:0',
+        'OPTIONS': {
+            # Since we are using both Python 2 & 3 in tests, we need to use
+            # a compatible pickle version to avoid unpickling errors when
+            # running a Python 2 test after a Python 3 test.
+            'PICKLE_VERSION': 2,
+        }
     },
     'memcached': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
