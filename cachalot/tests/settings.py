@@ -63,7 +63,7 @@ class SettingsTestCase(TransactionTestCase):
     @skipIf(len(settings.CACHES) == 1,
             'We can’t change the cache used since there’s only one configured')
     def test_cache(self):
-        with cachalot_settings(CACHALOT_CACHE='default'):
+        with cachalot_settings(CACHALOT_CACHE=DEFAULT_CACHE_ALIAS):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
