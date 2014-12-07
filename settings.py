@@ -60,5 +60,6 @@ if django.VERSION < (1, 7):
     INSTALLED_APPS.append('south')
 
 
+MIDDLEWARE_CLASSES = ()
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 SECRET_KEY = 'it’s not important but we have to set it'

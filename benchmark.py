@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # coding: utf-8
 
 from __future__ import unicode_literals, print_function
@@ -7,6 +8,7 @@ from time import time
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 
+import django
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.cache import get_cache
@@ -176,6 +178,9 @@ def create_data(using):
 
 
 if __name__ == '__main__':
+    if django.VERSION[:2] >= (1, 7):
+        django.setup()
+
     old_db_names = {}
     for alias in connections:
         conn = connections[alias]
