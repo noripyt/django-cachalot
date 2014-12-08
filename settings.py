@@ -78,7 +78,7 @@ else:
 
 DEFAULT_CACHE_ALIAS = os.environ.get('CACHE_BACKEND', 'locmem')
 CACHES['default'] = CACHES.pop(DEFAULT_CACHE_ALIAS)
-if DEFAULT_CACHE_ALIAS == 'memcached':
+if DEFAULT_CACHE_ALIAS == 'memcached' and 'pylibmc' in CACHES:
     del CACHES['pylibmc']
 elif DEFAULT_CACHE_ALIAS == 'pylibmc':
     del CACHES['memcached']
