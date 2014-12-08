@@ -65,11 +65,16 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
     },
-    'pylibmc': {
+}
+try:
+    import pylibmc
+except ImportError:
+    pass
+else:
+    CACHES['pylibmc'] = {
         'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
         'LOCATION': '127.0.0.1:11211',
-    },
-}
+    }
 
 DEFAULT_CACHE_ALIAS = os.environ.get('CACHE_BACKEND', 'locmem')
 CACHES['default'] = CACHES.pop(DEFAULT_CACHE_ALIAS)
