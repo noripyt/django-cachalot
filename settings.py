@@ -44,6 +44,13 @@ CACHES = {
             'MAX_ENTRIES': 10e9,
         }
     },
+    'filebased': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp/django_cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 10e9,  # (See locmem)
+        }
+    },
     'redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': '127.0.0.1:6379:0',

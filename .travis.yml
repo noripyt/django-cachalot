@@ -27,12 +27,15 @@ before_script:
 
 script:
    - tox -e $TOXENV-sqlite3-locmem
+   - tox -e $TOXENV-sqlite3-filebased
    - tox -e $TOXENV-sqlite3-redis
    - tox -e $TOXENV-sqlite3-memcached
    - tox -e $TOXENV-postgresql-locmem
+   - tox -e $TOXENV-postgresql-filebased
    - tox -e $TOXENV-postgresql-redis
    - tox -e $TOXENV-postgresql-memcached
    - tox -e $TOXENV-mysql-locmem
+   - tox -e $TOXENV-mysql-filebased
    - tox -e $TOXENV-mysql-redis
    - tox -e $TOXENV-mysql-memcached
 
