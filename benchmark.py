@@ -13,12 +13,11 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.cache import get_cache
 from django.db import connections, connection
-from django.test.utils import CaptureQueriesContext
+from django.test.utils import CaptureQueriesContext, override_settings
 import matplotlib.pyplot as plt
 import pandas as pd
 
 from cachalot.api import invalidate_all
-from cachalot.settings import cachalot_settings
 from cachalot.tests.models import Test
 
 
@@ -71,7 +70,7 @@ class Benchmark(object):
             query_str = 'list(%s)' % query_str
         self.query_function = eval('lambda using: ' + query_str)
 
-        with cachalot_settings(CACHALOT_ENABLED=False):
+        with override_settings(CACHALOT_ENABLED=False):
             self.bench_once(CONTEXTS[0], num_queries)
 
         self.bench_once(CONTEXTS[1], num_queries, invalidate_before=True)
@@ -97,7 +96,7 @@ class Benchmark(object):
             for cache_alias in settings.CACHES:
                 cache = get_cache(cache_alias)
                 self.cache_name = cache.__class__.__name__[:-5].lower()
-                with cachalot_settings(CACHALOT_CACHE=cache_alias):
+                with override_settings(CACHALOT_CACHE=cache_alias):
                     self.execute_benchmark()
 
         self.df = pd.DataFrame.from_records(self.data)

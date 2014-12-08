@@ -81,26 +81,21 @@ Settings
 Dynamic overriding
 ~~~~~~~~~~~~~~~~~~
 
-Obviously, you can set these settings in your Django settings.
-But you can also change them whenever you want!
-Simply use ``cachalot_settings`` as a context manager, a decorator,
-or simply by changing its attributes:
+Django-cachalot is built so that its settings can be dynamically changed.
+
+For example:
 
 .. code:: python
 
-    from cachalot.settings import cachalot_settings
+    from django.conf import settings
+    from django.test.utils import override_settings
 
-    with cachalot_settings(CACHALOT_ENABLED=False):
+    with override_settings(CACHALOT_ENABLED=False):
         # SQL queries are not cached in this block
 
-    @cachalot_settings(CACHALOT_CACHE='another_alias')
+    @override_settings(CACHALOT_CACHE='another_alias')
     def your_function():
         # What’s in this function uses another cache
 
     # Globally disables SQL caching until you set it back to True
-    cachalot_settings.CACHALOT_ENABLED = False
-
-In tests, you can use
-`Django’s testing tools <https://docs.djangoproject.com/en/1.7/topics/testing/tools/#overriding-settings>`_
-as well as ``cachalot_settings``.  The only difference is that you can’t use
-``cachalot_settings`` to decorate a class.
+    settings.CACHALOT_ENABLED = False

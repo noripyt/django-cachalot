@@ -17,8 +17,7 @@ master
 - Adds 2 settings to customize how cache keys are generated
 - Adds a benchmark
 - Adds file-based cache support for Django 1.7
-- Fixes overridden settings not working when they are already defined in
-  Django settings
+- Simplifies cachalot_settings and forbids its modification
 
 
 0.8.1
