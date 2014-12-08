@@ -3,4 +3,5 @@ psycopg2
 MySQL-python
 django-redis
 python-memcached
+pylibmc
 South

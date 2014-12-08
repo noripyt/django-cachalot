@@ -6,12 +6,16 @@ Requirements
 
 - Django 1.6 or 1.7
 - Python 2.6, 2.7, 3.2, 3.3, or 3.4
-- `django-redis <https://github.com/niwibe/django-redis>`_,
-  `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_,
-  `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
-  (only with Django >= 1.7 as it is not thread-safe before),
-  or `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
-  (but it’s not shared between processes, so don’t use it with RQ or Celery)
+- a cache configured as `default` with one of these backends:
+
+  - `django-redis <https://github.com/niwibe/django-redis>`_
+  - `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_
+    (using either python-memcached or pylibmc)
+  - `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
+    (only with Django >= 1.7 as it was not thread-safe before)
+  - `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
+    (but it’s not shared between processes, so don’t use it with RQ or Celery)
+
 - PostgreSQL, MySQL or SQLite
 
 Usage

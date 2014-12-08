@@ -65,9 +65,18 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
     },
+    'pylibmc': {
+        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+        'LOCATION': '127.0.0.1:11211',
+    },
 }
 
-CACHES['default'] = CACHES.pop(os.environ.get('CACHE_BACKEND', 'locmem'))
+DEFAULT_CACHE_ALIAS = os.environ.get('CACHE_BACKEND', 'locmem')
+CACHES['default'] = CACHES.pop(DEFAULT_CACHE_ALIAS)
+if DEFAULT_CACHE_ALIAS == 'memcached':
+    del CACHES['pylibmc']
+elif DEFAULT_CACHE_ALIAS == 'pylibmc':
+    del CACHES['memcached']
 
 
 INSTALLED_APPS = [
