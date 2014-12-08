@@ -96,3 +96,6 @@ if django.VERSION < (1, 7):
 MIDDLEWARE_CLASSES = ()
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 SECRET_KEY = 'it’s not important but we have to set it'
+
+
+CACHALOT_ENABLED = True
