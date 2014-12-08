@@ -24,6 +24,9 @@ Usage
 #. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. Be aware of :ref:`the few limits <limits>`
+#. If you use
+   `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
+   add ``'cachalot.panels.CachalotPanel',`` to your ``DEBUG_TOOLBAR_PANELS``
 #. Enjoy!
 
 

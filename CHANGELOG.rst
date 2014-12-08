@@ -4,20 +4,29 @@ What’s new in django-cachalot?
 master
 ------
 
+Added:
+
 - Caches all queries implying ``Queryset.extra``
-- Adds a setting to choose if random queries must be cached
 - Invalidates raw queries
 - Adds a simple API containing:
   ``invalidate_tables``, ``invalidate_models``, ``invalidate_all``
-- Uses an infinite timeout
+- Adds file-based cache support for Django 1.7
+- Adds a setting to choose if random queries must be cached
+- Adds 2 settings to customize how cache keys are generated
+- Adds a django-debug-toolbar panel
+- Adds a benchmark
+
+Fixed:
+
 - Rewrites invalidation for a better speed & memory performance
 - Fixes a stale cache issue occurring when an invalidation is done
   exactly during a SQL request on the invalidated table(s)
 - Fixes a stale cache issue occurring after concurrent transactions
-- Adds 2 settings to customize how cache keys are generated
-- Adds a benchmark
-- Adds file-based cache support for Django 1.7
-- Simplifies cachalot_settings and forbids its modification
+- Uses an infinite timeout
+
+Removed:
+
+- Simplifies ``cachalot_settings`` and forbids its use or modification
 
 
 0.8.1
