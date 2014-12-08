@@ -1,2 +1,2 @@
 include README.rst LICENSE AUTHORS.rst CHANGELOG.rst requirements.txt
-recursive-include *.json
+recursive-include *.json *.html
