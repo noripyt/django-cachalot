@@ -8,9 +8,10 @@ Requirements
 - Python 2.6, 2.7, 3.2, 3.3, or 3.4
 - `django-redis <https://github.com/niwibe/django-redis>`_,
   `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_,
-  `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_,
-  (or `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_,
-  but it’s not shared between processes, so don’t use it with RQ or Celery)
+  `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
+  (only with Django >= 1.7 as it is not thread-safe before),
+  or `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
+  (but it’s not shared between processes, so don’t use it with RQ or Celery)
 - PostgreSQL, MySQL or SQLite
 
 Usage

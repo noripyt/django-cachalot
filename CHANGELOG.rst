@@ -16,6 +16,7 @@ master
 - Fixes a stale cache issue occurring after concurrent transactions
 - Adds 2 settings to customize how cache keys are generated
 - Adds a benchmark
+- Adds file-based cache support for Django 1.7
 
 
 0.8.1
