@@ -56,7 +56,6 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
     new_table_cache_keys = frozenset(table_cache_keys) - frozenset(data)
 
     if new_table_cache_keys:
-        cache.clear()
         for table_cache_key in new_table_cache_keys:
             cache.add(table_cache_key, time(), None)
     elif cache_key in data:
