@@ -54,11 +54,12 @@ class CachalotPanel(Panel):
                 data[db_alias].append(
                     (model._meta.app_label, model.__name__, invalidation))
                 if self.last_invalidation is None \
-                        or invalidation < self.last_invalidation:
+                        or invalidation > self.last_invalidation:
                     self.last_invalidation = invalidation
             data[db_alias].sort(key=lambda row: row[2], reverse=True)
         self.record_stats({'invalidations_per_db': data.items()})
 
+    @property
     def nav_subtitle(self):
         if self.enabled and self.last_invalidation is not None:
             return (_('Last invalidation: %s')
