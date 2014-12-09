@@ -12,7 +12,7 @@ if __name__ == '__main__':
     if django.VERSION[:2] >= (1, 7):
         django.setup()
     from django.test.runner import DiscoverRunner
-    test_runner = DiscoverRunner()
+    test_runner = DiscoverRunner(verbosity=2)
     failures = test_runner.run_tests(['cachalot.tests'])
     if failures:
         sys.exit(failures)
