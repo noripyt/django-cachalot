@@ -1,8 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from threading import Thread, Lock
-from time import sleep
+from threading import Thread
 
 from django.db import connection, transaction
 from django.test import TransactionTestCase, skipUnlessDBFeature
@@ -11,10 +10,6 @@ from .models import Test
 
 
 class TestThread(Thread):
-    def __init__(self):
-        super(TestThread, self).__init__()
-        self.lock = Lock()
-
     def start_and_join(self):
         self.start()
         self.join()
@@ -22,6 +17,7 @@ class TestThread(Thread):
 
     def run(self):
         self.t = Test.objects.first()
+        connection.close()
 
 
 class ThreadSafetyTestCase(TransactionTestCase):
