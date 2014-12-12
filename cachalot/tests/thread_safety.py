@@ -15,47 +15,35 @@ class TestThread(Thread):
         super(TestThread, self).__init__()
         self.lock = Lock()
 
-    def wait(self):
-        with self.lock:
-            sleep(0.1)
-
-    def start(self, n=2):
-        self.n = n
-        super(TestThread, self).start()
+    def start_and_join(self):
+        self.start()
+        self.join()
+        return self.t
 
     def run(self):
-        for i in range(1, self.n+1):
-            setattr(self, 't%d' % i, Test.objects.first())
-            self.wait()
-
-        connection.close()
+        self.t = Test.objects.first()
 
 
 class ThreadSafetyTestCase(TransactionTestCase):
-    def setUp(self):
-        self.thread = TestThread()
-
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching(self):
-        self.thread.start()
-        self.thread.wait()
+        t1 = TestThread().start_and_join()
         t = Test.objects.create(name='test')
-        self.thread.wait()
+        t2 = TestThread().start_and_join()
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, t)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, t)
 
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_during_atomic(self):
         with self.assertNumQueries(1):
             with transaction.atomic():
-                self.thread.start()
-                self.thread.wait()
+                t1 = TestThread().start_and_join()
                 t = Test.objects.create(name='test')
-                self.thread.wait()
+                t2 = TestThread().start_and_join()
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, None)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, None)
 
         with self.assertNumQueries(1):
             data = Test.objects.first()
@@ -63,16 +51,15 @@ class ThreadSafetyTestCase(TransactionTestCase):
 
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_before_and_during_atomic_1(self):
-        self.thread.start()
-        self.thread.wait()
+        t1 = TestThread().start_and_join()
 
         with self.assertNumQueries(1):
             with transaction.atomic():
-                self.thread.wait()
+                t2 = TestThread().start_and_join()
                 t = Test.objects.create(name='test')
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, None)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, None)
 
         with self.assertNumQueries(1):
             data = Test.objects.first()
@@ -80,16 +67,15 @@ class ThreadSafetyTestCase(TransactionTestCase):
 
     @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_before_and_during_atomic_2(self):
-        self.thread.start()
-        self.thread.wait()
+        t1 = TestThread().start_and_join()
 
         with self.assertNumQueries(1):
             with transaction.atomic():
                 t = Test.objects.create(name='test')
-                self.thread.wait()
+                t2 = TestThread().start_and_join()
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, None)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, None)
 
         with self.assertNumQueries(1):
             data = Test.objects.first()
@@ -99,14 +85,13 @@ class ThreadSafetyTestCase(TransactionTestCase):
     def test_concurrent_caching_during_and_after_atomic_1(self):
         with self.assertNumQueries(1):
             with transaction.atomic():
-                self.thread.start()
-                self.thread.wait()
+                t1 = TestThread().start_and_join()
                 t = Test.objects.create(name='test')
 
-        self.thread.wait()
+        t2 = TestThread().start_and_join()
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, t)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, t)
 
         with self.assertNumQueries(0):
             data = Test.objects.first()
@@ -117,13 +102,12 @@ class ThreadSafetyTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             with transaction.atomic():
                 t = Test.objects.create(name='test')
-                self.thread.start()
-                self.thread.wait()
+                t1 = TestThread().start_and_join()
 
-        self.thread.wait()
+        t2 = TestThread().start_and_join()
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, t)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, t)
 
         with self.assertNumQueries(0):
             data = Test.objects.first()
@@ -133,16 +117,15 @@ class ThreadSafetyTestCase(TransactionTestCase):
     def test_concurrent_caching_during_and_after_atomic_3(self):
         with self.assertNumQueries(1):
             with transaction.atomic():
-                self.thread.start(3)
-                self.thread.wait()
+                t1 = TestThread().start_and_join()
                 t = Test.objects.create(name='test')
-                self.thread.wait()
+                t2 = TestThread().start_and_join()
 
-        self.thread.wait()
+        t3 = TestThread().start_and_join()
 
-        self.assertEqual(self.thread.t1, None)
-        self.assertEqual(self.thread.t2, None)
-        self.assertEqual(self.thread.t3, t)
+        self.assertEqual(t1, None)
+        self.assertEqual(t2, None)
+        self.assertEqual(t3, t)
 
         with self.assertNumQueries(0):
             data = Test.objects.first()
