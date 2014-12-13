@@ -56,7 +56,8 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
     new_table_cache_keys = frozenset(table_cache_keys) - frozenset(data)
 
     if new_table_cache_keys:
-        cache.set_many(new_table_cache_keys, time(), None)
+        now = time()
+        cache.set_many(dict([(k, now) for k in new_table_cache_keys]), None)
     elif cache_key in data:
         try:
             timestamp, result = data.pop(cache_key)
