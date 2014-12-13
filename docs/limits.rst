@@ -10,6 +10,17 @@ Locmem is a just a dict stored in a single Python process.
 It’s not shared between processes, so don’t use locmem with django-cachalot
 in a multi-processes project, if you use RQ or Celery for instance.
 
+
+MySQL
+.....
+
+This database software already provides by default something like
+django-cachalot:
+`MySQL query cache <http://dev.mysql.com/doc/refman/5.7/en/query-cache.html>`_.
+Django-cachalot will slow down your queries if that query cache is enabled.
+If it’s not enabled, django-cachalot will make queries much faster.
+But you should probably better enable the query cache instead.
+
 .. _Raw queries limits:
 
 Raw SQL queries

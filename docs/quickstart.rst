@@ -14,9 +14,14 @@ Requirements
   - `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
     (only with Django >= 1.7 as it was not thread-safe before)
   - `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
-    (but it’s not shared between processes, so don’t use it with RQ or Celery)
+    (but it’s not shared between processes, see :ref:`Limits`)
 
-- PostgreSQL, MySQL or SQLite
+- one of these databases:
+
+  - PostgreSQL
+  - SQLite
+  - MySQL (but you probably don’t need django-cachalot in this case,
+           see :ref:`Limits`)
 
 Usage
 .....
@@ -26,7 +31,8 @@ Usage
 #. Be aware of :ref:`the few limits <limits>`
 #. If you use
    `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
-   add ``'cachalot.panels.CachalotPanel',`` to your ``DEBUG_TOOLBAR_PANELS``
+   you can add ``'cachalot.panels.CachalotPanel',``
+   to your ``DEBUG_TOOLBAR_PANELS``
 #. Enjoy!
 
 
