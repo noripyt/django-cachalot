@@ -44,13 +44,6 @@ CACHES = {
             'MAX_ENTRIES': 10e9,
         }
     },
-    'filebased': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': '/tmp/django_cache',
-        'OPTIONS': {
-            'MAX_ENTRIES': 10e9,  # (See locmem)
-        }
-    },
     'redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'redis://127.0.0.1:6379/0',
@@ -66,6 +59,14 @@ CACHES = {
         'LOCATION': '127.0.0.1:11211',
     },
 }
+if django.VERSION >= (1, 7):
+    CACHES['filebased'] = {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': '/tmp/django_cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 10e9,  # (See locmem)
+        }
+    }
 try:
     import pylibmc
 except ImportError:
