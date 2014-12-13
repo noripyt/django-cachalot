@@ -22,7 +22,7 @@ from cachalot.tests.models import Test
 
 
 RESULTS_PATH = 'benchmark/'
-CONTEXTS = ('reference', '1st query', '2nd query')
+CONTEXTS = ('Control', 'Cold cache', 'Hot cache')
 
 
 class AssertNumQueries(CaptureQueriesContext):
@@ -81,12 +81,17 @@ class Benchmark(object):
         self.benchmark('.count()', to_list=False)
         self.benchmark('.first()', to_list=False)
         self.benchmark('[:10]')
-        self.benchmark(".filter(name__icontains='e')[:10]")
-        self.benchmark(".order_by('owner')[:10]")
-        self.benchmark(".select_related('owner')[:10]")
-        self.benchmark(
-            ".select_related('owner').prefetch_related('owner__groups')[:10]",
-            num_queries=2)
+        self.benchmark('[5000:5010]')
+        self.benchmark(".filter(name__icontains='e')[0:10]")
+        self.benchmark(".filter(name__icontains='e')[5000:5010]")
+        self.benchmark(".order_by('owner')[0:10]")
+        self.benchmark(".order_by('owner')[5000:5010]")
+        self.benchmark(".select_related('owner')[0:10]")
+        self.benchmark(".select_related('owner')[5000:5010]")
+        self.benchmark(".prefetch_related('owner__groups')[0:10]",
+                       num_queries=3)
+        self.benchmark(".prefetch_related('owner__groups')[5000:5010]",
+                       num_queries=3)
 
     def run(self):
         for db_alias in settings.DATABASES:
@@ -145,11 +150,11 @@ class Benchmark(object):
             plt.figure()
             axes = self.means[v].plot(
                 kind='barh', xerr=self.errors[v],
-                xlim=self.xlim, figsize=(15, 10), subplots=True, layout=(4, 2),
+                xlim=self.xlim, figsize=(15, 15), subplots=True, layout=(6, 2),
                 sharey=True, legend=False)
+            plt.gca().invert_yaxis()
             for row in axes:
                 for ax in row:
-                    ax.invert_yaxis()
                     ax.set_ylabel('')
                     ax.set_xlabel('Time (s)')
             plt.savefig(os.path.join(RESULTS_PATH, '%s_%s.svg' % (param, v)))
