@@ -59,14 +59,10 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
         now = time()
         cache.set_many(dict([(k, now) for k in new_table_cache_keys]), None)
     elif cache_key in data:
-        try:
-            timestamp, result = data.pop(cache_key)
-        except TypeError:  # Occurs when None is unexpectedly found
-            pass
-        else:
-            table_times = data.values()
-            if table_times and timestamp > max(table_times):
-                return result
+        timestamp, result = data.pop(cache_key)
+        table_times = data.values()
+        if table_times and timestamp > max(table_times):
+            return result
 
     result = execute_query_func()
     if isinstance(result, Iterable) \

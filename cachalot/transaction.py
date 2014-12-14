@@ -11,17 +11,8 @@ class AtomicCache(dict):
         self.parent_cache = parent_cache
         self.to_be_invalidated = set()
 
-    def get(self, k, default=None):
-        if k in self:
-            return self[k]
-        return self.parent_cache.get(k, default)
-
     def set(self, k, v, timeout):
         self[k] = v
-
-    def add(self, k, v, timeout):
-        if self.get(k) is None:
-            self.set(k, v, timeout)
 
     def get_many(self, keys):
         data = dict([(k, self[k]) for k in keys if k in self])
