@@ -1,7 +1,7 @@
 How django-cachalot works
 -------------------------
 
-.. note:: If you don’t understand, just pretend it’s magic.
+.. note:: If you don’t understand, you can pretend it’s magic.
 
 Reverse engineering
 ...................
@@ -14,7 +14,9 @@ you can be sure that the test suite will fail.
 Monkey patching
 ...............
 
-django-cachalot modifies Django in place during execution to add a caching tool
+Django-cachalot modifies Django in place during execution to add a caching tool
 just before SQL queries are executed.
-We detect which cache keys must be removed when some data
-is created/changed/deleted on the database.
+When a SQL query reads data, we save the result in cache. If that same query is
+executed later, we fetch that result from cache.
+When we detect `CREATE`, `UPDATE` or `DELETE`, we know which tables are
+modified. All the previous cached queries can therefore be safely invalidated.
