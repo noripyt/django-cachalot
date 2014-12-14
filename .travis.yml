@@ -1,60 +1,116 @@
 language: python
 
-python:
-  - 2.6
-  - 2.7
-  - 3.2
-  - 3.3
-  - 3.4
-
 services:
   - memcached
   - redis-server
 
 env:
-  - DJANGO="Django>=1.6,<1.7"
-  - DJANGO="Django>=1.7,<1.8"
+  - TOXENV=py2.6-django1.6-sqlite3-locmem
+  - TOXENV=py2.6-django1.6-sqlite3-redis
+  - TOXENV=py2.6-django1.6-sqlite3-memcached
+  - TOXENV=py2.6-django1.6-postgresql-locmem
+  - TOXENV=py2.6-django1.6-postgresql-redis
+  - TOXENV=py2.6-django1.6-postgresql-memcached
+  - TOXENV=py2.6-django1.6-mysql-locmem
+  - TOXENV=py2.6-django1.6-mysql-redis
+  - TOXENV=py2.6-django1.6-mysql-memcached
+  - TOXENV=py2.7-django1.7-sqlite3-pylibmc
+  - TOXENV=py2.7-django1.7-postgresql-pylibmc
+  - TOXENV=py2.7-django1.7-mysql-pylibmc
+  - TOXENV=py2.7-django1.7-sqlite3-filebased
+  - TOXENV=py2.7-django1.7-postgresql-filebased
+  - TOXENV=py2.7-django1.7-mysql-filebased
+  - TOXENV=py3.2-django1.7-sqlite3-filebased
+  - TOXENV=py3.2-django1.7-postgresql-filebased
+  - TOXENV=py3.2-django1.7-mysql-filebased
+  - TOXENV=py3.3-django1.7-sqlite3-filebased
+  - TOXENV=py3.3-django1.7-postgresql-filebased
+  - TOXENV=py3.3-django1.7-mysql-filebased
+  - TOXENV=py3.4-django1.7-sqlite3-filebased
+  - TOXENV=py3.4-django1.7-postgresql-filebased
+  - TOXENV=py3.4-django1.7-mysql-filebased
+  - TOXENV=py2.7-django1.6-sqlite3-locmem
+  - TOXENV=py2.7-django1.6-sqlite3-redis
+  - TOXENV=py2.7-django1.6-sqlite3-memcached
+  - TOXENV=py2.7-django1.6-postgresql-locmem
+  - TOXENV=py2.7-django1.6-postgresql-redis
+  - TOXENV=py2.7-django1.6-postgresql-memcached
+  - TOXENV=py2.7-django1.6-mysql-locmem
+  - TOXENV=py2.7-django1.6-mysql-redis
+  - TOXENV=py2.7-django1.6-mysql-memcached
+  - TOXENV=py2.7-django1.7-sqlite3-locmem
+  - TOXENV=py2.7-django1.7-sqlite3-redis
+  - TOXENV=py2.7-django1.7-sqlite3-memcached
+  - TOXENV=py2.7-django1.7-postgresql-locmem
+  - TOXENV=py2.7-django1.7-postgresql-redis
+  - TOXENV=py2.7-django1.7-postgresql-memcached
+  - TOXENV=py2.7-django1.7-mysql-locmem
+  - TOXENV=py2.7-django1.7-mysql-redis
+  - TOXENV=py2.7-django1.7-mysql-memcached
+  - TOXENV=py3.2-django1.6-sqlite3-locmem
+  - TOXENV=py3.2-django1.6-sqlite3-redis
+  - TOXENV=py3.2-django1.6-sqlite3-memcached
+  - TOXENV=py3.2-django1.6-postgresql-locmem
+  - TOXENV=py3.2-django1.6-postgresql-redis
+  - TOXENV=py3.2-django1.6-postgresql-memcached
+  - TOXENV=py3.2-django1.6-mysql-locmem
+  - TOXENV=py3.2-django1.6-mysql-redis
+  - TOXENV=py3.2-django1.6-mysql-memcached
+  - TOXENV=py3.2-django1.7-sqlite3-locmem
+  - TOXENV=py3.2-django1.7-sqlite3-redis
+  - TOXENV=py3.2-django1.7-sqlite3-memcached
+  - TOXENV=py3.2-django1.7-postgresql-locmem
+  - TOXENV=py3.2-django1.7-postgresql-redis
+  - TOXENV=py3.2-django1.7-postgresql-memcached
+  - TOXENV=py3.2-django1.7-mysql-locmem
+  - TOXENV=py3.2-django1.7-mysql-redis
+  - TOXENV=py3.2-django1.7-mysql-memcached
+  - TOXENV=py3.3-django1.6-sqlite3-locmem
+  - TOXENV=py3.3-django1.6-sqlite3-redis
+  - TOXENV=py3.3-django1.6-sqlite3-memcached
+  - TOXENV=py3.3-django1.6-postgresql-locmem
+  - TOXENV=py3.3-django1.6-postgresql-redis
+  - TOXENV=py3.3-django1.6-postgresql-memcached
+  - TOXENV=py3.3-django1.6-mysql-locmem
+  - TOXENV=py3.3-django1.6-mysql-redis
+  - TOXENV=py3.3-django1.6-mysql-memcached
+  - TOXENV=py3.3-django1.7-sqlite3-locmem
+  - TOXENV=py3.3-django1.7-sqlite3-redis
+  - TOXENV=py3.3-django1.7-sqlite3-memcached
+  - TOXENV=py3.3-django1.7-postgresql-locmem
+  - TOXENV=py3.3-django1.7-postgresql-redis
+  - TOXENV=py3.3-django1.7-postgresql-memcached
+  - TOXENV=py3.3-django1.7-mysql-locmem
+  - TOXENV=py3.3-django1.7-mysql-redis
+  - TOXENV=py3.3-django1.7-mysql-memcached
+  - TOXENV=py3.4-django1.6-sqlite3-locmem
+  - TOXENV=py3.4-django1.6-sqlite3-redis
+  - TOXENV=py3.4-django1.6-sqlite3-memcached
+  - TOXENV=py3.4-django1.6-postgresql-locmem
+  - TOXENV=py3.4-django1.6-postgresql-redis
+  - TOXENV=py3.4-django1.6-postgresql-memcached
+  - TOXENV=py3.4-django1.6-mysql-locmem
+  - TOXENV=py3.4-django1.6-mysql-redis
+  - TOXENV=py3.4-django1.6-mysql-memcached
+  - TOXENV=py3.4-django1.7-sqlite3-locmem
+  - TOXENV=py3.4-django1.7-sqlite3-redis
+  - TOXENV=py3.4-django1.7-sqlite3-memcached
+  - TOXENV=py3.4-django1.7-postgresql-locmem
+  - TOXENV=py3.4-django1.7-postgresql-redis
+  - TOXENV=py3.4-django1.7-postgresql-memcached
+  - TOXENV=py3.4-django1.7-mysql-locmem
+  - TOXENV=py3.4-django1.7-mysql-redis
+  - TOXENV=py3.4-django1.7-mysql-memcached
 
 sudo: false
 
-install:
-  - pip install $DJANGO coveralls
-  - if [[ $TRAVIS_PYTHON_VERSION == 3* ]];
-    then
-      pip install -r runtests_requirements_py3.txt;
-    else
-      pip install -r runtests_requirements_py2.txt;
-    fi
+install: pip install tox coveralls
 
 before_script:
     - psql -c 'CREATE USER cachalot CREATEDB;' -U postgres
     - psql -c 'CREATE DATABASE cachalot OWNER cachalot;' -U postgres
     - mysql -u root -e 'CREATE DATABASE cachalot;'
 
-script:
-  - CACHE_BACKEND=locmem    DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=locmem    DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=locmem    DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=redis     DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=redis     DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=redis     DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=memcached DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=memcached DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=memcached DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
-  - if [[ $DJANGO == "Django>=1.7,<1.8" ]]; then
-    CACHE_BACKEND=filebased DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
-    CACHE_BACKEND=filebased DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
-    CACHE_BACKEND=filebased DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
-    if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then
-    CACHE_BACKEND=pylibmc   DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
-    CACHE_BACKEND=pylibmc   DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
-    CACHE_BACKEND=pylibmc   DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
-    fi
-    fi
+script: tox -e $TOXENV
 
 after_success: coveralls
-
-matrix:
-  exclude:
-    - python: 2.6
-      env: DJANGO="Django>=1.7,<1.8"
