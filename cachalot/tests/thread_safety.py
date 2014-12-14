@@ -20,8 +20,8 @@ class TestThread(Thread):
         connection.close()
 
 
+@skipUnlessDBFeature('test_db_allows_multiple_connections')
 class ThreadSafetyTestCase(TransactionTestCase):
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching(self):
         t1 = TestThread().start_and_join()
         t = Test.objects.create(name='test')
@@ -30,7 +30,6 @@ class ThreadSafetyTestCase(TransactionTestCase):
         self.assertEqual(t1, None)
         self.assertEqual(t2, t)
 
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_during_atomic(self):
         with self.assertNumQueries(1):
             with transaction.atomic():
@@ -45,7 +44,6 @@ class ThreadSafetyTestCase(TransactionTestCase):
             data = Test.objects.first()
         self.assertEqual(data, t)
 
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_before_and_during_atomic_1(self):
         t1 = TestThread().start_and_join()
 
@@ -61,7 +59,6 @@ class ThreadSafetyTestCase(TransactionTestCase):
             data = Test.objects.first()
         self.assertEqual(data, t)
 
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_before_and_during_atomic_2(self):
         t1 = TestThread().start_and_join()
 
@@ -77,7 +74,6 @@ class ThreadSafetyTestCase(TransactionTestCase):
             data = Test.objects.first()
         self.assertEqual(data, t)
 
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_during_and_after_atomic_1(self):
         with self.assertNumQueries(1):
             with transaction.atomic():
@@ -93,7 +89,6 @@ class ThreadSafetyTestCase(TransactionTestCase):
             data = Test.objects.first()
         self.assertEqual(data, t)
 
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_during_and_after_atomic_2(self):
         with self.assertNumQueries(1):
             with transaction.atomic():
@@ -109,7 +104,6 @@ class ThreadSafetyTestCase(TransactionTestCase):
             data = Test.objects.first()
         self.assertEqual(data, t)
 
-    @skipUnlessDBFeature('test_db_allows_multiple_connections')
     def test_concurrent_caching_during_and_after_atomic_3(self):
         with self.assertNumQueries(1):
             with transaction.atomic():

@@ -2,9 +2,9 @@
 
 from __future__ import unicode_literals
 try:
-    from unittest import skipIf, skip
+    from unittest import skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skipIf, skip
+    from unittest2 import skipIf
 
 from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
@@ -652,14 +652,41 @@ class WriteTestCase(TransactionTestCase):
                 list(Test.objects.values_list('name', flat=True)),
                 ['test1', 'test2', 'test3'])
 
-
-    @skip(NotImplementedError)
     def test_raw_update(self):
-        pass
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test')
+        with self.assertNumQueries(1):
+            self.assertListEqual(
+                list(Test.objects.values_list('name', flat=True)),
+                ['test'])
 
-    @skip(NotImplementedError)
+        with self.assertNumQueries(1):
+            cursor = connection.cursor()
+            cursor.execute("UPDATE cachalot_test SET name = 'new name';")
+            cursor.close()
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(
+                list(Test.objects.values_list('name', flat=True)),
+                ['new name'])
+
     def test_raw_delete(self):
-        pass
+        with self.assertNumQueries(1):
+            Test.objects.create(name='test')
+        with self.assertNumQueries(1):
+            self.assertListEqual(
+                list(Test.objects.values_list('name', flat=True)),
+                ['test'])
+
+        with self.assertNumQueries(1):
+            cursor = connection.cursor()
+            cursor.execute("DELETE FROM cachalot_test;")
+            cursor.close()
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(
+                list(Test.objects.values_list('name', flat=True)),
+                [])
 
 
 class DatabaseCommandTestCase(TransactionTestCase):

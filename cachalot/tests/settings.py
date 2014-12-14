@@ -2,9 +2,9 @@
 
 from __future__ import unicode_literals
 try:
-    from unittest import skipIf, skip
+    from unittest import skipIf
 except ImportError:  # For Python 2.6
-    from unittest2 import skipIf, skip
+    from unittest2 import skipIf
 
 from django.conf import settings
 from django.core.cache import DEFAULT_CACHE_ALIAS
@@ -90,6 +90,14 @@ class SettingsTestCase(TransactionTestCase):
             with self.assertNumQueries(0):
                 list(Test.objects.order_by('?'))
 
-    @skip(NotImplementedError)
     def test_invalidate_raw(self):
-        pass
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        with self.settings(CACHALOT_INVALIDATE_RAW=False):
+            with self.assertNumQueries(1):
+                cursor = connection.cursor()
+                cursor.execute("UPDATE %s SET name = 'new name';"
+                               % Test._meta.db_table)
+                cursor.close()
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
