@@ -1,8 +1,8 @@
 What’s new in django-cachalot?
 ==============================
 
-master
-------
+0.9.0
+-----
 
 Added:
 
