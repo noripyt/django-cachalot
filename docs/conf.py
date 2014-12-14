@@ -16,6 +16,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.abspath('..'))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 import cachalot
 
 # This sets up Django, necessary for autodoc
