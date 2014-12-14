@@ -653,7 +653,7 @@ class WriteTestCase(TransactionTestCase):
                 ['test1', 'test2', 'test3'])
 
     def test_raw_update(self):
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test')
         with self.assertNumQueries(1):
             self.assertListEqual(
@@ -671,7 +671,7 @@ class WriteTestCase(TransactionTestCase):
                 ['new name'])
 
     def test_raw_delete(self):
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test')
         with self.assertNumQueries(1):
             self.assertListEqual(
