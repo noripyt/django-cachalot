@@ -11,7 +11,7 @@ Requirements
   - `django-redis <https://github.com/niwibe/django-redis>`_
   - `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_
     (using either python-memcached or pylibmc (but pylibmc is only supported
-     with Django >= 1.7))
+    with Django >= 1.7))
   - `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
     (only with Django >= 1.7 as it was not thread-safe before)
   - `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
@@ -22,7 +22,7 @@ Requirements
   - PostgreSQL
   - SQLite
   - MySQL (but you probably don’t need django-cachalot in this case,
-           see :ref:`Limits`)
+    see :ref:`Limits`)
 
 Usage
 .....
