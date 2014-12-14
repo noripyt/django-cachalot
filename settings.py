@@ -68,15 +68,15 @@ if django.VERSION >= (1, 7):
                 'MAX_ENTRIES': 10e9,  # (See locmem)
             }
         })
-try:
-    import pylibmc
-except ImportError:
-    pass
-else:
-    CACHES['pylibmc'] = {
-        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
-        'LOCATION': '127.0.0.1:11211',
-    }
+    try:
+        import pylibmc
+    except ImportError:
+        pass
+    else:
+        CACHES['pylibmc'] = {
+            'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+            'LOCATION': '127.0.0.1:11211',
+        }
 
 DEFAULT_CACHE_ALIAS = os.environ.get('CACHE_BACKEND', 'redis')
 CACHES['default'] = CACHES.pop(DEFAULT_CACHE_ALIAS)

@@ -45,11 +45,11 @@ script:
     CACHE_BACKEND=filebased DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
-    fi
-  - if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then
+    if [[ $TRAVIS_PYTHON_VERSION == 2* ]]; then
     CACHE_BACKEND=pylibmc   DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=pylibmc   DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=pylibmc   DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
+    fi
     fi
 
 after_success: coveralls
