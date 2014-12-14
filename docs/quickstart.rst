@@ -6,7 +6,7 @@ Requirements
 
 - Django 1.6 or 1.7
 - Python 2.6, 2.7, 3.2, 3.3, or 3.4
-- a cache configured as `default` with one of these backends:
+- a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwibe/django-redis>`_
   - `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_

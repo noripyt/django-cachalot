@@ -18,5 +18,5 @@ Django-cachalot modifies Django in place during execution to add a caching tool
 just before SQL queries are executed.
 When a SQL query reads data, we save the result in cache. If that same query is
 executed later, we fetch that result from cache.
-When we detect `CREATE`, `UPDATE` or `DELETE`, we know which tables are
+When we detect ``INSERT``, ``UPDATE`` or ``DELETE``, we know which tables are
 modified. All the previous cached queries can therefore be safely invalidated.
