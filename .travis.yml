@@ -32,9 +32,6 @@ before_script:
     - mysql -u root -e 'CREATE DATABASE cachalot;'
 
 script:
-  - CACHE_BACKEND=locmem    DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=locmem    DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
-  - CACHE_BACKEND=locmem    DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
   - CACHE_BACKEND=redis     DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py
   - CACHE_BACKEND=redis     DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
   - CACHE_BACKEND=redis     DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
@@ -42,6 +39,9 @@ script:
   - CACHE_BACKEND=memcached DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
   - CACHE_BACKEND=memcached DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
   - if [[ $DJANGO == "Django>=1.7,<1.8" ]]; then
+    CACHE_BACKEND=locmem    DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
+    CACHE_BACKEND=locmem    DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
+    CACHE_BACKEND=locmem    DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
@@ -57,4 +57,4 @@ after_success: coveralls
 matrix:
   exclude:
     - python: 2.6
-      env: DJANGO=">=1.7,<1.8"
+      env: DJANGO="Django>=1.7,<1.8"
