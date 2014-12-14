@@ -32,6 +32,7 @@ Caches your Django ORM queries and automatically invalidates them.
    quickstart
    limits
    api
+   benchmark
    todo
    reporting
    how

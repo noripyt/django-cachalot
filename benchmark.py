@@ -5,6 +5,8 @@ from __future__ import unicode_literals, print_function
 import os
 from random import choice
 from time import time
+import io
+
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 
@@ -125,7 +127,7 @@ class Benchmark(object):
                   [ups[key][subkey][context] for context in self.means.index]])
                 for subkey in self.means.columns.levels[1]))
             for key in self.means.columns.levels[0])
-        self.get_perfs()
+        self.get_perfs(param)
         self.plot_detail(param)
 
         gp = self.df.groupby(('context', param))['time']
@@ -138,12 +140,16 @@ class Benchmark(object):
             for key in self.means]
         self.plot_general(param)
 
-    def get_perfs(self):
-        for v in self.means.columns.levels[0]:
-            g = self.means[v].mean(axis=1)
-            print('%s is %.1f× slower then %.1f× faster'
-                  % (v.ljust(10), g[CONTEXTS[1]] / g[CONTEXTS[0]],
-                     g[CONTEXTS[0]] / g[CONTEXTS[2]]))
+    def get_perfs(self, param):
+        with io.open(os.path.join(RESULTS_PATH, param + '_results.rst'),
+                     'w') as f:
+            for v in self.means.columns.levels[0]:
+                g = self.means[v].mean(axis=1)
+                perf = ('%s is %.1f× slower then %.1f× faster'
+                        % (v.ljust(10), g[CONTEXTS[1]] / g[CONTEXTS[0]],
+                           g[CONTEXTS[0]] / g[CONTEXTS[2]]))
+                print(perf)
+                f.write('- %s\n' % perf)
 
     def plot_detail(self, param):
         for v in self.means.columns.levels[0]:
