@@ -12,13 +12,13 @@ services:
   - redis-server
 
 env:
-  - DJANGO=">=1.6,<1.7"
-  - DJANGO=">=1.7,<1.8"
+  - DJANGO="Django>=1.6,<1.7"
+  - DJANGO="Django>=1.7,<1.8"
 
 sudo: false
 
 install:
-  - pip install Django==$DJANGO coveralls
+  - pip install $DJANGO coveralls
   - if [[ $TRAVIS_PYTHON_VERSION == 3* ]];
     then
       pip install -r runtests_requirements_py3.txt;
@@ -41,7 +41,7 @@ script:
   - CACHE_BACKEND=memcached DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py
   - CACHE_BACKEND=memcached DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py
   - CACHE_BACKEND=memcached DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py
-  - if [[ $DJANGO == ">=1.7,<1.8" ]]; then
+  - if [[ $DJANGO == "Django>=1.7,<1.8" ]]; then
     CACHE_BACKEND=filebased DB_ENGINE=sqlite3    coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=postgresql coverage run -a --source=cachalot ./runtests.py;
     CACHE_BACKEND=filebased DB_ENGINE=mysql      coverage run -a --source=cachalot ./runtests.py;
