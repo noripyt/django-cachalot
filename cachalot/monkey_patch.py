@@ -53,11 +53,15 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
     cache = cachalot_caches.get_cache()
     data = cache.get_many(table_cache_keys + [cache_key])
 
-    new_table_cache_keys = frozenset(table_cache_keys) - frozenset(data)
+    new_table_cache_keys = set(table_cache_keys)
+    new_table_cache_keys.difference_update(data)
 
     if new_table_cache_keys:
         now = time()
-        cache.set_many(dict([(k, now) for k in new_table_cache_keys]), None)
+        d = {}
+        for k in new_table_cache_keys:
+            d[k] = now
+        cache.set_many(d, None)
     elif cache_key in data:
         timestamp, result = data.pop(cache_key)
         table_times = data.values()
