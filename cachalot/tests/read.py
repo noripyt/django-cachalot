@@ -530,7 +530,11 @@ class ReadTestCase(TransactionTestCase):
         Tests if queries executed from a DB cursor are not cached.
         """
 
-        sql = 'SELECT * FROM %s;' % Test._meta.db_table
+        attname_column_list = [f.get_attname_column()
+                               for f in Test._meta.fields]
+        attnames = [t[0] for t in attname_column_list]
+        columns = [t[1] for t in attname_column_list]
+        sql = 'SELECT %s FROM %s;' % (', '.join(columns), Test._meta.db_table)
 
         with self.assertNumQueries(1):
             cursor = connection.cursor()
@@ -543,7 +547,7 @@ class ReadTestCase(TransactionTestCase):
             data2 = list(cursor.fetchall())
             cursor.close()
         self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, list(Test.objects.values_list()))
+        self.assertListEqual(data2, list(Test.objects.values_list(*attnames)))
 
     def test_missing_table_cache_key(self):
         with self.assertNumQueries(1):
