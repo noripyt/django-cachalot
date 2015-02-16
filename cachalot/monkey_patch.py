@@ -125,7 +125,7 @@ def _patch_cursor():
             if getattr(cursor.db, 'raw', True) \
                     and cachalot_settings.CACHALOT_INVALIDATE_RAW:
                 sql = sql.lower()
-                if 'update' in sql or 'insert' in sql or 'delete' in sql:
+                if 'update' or 'insert' or 'delete' in sql:
                     tables = _get_tables_from_sql(cursor.db, sql)
                     invalidate_tables(tables, db_alias=cursor.db.alias)
             return out
