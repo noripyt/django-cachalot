@@ -3,6 +3,11 @@ Benchmark
 
 .. contents::
 
+Conditions
+..........
+
+.. include:: ../benchmark/conditions.rst
+
 Database results
 ................
 

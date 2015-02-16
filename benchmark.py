@@ -2,10 +2,15 @@
 # coding: utf-8
 
 from __future__ import unicode_literals, print_function
-import os
-from random import choice
-from time import time
+from collections import OrderedDict
 import io
+import os
+import platform
+from random import choice
+import re
+import sqlite3
+from subprocess import check_output
+from time import time
 
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
@@ -17,14 +22,75 @@ from django.core.cache import get_cache
 from django.db import connections, connection
 from django.test.utils import CaptureQueriesContext, override_settings
 import matplotlib.pyplot as plt
+import MySQLdb
 import pandas as pd
+import psycopg2
 
+import cachalot
 from cachalot.api import invalidate_all
 from cachalot.tests.models import Test
 
 
 RESULTS_PATH = 'benchmark/'
 CONTEXTS = ('Control', 'Cold cache', 'Hot cache')
+
+
+def write_conditions():
+    versions = OrderedDict()
+
+    # CPU
+    with open('/proc/cpuinfo') as f:
+        versions['CPU'] = re.search(r'^model name\s+: (.+)$', f.read(),
+                                    flags=re.MULTILINE).group(1)
+    # RAM
+    with open('/proc/meminfo') as f:
+        versions['RAM'] = re.search(r'^MemTotal:\s+(.+)$', f.read(),
+                                    flags=re.MULTILINE).group(1)
+    # OS
+    linux_dist = ' '.join(platform.linux_distribution()).strip()
+    if linux_dist:
+        versions['Linux distribution'] = linux_dist
+    else:
+        versions['OS'] = platform.system() + ' ' + platform.release()
+
+    versions.update((
+        ('Python', platform.python_version()),
+        ('Django', django.get_version()),
+        ('cachalot', cachalot.version_string),
+        ('sqlite', sqlite3.sqlite_version),
+    ))
+    # PostgreSQL
+    cursor = connections['postgresql'].cursor()
+    cursor.execute('SELECT version();')
+    versions['PostgreSQL'] = re.match(r'^PostgreSQL ([\d\.]+) on .+$',
+                                      cursor.fetchone()[0]).group(1)
+    cursor.close()
+    # MySQL
+    cursor = connections['mysql'].cursor()
+    cursor.execute('SELECT version();')
+    versions['MySQL'] = cursor.fetchone()[0].split('-')[0]
+    cursor.close()
+    # Redis
+    out = check_output(['redis-cli', 'INFO', 'server']).replace('\r', '')
+    versions['Redis'] = re.search(r'^redis_version:([\d\.]+)$', out,
+                                  flags=re.MULTILINE).group(1)
+    # memcached
+    out = check_output(['memcached', '-h'])
+    versions['memcached'] = re.match(r'^memcached ([\d\.]+)$', out,
+                                     flags=re.MULTILINE).group(1)
+
+    versions.update((
+        ('psycopg2', psycopg2.__version__.split()[0]),
+        ('MySQLdb', MySQLdb.__version__),
+    ))
+
+    with io.open(os.path.join('benchmark', 'conditions.rst'), 'w') as f:
+        def write_table_sep(char='='):
+            f.write(''.ljust(20, char) + ' ' + ''.ljust(50, char) + '\n')
+        write_table_sep()
+        for k, v in versions.items():
+            f.write(k.ljust(20) + ' ' + v + '\n')
+        write_table_sep()
 
 
 class AssertNumQueries(CaptureQueriesContext):
@@ -190,6 +256,8 @@ def create_data(using):
 if __name__ == '__main__':
     if django.VERSION[:2] >= (1, 7):
         django.setup()
+
+    write_conditions()
 
     old_db_names = {}
     for alias in connections:
