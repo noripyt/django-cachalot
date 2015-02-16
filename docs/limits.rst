@@ -13,16 +13,27 @@ in a multi-processes project, if you use RQ or Celery for instance.
 Redis
 .....
 
-By default, Redis will not evict persistent keys (those without an expiry set)
-when the maximum memory has been reached. The keys created by django-cachalot
-are persistent, so in an out of memory situation most of the site will go down
-due to OOM exceptions.
+By default, Redis will not evict persistent cache keys (those a ``None``
+timeout) when the maximum memory has been reached. The cache keys created
+by django-cachalot are persistent, so if Redis runs out of memory,
+django-cachalot and all other ``cache.set`` will raise
+``ResponseError: OOM command not allowed when used memory > 'maxmemory'.``
+because Redis is not allowed to delete persistent keys.
 
-To avoid this, you can change 'maxmemory-policy' to 'allkeys-lru' in redis.conf.
-Be aware that this policy applies to all the databases on that server.
+To avoid this, 2 solutions:
 
-You'll also want to keep an eye on the redis stats and increase 'maxmemory' if
-needed. This is just to improve performance, it doesn't impact site availability.
+- If you only store disposable data in Redis, you can change
+  ``maxmemory-policy`` to ``allkeys-lru`` in your Redis configuration.
+  Be aware that this setting is global; all your Redis databases will use it.
+  **If you don’t know what you’re doing, use the next solution or use
+  another cache backend.**
+- Increase ``maxmemory`` in your Redis configuration.
+  You can start by setting it to a high value (for example half of your RAM)
+  then decrease it by looking at the Redis database maximum size using
+  ``redis-cli info memory``.
+
+For more information, read
+`Using Redis as a LRU cache <http://redis.io/topics/lru-cache>`_.
 
 MySQL
 .....
