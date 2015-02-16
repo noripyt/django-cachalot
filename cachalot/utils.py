@@ -89,7 +89,8 @@ def _get_table_cache_keys(compiler):
     query = compiler.query
     using = compiler.using
 
-    tables = set(query.tables)
+    tables = set([join_info.table_name
+                  for join_info in query.alias_map.values()])
     tables.add(query.model._meta.db_table)
     if query.extra_select or any([isinstance(c, ExtraWhere)
                                   for c in query.where.children]):
