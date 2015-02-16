@@ -10,6 +10,19 @@ Locmem is a just a dict stored in a single Python process.
 It’s not shared between processes, so don’t use locmem with django-cachalot
 in a multi-processes project, if you use RQ or Celery for instance.
 
+Redis
+.....
+
+By default, Redis will not evict persistent keys (those without an expiry set)
+when the maximum memory has been reached. The keys created by django-cachalot
+are persistent, so in an out of memory situation most of the site will go down
+due to OOM exceptions.
+
+To avoid this, you can change 'maxmemory-policy' to 'allkeys-lru' in redis.conf.
+Be aware that this policy applies to all the databases on that server.
+
+You'll also want to keep an eye on the redis stats and increase 'maxmemory' if
+needed. This is just to improve performance, it doesn't impact site availability.
 
 MySQL
 .....
