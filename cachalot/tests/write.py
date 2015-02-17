@@ -299,6 +299,34 @@ class WriteTestCase(TransactionTestCase):
         self.assertListEqual(data5, [user1, user2])
         self.assertListEqual([u.n for u in data5], [3, 2])
 
+    def test_invalidate_having(self):
+        with self.assertNumQueries(1):
+            data1 = list(User.objects.annotate(n=Count('user_permissions'))
+                         .filter(n__gte=1))
+            self.assertListEqual(data1, [])
+
+        u = User.objects.create_user('user')
+
+        with self.assertNumQueries(1):
+            data2 = list(User.objects.annotate(n=Count('user_permissions'))
+                         .filter(n__gte=1))
+            self.assertListEqual(data2, [])
+
+        p = Permission.objects.first()
+        p.save()
+
+        with self.assertNumQueries(1):
+            data3 = list(User.objects.annotate(n=Count('user_permissions'))
+                         .filter(n__gte=1))
+            self.assertListEqual(data3, [])
+
+        u.user_permissions.add(p)
+
+        with self.assertNumQueries(1):
+            data3 = list(User.objects.annotate(n=Count('user_permissions'))
+                         .filter(n__gte=1))
+            self.assertListEqual(data3, [u])
+
     def test_invalidate_subquery(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(owner__in=User.objects.all()))

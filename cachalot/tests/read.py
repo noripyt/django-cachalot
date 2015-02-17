@@ -457,6 +457,17 @@ class ReadTestCase(TransactionTestCase):
                 self.assertListEqual([t.name for t in data2],
                                      ['test1', 'test2'])
 
+    def test_having(self):
+        with self.assertNumQueries(1):
+            data1 = list(User.objects.annotate(n=Count('user_permissions'))
+                         .filter(n__gte=1))
+            self.assertListEqual(data1, [self.user])
+
+        with self.assertNumQueries(0):
+            data2 = list(User.objects.annotate(n=Count('user_permissions'))
+                         .filter(n__gte=1))
+            self.assertListEqual(data2, [self.user])
+
     def test_extra_select(self):
         username_length_sql = """
         SELECT LENGTH(%(user_table)s.username)
