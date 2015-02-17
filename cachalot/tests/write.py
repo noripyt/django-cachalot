@@ -373,6 +373,68 @@ class WriteTestCase(TransactionTestCase):
             )
         self.assertListEqual(data10, [])
 
+    def test_invalidate_nested_subqueries(self):
+        with self.assertNumQueries(1):
+            data1 = list(
+                User.objects.filter(
+                    pk__in=User.objects.filter(
+                        user_permissions__in=Permission.objects.all()
+                    )
+                )
+            )
+        self.assertListEqual(data1, [])
+
+        u = User.objects.create_user('test')
+
+        with self.assertNumQueries(1):
+            data2 = list(
+                User.objects.filter(
+                    pk__in=User.objects.filter(
+                        user_permissions__in=Permission.objects.all()
+                    )
+                )
+            )
+        self.assertListEqual(data2, [])
+
+        p = Permission.objects.first()
+        u.user_permissions.add(p)
+
+        with self.assertNumQueries(1):
+            data3 = list(
+                User.objects.filter(
+                    pk__in=User.objects.filter(
+                        user_permissions__in=Permission.objects.all()
+                    )
+                )
+            )
+        self.assertListEqual(data3, [u])
+
+        with self.assertNumQueries(1):
+            data4 = list(
+                User.objects.filter(
+                    pk__in=User.objects.filter(
+                        pk__in=User.objects.filter(
+                            user_permissions__in=Permission.objects.all()
+                        )
+                    )
+                )
+            )
+        self.assertListEqual(data4, [u])
+
+        u.user_permissions.remove(p)
+
+        with self.assertNumQueries(1):
+            data5 = list(
+                User.objects.filter(
+                    pk__in=User.objects.filter(
+                        pk__in=User.objects.filter(
+                            user_permissions__in=Permission.objects.all()
+                        )
+                    )
+                )
+            )
+        self.assertListEqual(data5, [])
+
     def test_invalidate_select_related(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.select_related('owner'))
@@ -574,6 +636,16 @@ class WriteTestCase(TransactionTestCase):
             data3 = list(User.objects.annotate(n=Count('user_permissions'))
                          .filter(n__gte=1))
             self.assertListEqual(data3, [u])
+
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.annotate(n=Count('user_permissions'))
+                             .filter(n__gte=1).count(), 1)
+
+        u.user_permissions.clear()
+
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.annotate(n=Count('user_permissions'))
+                             .filter(n__gte=1).count(), 0)
 
     def test_invalidate_extra_where(self):
         sql_condition = ("owner_id IN "

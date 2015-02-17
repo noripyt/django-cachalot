@@ -468,6 +468,14 @@ class ReadTestCase(TransactionTestCase):
                          .filter(n__gte=1))
             self.assertListEqual(data2, [self.user])
 
+        with self.assertNumQueries(1):
+            self.assertEqual(User.objects.annotate(n=Count('user_permissions'))
+                             .filter(n__gte=1).count(), 1)
+
+        with self.assertNumQueries(0):
+            self.assertEqual(User.objects.annotate(n=Count('user_permissions'))
+                             .filter(n__gte=1).count(), 1)
+
     def test_extra_select(self):
         username_length_sql = """
         SELECT LENGTH(%(user_table)s.username)
