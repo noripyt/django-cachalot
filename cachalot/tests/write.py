@@ -351,6 +351,28 @@ class WriteTestCase(TransactionTestCase):
                 ).distinct())
         self.assertListEqual(data7, [t])
 
+        with self.assertNumQueries(1):
+            data8 = list(
+                User.objects.filter(user_permissions__in=g.permissions.all())
+            )
+        self.assertListEqual(data8, [])
+
+        u.user_permissions.add(p)
+
+        with self.assertNumQueries(1):
+            data9 = list(
+                User.objects.filter(user_permissions__in=g.permissions.all())
+            )
+        self.assertListEqual(data9, [u])
+
+        g.permissions.remove(p)
+
+        with self.assertNumQueries(1):
+            data10 = list(
+                User.objects.filter(user_permissions__in=g.permissions.all())
+            )
+        self.assertListEqual(data10, [])
+
     def test_invalidate_select_related(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.select_related('owner'))
