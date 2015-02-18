@@ -6,14 +6,14 @@ Limits
 Locmem
 ......
 
-Locmem is a just a dict stored in a single Python process.
+Locmem is a just a ``dict`` stored in a single Python process.
 It’s not shared between processes, so don’t use locmem with django-cachalot
 in a multi-processes project, if you use RQ or Celery for instance.
 
 Redis
 .....
 
-By default, Redis will not evict persistent cache keys (those a ``None``
+By default, Redis will not evict persistent cache keys (those with a ``None``
 timeout) when the maximum memory has been reached. The cache keys created
 by django-cachalot are persistent, so if Redis runs out of memory,
 django-cachalot and all other ``cache.set`` will raise

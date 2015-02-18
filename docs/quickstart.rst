@@ -34,6 +34,9 @@ Usage
    `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
    to your ``DEBUG_TOOLBAR_PANELS``
+#. If you need to invalidate all django-cachalot cache keys from an external script
+   – typically after restoring a SQL database –, simply run
+   ``./manage.py invalidate_cachalot``
 #. Enjoy!
 
 

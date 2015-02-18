@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db import connection
 
 from .cache import cachalot_caches
 from .utils import _get_table_cache_key, _invalidate_table_cache_keys
@@ -12,16 +11,24 @@ from .utils import _get_table_cache_key, _invalidate_table_cache_keys
 __all__ = ('invalidate_tables', 'invalidate_models', 'invalidate_all')
 
 
+def _aliases_iterator(cache_alias, db_alias):
+    cache_aliases = settings.CACHES if cache_alias is None else (cache_alias,)
+    db_aliases = settings.DATABASES if db_alias is None else (db_alias,)
+    for cache_alias in cache_aliases:
+        for db_alias in db_aliases:
+            yield cache_alias, db_alias
+
+
 def invalidate_tables(tables, cache_alias=None, db_alias=None):
     """
     Clears what was cached by django-cachalot implying one or more SQL tables
     from ``tables``.
 
     If ``cache_alias`` is specified, it only clears the SQL queries stored
-    on this cache, otherwise the current cache is cleared.
+    on this cache, otherwise queries from all caches are cleared.
 
     If ``db_alias`` is specified, it only clears the SQL queries executed
-    on this database, otherwise queries from the current database are cleared.
+    on this database, otherwise queries from all databases are cleared.
 
     :arg tables: SQL tables names
     :type tables: iterable of strings
@@ -33,12 +40,10 @@ def invalidate_tables(tables, cache_alias=None, db_alias=None):
     :rtype: NoneType
     """
 
-    if db_alias is None:
-        db_alias = connection.alias
-
-    table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
-    cache = cachalot_caches.get_cache(cache_alias)
-    _invalidate_table_cache_keys(cache, table_cache_keys)
+    for cache_alias, db_alias in _aliases_iterator(cache_alias, db_alias):
+        table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
+        cache = cachalot_caches.get_cache(cache_alias)
+        _invalidate_table_cache_keys(cache, table_cache_keys)
 
 
 def invalidate_models(models, cache_alias=None, db_alias=None):
@@ -65,7 +70,7 @@ def invalidate_all(cache_alias=None, db_alias=None):
     Clears everything that was cached by django-cachalot.
 
     If ``cache_alias`` is specified, it only clears the SQL queries stored
-    on this cache, otherwise all caches are cleared.
+    on this cache, otherwise queries from all caches are cleared.
 
     If ``db_alias`` is specified, it only clears the SQL queries executed
     on this database, otherwise queries from all databases are cleared.
@@ -78,8 +83,5 @@ def invalidate_all(cache_alias=None, db_alias=None):
     :rtype: NoneType
     """
 
-    cache_aliases = settings.CACHES if cache_alias is None else (cache_alias,)
-    db_aliases = settings.DATABASES if db_alias is None else (db_alias,)
-    for cache_alias in cache_aliases:
-        for db_alias in db_aliases:
-            cachalot_caches.invalidate_all(cache_alias, db_alias)
+    for cache_alias, db_alias in _aliases_iterator(cache_alias, db_alias):
+        cachalot_caches.invalidate_all(cache_alias, db_alias)
