@@ -7,7 +7,8 @@ from time import time
 import django
 from django.db import connections
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
-if django.VERSION[:2] >= (1, 7):
+DJANGO_GTE_1_7 = django.VERSION[:2] >= (1, 7)
+if DJANGO_GTE_1_7:
     from django.utils.module_loading import import_string
 else:
     from django.utils.module_loading import import_by_path as import_string
@@ -79,8 +80,15 @@ def _find_subqueries(children):
     for child in children:
         if isinstance(child, SubqueryConstraint):
             yield child.query_object.query
-        elif isinstance(child, tuple) and hasattr(child[-1], 'query'):
-            yield child[-1].query
+        else:
+            rhs = None
+            if DJANGO_GTE_1_7:
+                if hasattr(child, 'rhs'):
+                    rhs = child.rhs
+            elif isinstance(child, tuple):
+                rhs = child[-1]
+            if hasattr(rhs, 'query'):
+                yield rhs.query
         if hasattr(child, 'children'):
             for grand_child in _find_subqueries(child.children):
                 yield grand_child
