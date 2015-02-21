@@ -21,7 +21,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         cache_alias = options['cache_alias']
         db_alias = options['db_alias']
-        verbosity = options['verbosity']
+        verbosity = int(options['verbosity'])
 
         models = []
         for arg in args:
@@ -38,7 +38,7 @@ class Command(BaseCommand):
         db_str = '' if db_alias is None else "for database '%s'" % db_alias
         keys_str = 'keys for %s models' % len(models) if args else 'all keys'
 
-        if verbosity != '0':
+        if verbosity > 0:
             self.stdout.write(' '.join(filter(bool, ['Invalidating', keys_str,
                                                      cache_str, db_str]))
                               + '...')
@@ -48,5 +48,5 @@ class Command(BaseCommand):
                               cache_alias=cache_alias, db_alias=db_alias)
         else:
             invalidate_all(cache_alias=cache_alias, db_alias=db_alias)
-        if verbosity != '0':
+        if verbosity > 0:
             self.stdout.write('Cache keys successfully invalidated.')

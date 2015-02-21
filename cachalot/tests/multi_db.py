@@ -21,8 +21,8 @@ class MultiDatabaseTestCase(TransactionTestCase):
     def setUp(self):
         self.t1 = Test.objects.create(name='test1')
         self.t2 = Test.objects.create(name='test2')
-        self.db_alias2 = [alias for alias in settings.DATABASES
-                          if alias != DEFAULT_DB_ALIAS][0]
+        self.db_alias2 = (alias for alias in settings.DATABASES
+                          if alias != DEFAULT_DB_ALIAS).next()
         self.is_sqlite2 = connections[self.db_alias2].vendor == 'sqlite'
 
     def test_read(self):
