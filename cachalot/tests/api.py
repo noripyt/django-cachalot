@@ -96,11 +96,11 @@ class CommandTestCase(TransactionTestCase):
     multi_db = True
 
     def setUp(self):
-        self.db_alias2 = (alias for alias in settings.DATABASES
-                          if alias != DEFAULT_DB_ALIAS).next()
+        self.db_alias2 = next(alias for alias in settings.DATABASES
+                              if alias != DEFAULT_DB_ALIAS)
 
-        self.cache_alias2 = (alias for alias in settings.CACHES
-                             if alias != DEFAULT_CACHE_ALIAS).next()
+        self.cache_alias2 = next(alias for alias in settings.CACHES
+                                 if alias != DEFAULT_CACHE_ALIAS)
 
         self.t1 = Test.objects.create(name='test1')
         self.t2 = Test.objects.using(self.db_alias2).create(name='test2')

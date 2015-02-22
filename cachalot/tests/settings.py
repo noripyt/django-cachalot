@@ -69,8 +69,8 @@ class SettingsTestCase(TransactionTestCase):
             with self.assertNumQueries(0):
                 list(Test.objects.all())
 
-        other_cache_alias = (alias for alias in settings.CACHES
-                             if alias != DEFAULT_CACHE_ALIAS).next()
+        other_cache_alias = next(alias for alias in settings.CACHES
+                                 if alias != DEFAULT_CACHE_ALIAS)
 
         with self.settings(CACHALOT_CACHE=other_cache_alias):
             with self.assertNumQueries(1):
