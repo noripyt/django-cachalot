@@ -1,3 +1,5 @@
+In this benchmark, a small database is generated, and each test is executed 20 times under the following conditions:
+
 ==================== ==================================================
 CPU                  Intel(R) Core(TM) i7-2670QM CPU @ 2.20GHz
 RAM                  12281228 kB

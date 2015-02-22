@@ -1,5 +1,5 @@
-- filebased  is 1.2× slower then 8.6× faster
-- locmem     is 1.1× slower then 9.0× faster
-- memcached  is 1.1× slower then 6.9× faster
-- pylibmc    is 1.1× slower then 7.1× faster
-- redis      is 1.1× slower then 8.2× faster
+- filebased  is 1.2× slower then 8.8× faster
+- locmem     is 1.1× slower then 9.3× faster
+- memcached  is 1.1× slower then 7.5× faster
+- pylibmc    is 1.1× slower then 6.6× faster
+- redis      is 1.1× slower then 7.6× faster

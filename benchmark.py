@@ -85,6 +85,10 @@ def write_conditions():
     ))
 
     with io.open(os.path.join('benchmark', 'conditions.rst'), 'w') as f:
+        f.write('In this benchmark, a small database is generated, '
+                'and each test is executed %s times '
+                'under the following conditions:\n\n' % Benchmark.n)
+
         def write_table_sep(char='='):
             f.write(''.ljust(20, char) + ' ' + ''.ljust(50, char) + '\n')
         write_table_sep()
@@ -112,8 +116,9 @@ class AssertNumQueries(CaptureQueriesContext):
 
 
 class Benchmark(object):
-    def __init__(self, n=20):
-        self.n = n
+    n = 20
+
+    def __init__(self):
         self.data = []
 
     def bench_once(self, context, num_queries, invalidate_before=False):
