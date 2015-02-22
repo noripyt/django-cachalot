@@ -11,10 +11,10 @@ class Command(BaseCommand):
     args = '[app_label[.modelname] [...]]'
     option_list = BaseCommand.option_list + (
         make_option('-c', '--cache', action='store', dest='cache_alias',
-                    type='choice', choices=settings.CACHES.keys(),
+                    type='choice', choices=list(settings.CACHES.keys()),
                     help='Cache alias from the CACHES setting.'),
         make_option('-d', '--db', action='store', dest='db_alias',
-                    type='choice', choices=settings.DATABASES.keys(),
+                    type='choice', choices=list(settings.DATABASES.keys()),
                     help='Database alias from the DATABASES setting.'),
     )
 
