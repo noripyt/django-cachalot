@@ -1,3 +1,5 @@
+-r requirements.txt
+
 psycopg2
 https://github.com/clelland/MySQL-for-Python-3/tarball/master
 django-redis
