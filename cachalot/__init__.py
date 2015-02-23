@@ -1,2 +1,2 @@
-__version__ = (0, 9, 0, 'post')
+__version__ = (1, 0, '0rc')
 version_string = '.'.join(str(n) for n in __version__)

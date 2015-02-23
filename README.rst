@@ -22,7 +22,10 @@ Caches your Django ORM queries and automatically invalidates them.
 .. image:: http://img.shields.io/gratipay/BertrandBordage.svg?style=flat-square
    :target: https://gratipay.com/BertrandBordage/
 
-**Currently in beta, do not use in production**
+| **Version 1.0.0** will be released **15 March 2015**!
+| A **release candidate** is available on PyPI.
+| Test it and **earn 30 €** by reporting an invalidation issue before 1.0.0!
+| (see `my blog <http://blog.bordage.pro/django-cachalot-rc/>`_ for more info)
 
 
 Documentation

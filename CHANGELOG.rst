@@ -1,6 +1,36 @@
 What’s new in django-cachalot?
 ==============================
 
+1.0.0rc
+-------
+
+Added:
+
+- Adds an `invalidate_cachalot` command to invalidate django-cachalot
+  from a script without having to clear the whole cache
+- Adds the benchmark introduction, conditions & results to the documentation
+- Adds a short guide on how to configure Redis as a LRU cache
+
+Fixed:
+
+- Fixes a rare invalidation issue occurring when updating a many-to-many table
+  after executing a queryset generating a ``HAVING`` SQL statement –
+  for example,
+  ``User.objects.first().user_permissions.add(Permission.objects.first())``
+  was not invalidating
+  ``User.objects.annotate(n=Count('user_permissions')).filter(n__gte=1)``
+- Fixes an even rarer invalidation issue occurring when updating a many-to-many
+  table after executing a queryset filtering nested subqueries
+  by another subquery through that many-to-many table – for example::
+
+    User.objects.filter(
+        pk__in=User.objects.filter(
+            pk__in=User.objects.filter(
+                user_permissions__in=Permission.objects.all())))
+- Avoids setting useless cache keys by using table names instead of
+  Django-generated table alias
+
+
 0.9.0
 -----
 
