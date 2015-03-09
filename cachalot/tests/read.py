@@ -581,6 +581,14 @@ class ReadTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             list(Test.objects.all())
 
+    def test_unicode_get(self):
+        with self.assertNumQueries(1):
+            with self.assertRaises(Test.DoesNotExist):
+                Test.objects.get(name='Clémentine')
+        with self.assertNumQueries(0):
+            with self.assertRaises(Test.DoesNotExist):
+                Test.objects.get(name='Clémentine')
+
     def test_unicode_table_name(self):
         """
         Tests if using unicode in table names does not break caching.
