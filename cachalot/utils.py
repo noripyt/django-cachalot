@@ -12,6 +12,7 @@ if DJANGO_GTE_1_7:
     from django.utils.module_loading import import_string
 else:
     from django.utils.module_loading import import_by_path as import_string
+from django.utils.six import PY3
 
 from .settings import cachalot_settings
 
@@ -38,10 +39,10 @@ def get_query_cache_key(compiler):
     :rtype: str
     """
     sql, params = compiler.as_sql()
-    cache_key = ('%s:%s:%s' % (compiler.using, sql, params)).encode('utf-8')
+    cache_key = '%s:%s:%s' % (compiler.using, sql, params)
     # We always hash queries since they are nearly always longer than
     # ``MAX_CACHE_KEY_LENGTH``.
-    return sha1(cache_key).hexdigest()
+    return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
 def get_table_cache_key(db_alias, table):
@@ -55,11 +56,15 @@ def get_table_cache_key(db_alias, table):
     :return: A cache key
     :rtype: str
     """
-    cache_key = ('%s:%s' % (db_alias, table))
+    cache_key = '%s:%s' % (db_alias, table)
     # We check if we have to hash the key since it should nearly never be
     # necessary.
     if len(cache_key) > MAX_CACHE_KEY_LENGTH:
         return sha1(cache_key.encode('utf-8')).hexdigest()
+    # Because of a bug in python-memcached3, we have to encode
+    # cache keys to bytes or it fails with this backend.
+    if PY3:
+        return cache_key.encode()
     return cache_key
 
 
