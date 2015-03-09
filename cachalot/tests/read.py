@@ -580,3 +580,18 @@ class ReadTestCase(TransactionTestCase):
 
         with self.assertNumQueries(1):
             list(Test.objects.all())
+
+    def test_unicode_table_name(self):
+        """
+        Tests if using unicode in table names does not break caching.
+        """
+        cursor = connection.cursor()
+        table_name = 'Clémentine'
+        if connection.vendor == 'postgresql':
+            table_name = '"%s"' % table_name
+        cursor.execute('CREATE TABLE %s (taste VARCHAR(20));' % table_name)
+        with self.assertNumQueries(1):
+            list(Test.objects.extra(tables=['Clémentine']))
+        with self.assertNumQueries(0):
+            list(Test.objects.extra(tables=['Clémentine']))
+        cursor.execute('DROP TABLE %s;' % table_name)
