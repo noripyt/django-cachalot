@@ -55,11 +55,11 @@ def get_table_cache_key(db_alias, table):
     :return: A cache key
     :rtype: str
     """
-    cache_key = ('%s:%s' % (db_alias, table)).encode('utf-8')
+    cache_key = ('%s:%s' % (db_alias, table))
     # We check if we have to hash the key since it should nearly never be
     # necessary.
     if len(cache_key) > MAX_CACHE_KEY_LENGTH:
-        return sha1(cache_key).hexdigest()
+        return sha1(cache_key.encode('utf-8')).hexdigest()
     return cache_key
 
 
