@@ -1,0 +1,4 @@
+-r runtests_requirements_py2.txt
+
+pandas
+matplotlib

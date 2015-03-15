@@ -21,6 +21,7 @@ from django.contrib.auth.models import User, Group
 from django.core.cache import get_cache
 from django.db import connections, connection
 from django.test.utils import CaptureQueriesContext, override_settings
+from django.utils.encoding import force_text
 import matplotlib.pyplot as plt
 import MySQLdb
 import pandas as pd
@@ -71,11 +72,12 @@ def write_conditions():
     versions['MySQL'] = cursor.fetchone()[0].split('-')[0]
     cursor.close()
     # Redis
-    out = check_output(['redis-cli', 'INFO', 'server']).replace('\r', '')
+    out = force_text(check_output(['redis-cli',
+                                   'INFO', 'server'])).replace('\r', '')
     versions['Redis'] = re.search(r'^redis_version:([\d\.]+)$', out,
                                   flags=re.MULTILINE).group(1)
     # memcached
-    out = check_output(['memcached', '-h'])
+    out = force_text(check_output(['memcached', '-h']))
     versions['memcached'] = re.match(r'^memcached ([\d\.]+)$', out,
                                      flags=re.MULTILINE).group(1)
 
