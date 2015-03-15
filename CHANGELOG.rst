@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+1.0.0
+-----
+
+Fixes a bug occurring when caching a SQL query using a non-ascii table name.
+
+
 1.0.0rc
 -------
 
