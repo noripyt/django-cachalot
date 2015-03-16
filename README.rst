@@ -22,7 +22,7 @@ Caches your Django ORM queries and automatically invalidates them.
 .. image:: http://img.shields.io/gratipay/BertrandBordage.svg?style=flat-square
    :target: https://gratipay.com/BertrandBordage/
 
-**Since version 1.0.0 it is safe for production.**
+Since version 1.0.0 it is **safe for production**.
 
 
 Documentation
