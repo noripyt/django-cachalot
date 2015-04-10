@@ -5,17 +5,9 @@ from collections import Iterable
 from functools import wraps
 from time import time
 
-from django import VERSION as django_version
-from django.conf import settings
-if django_version >= (1, 7):
-    from django.db.backends.utils import CursorWrapper
-else:
-    from django.db.backends.util import CursorWrapper
+from django.db.backends.utils import CursorWrapper
 from django.db.models.query import EmptyResultSet
-if django_version >= (1, 7):
-    from django.db.models.signals import post_migrate
-else:
-    from django.db.models.signals import post_syncdb as post_migrate
+from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.transaction import Atomic, get_connection
@@ -30,13 +22,6 @@ from .utils import (
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
-
-
-PATCHED = False
-
-
-def is_patched():
-    return PATCHED
 
 
 def _unset_raw_connection(original):
@@ -178,21 +163,14 @@ def _patch_tests():
 
 
 def _invalidate_on_migration(sender, **kwargs):
-    db_alias = kwargs['using'] if django_version >= (1, 7) else kwargs['db']
+    db_alias = kwargs['using']
     invalidate_all(db_alias=db_alias)
 
 
 def patch():
-    global PATCHED
-
     post_migrate.connect(_invalidate_on_migration)
-    if 'south' in settings.INSTALLED_APPS:
-        from south.signals import post_migrate as south_post_migrate
-        south_post_migrate.connect(_invalidate_on_migration)
 
     _patch_cursor()
     _patch_tests()
     _patch_atomic()
     _patch_orm()
-
-    PATCHED = True

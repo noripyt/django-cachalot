@@ -261,8 +261,7 @@ def create_data(using):
 
 
 if __name__ == '__main__':
-    if django.VERSION[:2] >= (1, 7):
-        django.setup()
+    django.setup()
 
     write_conditions()
 

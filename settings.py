@@ -3,8 +3,6 @@
 from __future__ import unicode_literals
 import os
 
-import django
-
 
 DATABASES = {
     'sqlite3': {
@@ -26,26 +24,12 @@ DATABASES = {
 }
 for alias in DATABASES:
     test_db_name = 'test_' + DATABASES[alias]['NAME']
-    if django.VERSION < (1, 7):
-        DATABASES[alias]['TEST_NAME'] = test_db_name
-    else:
-        DATABASES[alias]['TEST'] = {'NAME': test_db_name}
+    DATABASES[alias]['TEST'] = {'NAME': test_db_name}
 
 DATABASES['default'] = DATABASES.pop(os.environ.get('DB_ENGINE', 'sqlite3'))
 
 
 CACHES = {
-    'locmem': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'OPTIONS': {
-            # We want that limit to be infinite, otherwise we can’t
-            # reliably count the number of SQL queries executed in tests.
-
-            # In this context, 10e9 is enough to be considered
-            # infinite.
-            'MAX_ENTRIES': 10e9,
-        }
-    },
     'redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'redis://127.0.0.1:6379/0',
@@ -60,24 +44,35 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
         'LOCATION': '127.0.0.1:11211',
     },
-}
-if django.VERSION >= (1, 7):
-    CACHES['filebased'] = {
+    'locmem': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'OPTIONS': {
+            # We want that limit to be infinite, otherwise we can’t
+            # reliably count the number of SQL queries executed in tests.
+
+            # In this context, 10e9 is enough to be considered
+            # infinite.
+            'MAX_ENTRIES': 10e9,
+        }
+    },
+    'filebased': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
         'LOCATION': '/tmp/django_cache',
         'OPTIONS': {
             'MAX_ENTRIES': 10e9,  # (See locmem)
         }
     }
-    try:
-        import pylibmc
-    except ImportError:
-        pass
-    else:
-        CACHES['pylibmc'] = {
-            'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
-            'LOCATION': '127.0.0.1:11211',
-        }
+}
+
+try:
+    import pylibmc
+except ImportError:
+    pass
+else:
+    CACHES['pylibmc'] = {
+        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
 
 DEFAULT_CACHE_ALIAS = os.environ.get('CACHE_BACKEND', 'locmem')
 CACHES['default'] = CACHES.pop(DEFAULT_CACHE_ALIAS)
@@ -92,8 +87,6 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
 ]
-if django.VERSION < (1, 7):
-    INSTALLED_APPS.append('south')
 
 
 MIGRATION_MODULES = {

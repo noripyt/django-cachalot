@@ -4,14 +4,9 @@ from __future__ import unicode_literals
 from hashlib import sha1
 from time import time
 
-import django
 from django.db import connections
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
-DJANGO_GTE_1_7 = django.VERSION[:2] >= (1, 7)
-if DJANGO_GTE_1_7:
-    from django.utils.module_loading import import_string
-else:
-    from django.utils.module_loading import import_by_path as import_string
+from django.utils.module_loading import import_string
 from django.utils.six import PY3
 
 from .settings import cachalot_settings
@@ -87,9 +82,8 @@ def _find_subqueries(children):
             yield child.query_object.query
         else:
             rhs = None
-            if DJANGO_GTE_1_7:
-                if hasattr(child, 'rhs'):
-                    rhs = child.rhs
+            if hasattr(child, 'rhs'):
+                rhs = child.rhs
             elif isinstance(child, tuple):
                 rhs = child[-1]
             if hasattr(rhs, 'query'):

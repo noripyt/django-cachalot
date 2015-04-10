@@ -4,16 +4,14 @@ Quick start
 Requirements
 ............
 
-- Django 1.6 or 1.7
-- Python 2.6, 2.7, 3.2, 3.3, or 3.4
+- Django 1.7 or 1.8
+- Python 2.7, 3.2, 3.3, or 3.4
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwibe/django-redis>`_
   - `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_
-    (using either python-memcached or pylibmc (but pylibmc is only supported
-    with Django >= 1.7))
+    (using either python-memcached or pylibmc)
   - `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
-    (only with Django >= 1.7 as it was not thread-safe before)
   - `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
     (but it’s not shared between processes, see :ref:`Limits`)
 

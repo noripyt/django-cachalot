@@ -1,10 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-try:
-    from unittest import skipIf
-except ImportError:  # For Python 2.6
-    from unittest2 import skipIf
+from unittest import skipIf
 
 from django.conf import settings
 from django.db import DEFAULT_DB_ALIAS, connections

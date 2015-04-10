@@ -1,12 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-try:
-    from unittest import skipIf
-except ImportError:  # For Python 2.6
-    from unittest2 import skipIf
 
-from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.management import call_command
@@ -79,8 +74,6 @@ class WriteTestCase(TransactionTestCase):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [t])
 
-    @skipIf(django_version < (1, 7),
-            'QuerySet.update_or_create is not implemented in Django < 1.7')
     def test_update_or_create(self):
         with self.assertNumQueries(1):
             self.assertListEqual(list(Test.objects.all()), [])
@@ -821,7 +814,7 @@ class DatabaseCommandTestCase(TransactionTestCase):
 
         call_command('flush', verbosity=0, interactive=False)
 
-        if django_version >= (1, 7) and connection.vendor == 'mysql':
+        if connection.vendor == 'mysql':
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()
@@ -836,7 +829,7 @@ class DatabaseCommandTestCase(TransactionTestCase):
         call_command('loaddata', 'cachalot/tests/loaddata_fixture.json',
                      verbosity=0, interactive=False)
 
-        if django_version >= (1, 7) and connection.vendor == 'mysql':
+        if connection.vendor == 'mysql':
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()

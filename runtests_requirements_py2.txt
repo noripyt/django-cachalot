@@ -5,6 +5,3 @@ MySQL-python
 django-redis
 python-memcached
 pylibmc
-South
-# For Python 2.6
-unittest2

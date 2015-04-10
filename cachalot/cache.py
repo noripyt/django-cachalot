@@ -3,8 +3,7 @@
 from __future__ import unicode_literals
 from threading import local
 
-# TODO: Replace with caches[CACHALOT_CACHE] when we drop Django 1.6 support.
-from django.core.cache import get_cache as get_django_cache
+from django.core.cache import caches
 from django.db import connections
 
 from .settings import cachalot_settings
@@ -31,7 +30,7 @@ class CacheHandler(local):
 
         min_level = -len(self.atomic_caches)
         if atomic_level < min_level:
-            return get_django_cache(cache_alias)
+            return caches[cache_alias]
         return self.get_atomic_cache(cache_alias, atomic_level)
 
     def enter_atomic(self):
