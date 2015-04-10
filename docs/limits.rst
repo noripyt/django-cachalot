@@ -3,13 +3,6 @@
 Limits
 ------
 
-Locmem
-......
-
-Locmem is a just a ``dict`` stored in a single Python process.
-It’s not shared between processes, so don’t use locmem with django-cachalot
-in a multi-processes project, if you use RQ or Celery for instance.
-
 Redis
 .....
 
@@ -34,6 +27,30 @@ To avoid this, 2 solutions:
 
 For more information, read
 `Using Redis as a LRU cache <http://redis.io/topics/lru-cache>`_.
+
+Memcached
+.........
+
+By default, memcached is configured for small servers.
+The maximum amount of memory used by memcached is 64 MB,
+and the maximum memory per cache key is 1 MB. This latter limit can lead to
+weird unhandled exceptions such as
+``Error: error 37 from memcached_set: SUCCESS``
+if you execute queries returning more than 1 MB of data.
+
+To increase these limits, set the ``-I`` and ``-m`` arguments when starting
+memcached. If you use Ubuntu and installed the package, you can modify
+`/etc/memcached.conf`, add ``-I 10`` on a newline to set the limit
+per cache key to 10 MB, and if you want increase the already existing ``-m 64``
+to something like ``-m 1000`` to set the maximum cache size to 1 GB.
+
+
+Locmem
+......
+
+Locmem is a just a ``dict`` stored in a single Python process.
+It’s not shared between processes, so don’t use locmem with django-cachalot
+in a multi-processes project, if you use RQ or Celery for instance.
 
 MySQL
 .....
