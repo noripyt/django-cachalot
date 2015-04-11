@@ -7,17 +7,8 @@ from time import time
 from django.db import connections
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
 from django.utils.module_loading import import_string
-from django.utils.six import PY3
 
 from .settings import cachalot_settings
-
-
-# The only cache backend with a key length limit is memcached (limited to
-# 255 characters). However, we hash keys on other backends as well to avoid
-# unnecessary huge communication between processes.
-# We set the limit to something smaller than 255 because a prefix might be
-# added by Django.
-MAX_CACHE_KEY_LENGTH = 200
 
 
 def get_query_cache_key(compiler):
@@ -35,8 +26,6 @@ def get_query_cache_key(compiler):
     """
     sql, params = compiler.as_sql()
     cache_key = '%s:%s:%s' % (compiler.using, sql, params)
-    # We always hash queries since they are nearly always longer than
-    # ``MAX_CACHE_KEY_LENGTH``.
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
@@ -52,15 +41,7 @@ def get_table_cache_key(db_alias, table):
     :rtype: str
     """
     cache_key = '%s:%s' % (db_alias, table)
-    # We check if we have to hash the key since it should nearly never be
-    # necessary.
-    if len(cache_key) > MAX_CACHE_KEY_LENGTH:
-        return sha1(cache_key.encode('utf-8')).hexdigest()
-    # Because of a bug in python-memcached3, we have to encode
-    # cache keys to bytes or it fails with this backend.
-    if PY3:
-        return cache_key.encode()
-    return cache_key
+    return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
 def _get_query_cache_key(compiler):
