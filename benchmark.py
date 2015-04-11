@@ -61,16 +61,14 @@ def write_conditions():
         ('sqlite', sqlite3.sqlite_version),
     ))
     # PostgreSQL
-    cursor = connections['postgresql'].cursor()
-    cursor.execute('SELECT version();')
-    versions['PostgreSQL'] = re.match(r'^PostgreSQL ([\d\.]+) on .+$',
-                                      cursor.fetchone()[0]).group(1)
-    cursor.close()
+    with connections['postgresql'].cursor() as cursor:
+        cursor.execute('SELECT version();')
+        versions['PostgreSQL'] = re.match(r'^PostgreSQL ([\d\.]+) on .+$',
+                                          cursor.fetchone()[0]).group(1)
     # MySQL
-    cursor = connections['mysql'].cursor()
-    cursor.execute('SELECT version();')
-    versions['MySQL'] = cursor.fetchone()[0].split('-')[0]
-    cursor.close()
+    with connections['mysql'].cursor() as cursor:
+        cursor.execute('SELECT version();')
+        versions['MySQL'] = cursor.fetchone()[0].split('-')[0]
     # Redis
     out = force_text(check_output(['redis-cli',
                                    'INFO', 'server'])).replace('\r', '')
