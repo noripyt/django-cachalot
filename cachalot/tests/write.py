@@ -732,11 +732,10 @@ class WriteTestCase(TransactionTestCase):
                 [])
 
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.execute(
-                "INSERT INTO cachalot_test (name, public) "
-                "VALUES ('test1', %s)", [1 if self.is_sqlite else 'true'])
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO cachalot_test (name, public) "
+                    "VALUES ('test1', %s)", [1 if self.is_sqlite else 'true'])
 
         with self.assertNumQueries(1):
             self.assertListEqual(
@@ -744,11 +743,10 @@ class WriteTestCase(TransactionTestCase):
                 ['test1'])
 
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.execute(
-                "INSERT INTO cachalot_test (name, public) "
-                "VALUES ('test2', %s)", [1 if self.is_sqlite else 'true'])
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO cachalot_test (name, public) "
+                    "VALUES ('test2', %s)", [1 if self.is_sqlite else 'true'])
 
         with self.assertNumQueries(1):
             self.assertListEqual(
@@ -756,11 +754,10 @@ class WriteTestCase(TransactionTestCase):
                 ['test1', 'test2'])
 
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.executemany(
-                "INSERT INTO cachalot_test (name, public) "
-                "VALUES ('test3', %s)", [[1 if self.is_sqlite else 'true']])
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.executemany(
+                    "INSERT INTO cachalot_test (name, public) "
+                    "VALUES ('test3', %s)", [[1 if self.is_sqlite else 'true']])
 
         with self.assertNumQueries(1):
             self.assertListEqual(
@@ -776,9 +773,8 @@ class WriteTestCase(TransactionTestCase):
                 ['test'])
 
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.execute("UPDATE cachalot_test SET name = 'new name';")
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.execute("UPDATE cachalot_test SET name = 'new name';")
 
         with self.assertNumQueries(1):
             self.assertListEqual(
@@ -794,9 +790,8 @@ class WriteTestCase(TransactionTestCase):
                 ['test'])
 
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.execute("DELETE FROM cachalot_test;")
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.execute("DELETE FROM cachalot_test;")
 
         with self.assertNumQueries(1):
             self.assertListEqual(

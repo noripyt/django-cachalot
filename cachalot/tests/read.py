@@ -556,15 +556,13 @@ class ReadTestCase(TransactionTestCase):
         sql = 'SELECT %s FROM %s;' % (', '.join(columns), Test._meta.db_table)
 
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            data1 = list(cursor.fetchall())
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                data1 = list(cursor.fetchall())
         with self.assertNumQueries(1):
-            cursor = connection.cursor()
-            cursor.execute(sql)
-            data2 = list(cursor.fetchall())
-            cursor.close()
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                data2 = list(cursor.fetchall())
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, list(Test.objects.values_list(*attnames)))
 
@@ -593,13 +591,14 @@ class ReadTestCase(TransactionTestCase):
         """
         Tests if using unicode in table names does not break caching.
         """
-        cursor = connection.cursor()
         table_name = 'Clémentine'
         if connection.vendor == 'postgresql':
             table_name = '"%s"' % table_name
-        cursor.execute('CREATE TABLE %s (taste VARCHAR(20));' % table_name)
+        with connection.cursor() as cursor:
+            cursor.execute('CREATE TABLE %s (taste VARCHAR(20));' % table_name)
         with self.assertNumQueries(1):
             list(Test.objects.extra(tables=['Clémentine']))
         with self.assertNumQueries(0):
             list(Test.objects.extra(tables=['Clémentine']))
-        cursor.execute('DROP TABLE %s;' % table_name)
+        with connection.cursor() as cursor:
+            cursor.execute('DROP TABLE %s;' % table_name)
