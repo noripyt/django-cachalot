@@ -14,7 +14,7 @@ from django.db import connection, transaction
 from django.db.models import Count
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
-from .models import Test, TestParent, TestChild
+from .models import Test, TestParent, TestChild, TestOne, TestThese
 
 
 class WriteTestCase(TransactionTestCase):
@@ -809,6 +809,88 @@ class WriteTestCase(TransactionTestCase):
             self.assertListEqual(
                 list(Test.objects.values_list('name', flat=True)),
                 [])
+
+    def test_clear_with_filters(self):
+        names = ['Thing 1', 'Thing 2', 'Thing 3']
+        for name in names:
+            thing = TestThese()
+            thing.name = name
+            thing.save()
+        hub = TestOne()
+        hub.name = 'Has lots'
+        hub.save()
+        for thing in TestThese.objects.all():
+            hub.have_lots_of_these.add(thing)
+        hub.save()
+        # read the number of things that hub has got
+        with self.assertNumQueries(1):
+            nt = list(hub.have_lots_of_these.all())
+        self.assertEqual(3, len(nt))
+
+        # read it again
+        with self.assertNumQueries(0):
+            list(hub.have_lots_of_these.all())
+
+        # read the number of TestOnes that have no things
+        with self.assertNumQueries(1):
+            ns = TestOne.objects.filter(have_lots_of_these=None).count()
+        self.assertEqual(ns, 0)
+
+        # now do a .clear on hub (which is a TestOne) and make sure db is queried for subsequent read
+        hub.have_lots_of_these.clear()
+        with self.assertNumQueries(1):
+            things = list(hub.have_lots_of_these.all())
+        self.assertEqual(0, len(things))
+
+        # again, query for the number of TestOnes that have no things. There
+        # should be one now
+        with self.assertNumQueries(1):
+            ns = TestOne.objects.filter(have_lots_of_these=None).count()
+            # there should now be one
+        self.assertEqual(ns, 1)
+
+    def test_clear_with_excludes(self):
+        '''
+        same test as above but using excludes rather than filters
+        '''
+        names = ['Thing 1', 'Thing 2', 'Thing 3']
+        for name in names:
+            thing = TestThese()
+            thing.name = name
+            thing.save()
+        hub = TestOne()
+        hub.name = 'Has lots'
+        hub.save()
+        for thing in TestThese.objects.all():
+            hub.have_lots_of_these.add(thing)
+        hub.save()
+
+        # read the number of things that hub has got
+        with self.assertNumQueries(1):
+            nt = list(hub.have_lots_of_these.all())
+        self.assertEqual(3, len(nt))
+
+        # read it again
+        with self.assertNumQueries(0):
+            list(hub.have_lots_of_these.all())
+
+        # read the number of TestOnes that have things via an exclude
+        # there should be one
+        with self.assertNumQueries(1):
+            ns = TestOne.objects.exclude(have_lots_of_these=None).count()
+        self.assertEqual(ns, 1)
+
+        # now do a .clear on hub (which is a TestOne) and make sure db is queried for subsequent read
+        hub.have_lots_of_these.clear()
+        with self.assertNumQueries(1):
+            things = list(hub.have_lots_of_these.all())
+        self.assertEqual(0, len(things))
+
+        # again, query for the number of TestOnes that have things. There
+        # should be none now
+        with self.assertNumQueries(1):
+            ns = TestOne.objects.exclude(have_lots_of_these=None).count()
+        self.assertEqual(ns, 0)
 
 
 class DatabaseCommandTestCase(TransactionTestCase):
