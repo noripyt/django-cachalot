@@ -6,6 +6,7 @@ from time import time
 
 import django
 from django.db import connections
+from django.db.models.sql import Query
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
 DJANGO_GTE_1_7 = django.VERSION[:2] >= (1, 7)
 if DJANGO_GTE_1_7:
@@ -73,7 +74,9 @@ def _find_subqueries(children):
                     rhs = child.rhs
             elif isinstance(child, tuple):
                 rhs = child[-1]
-            if hasattr(rhs, 'query'):
+            if isinstance(rhs, Query):
+                yield rhs
+            elif hasattr(rhs, 'query'):
                 yield rhs.query
         if hasattr(child, 'children'):
             for grand_child in _find_subqueries(child.children):
