@@ -1,6 +1,17 @@
 What’s new in django-cachalot?
 ==============================
 
+1.0.1
+-----
+
+- Fixes an invalidation issue discovered by Helen Warren that was occurring
+  when updating a ``ManyToManyField`` after executing using ``.exclude``
+  on that relation. For example, ``Permission.objects.all().delete()`` was not
+  invalidating ``User.objects.exclude(user_permissions=None)``
+- Fixes a ``UnicodeDecodeError`` introduced with python-memcached 1.54
+- Adds a ``post_invalidation`` signal
+
+
 1.0.0
 -----
 
