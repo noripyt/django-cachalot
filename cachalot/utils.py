@@ -15,6 +15,7 @@ else:
     from django.utils.module_loading import import_by_path as import_string
 
 from .settings import cachalot_settings
+from .signals import post_invalidation
 
 
 def get_query_cache_key(compiler):
@@ -99,16 +100,6 @@ def _get_tables(query, db_alias):
 
 
 def _get_table_cache_keys(compiler):
-    """
-    Returns a ``list`` of cache keys for all the SQL tables used
-    by ``compiler``.
-
-    :arg compiler: A SQLCompiler that will generate the SQL query
-    :type compiler: django.db.models.sql.compiler.SQLCompiler
-    :return: Cache keys for the SQL tables used
-    :rtype: list
-    """
-
     db_alias = compiler.using
     tables = _get_tables(compiler.query, db_alias)
     return [_get_table_cache_key(db_alias, t) for t in tables]
@@ -125,5 +116,10 @@ def _invalidate_table_cache_keys(cache, table_cache_keys):
 
 
 def _invalidate_tables(cache, compiler):
-    table_cache_keys = _get_table_cache_keys(compiler)
+    db_alias = compiler.using
+    tables = _get_tables(compiler.query, db_alias)
+    table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
     _invalidate_table_cache_keys(cache, table_cache_keys)
+
+    for table in tables:
+        post_invalidation.send(table, db_alias=db_alias)
