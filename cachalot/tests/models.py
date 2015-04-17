@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.db.models import (
-    Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField, ManyToManyField)
+    Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField)
 
 
 class Test(Model):
@@ -32,12 +32,3 @@ class TestChild(TestParent):
 
     class Meta(object):
         app_label = 'cachalot'
-
-
-class TestOne(Model):
-    name = CharField(max_length=20)
-    have_lots_of_these = ManyToManyField('TestThese', blank=True, null=True)
-
-
-class TestThese(Model):
-    name = CharField(max_length=20)
