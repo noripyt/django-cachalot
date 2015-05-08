@@ -89,3 +89,12 @@ In such cases, you may want to partially disable this behaviour by
 :ref:`CACHALOT_INVALIDATE_RAW` to ``False``.
 After that, use :ref:`the API <API>` to manually invalidate the tables
 you modified.
+
+Multiple Servers
+...............
+
+Django-cachalot uses the current server time to generate table cache keys.
+These keys are later compared to cached results to determine if they are
+still valid. In a multi-server deployment, it's important that all servers
+have a synchronized clock; if they do not, invalidations may not happen
+correctly. A difference of even a few seconds can cause this to occur.
