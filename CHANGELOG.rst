@@ -1,6 +1,17 @@
 What’s new in django-cachalot?
 ==============================
 
+1.0.2
+-----
+
+- Fixes an ``AttributeError`` occurring when excluding through a many-to-many
+  relation on a child model (using multi-table inheritance)
+- Stops caching queries with random subqueries – for example
+  ``User.objects.filter(pk__in=User.objects.order_by('?'))``
+- Optimises automatic invalidation
+- Adds a note about clock synchronisation
+
+
 1.0.1
 -----
 
