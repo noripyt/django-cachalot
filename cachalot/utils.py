@@ -67,7 +67,10 @@ def _get_tables_from_sql(connection, lowercased_sql):
 def _find_subqueries(children):
     for child in children:
         if isinstance(child, SubqueryConstraint):
-            yield child.query_object.query
+            if isinstance(child.query_object, Query):
+                yield child.query_object
+            else:
+                yield child.query_object.query
         else:
             rhs = None
             if DJANGO_GTE_1_7:
