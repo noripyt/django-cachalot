@@ -40,6 +40,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('testparent_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='cachalot.TestParent')),
                 ('public', models.BooleanField(default=False)),
+                ('permissions', models.ManyToManyField('auth.Permission', blank=True))
             ],
             bases=('cachalot.testparent',),
         ),

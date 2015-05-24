@@ -173,6 +173,12 @@ class ReadTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             list(Test.objects.order_by('?'))
 
+    def test_random_order_by_subquery(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(pk__in=Test.objects.order_by('?')))
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(pk__in=Test.objects.order_by('?')))
+
     def test_reverse(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.reverse())
@@ -300,6 +306,15 @@ class ReadTestCase(TransactionTestCase):
                 ).distinct())
         self.assertListEqual(data6, data5)
         self.assertListEqual(data6, [self.t1])
+
+        with self.assertNumQueries(1):
+            data7 = list(
+                TestChild.objects.exclude(permissions__isnull=True))
+        with self.assertNumQueries(0):
+            data8 = list(
+                TestChild.objects.exclude(permissions__isnull=True))
+        self.assertListEqual(data7, data8)
+        self.assertListEqual(data7, [])
 
     def test_aggregate(self):
         Test.objects.create(name='test3', owner=self.user)

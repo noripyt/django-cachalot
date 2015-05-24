@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.db.models import (
-    Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField)
+    Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
+    ManyToManyField)
 
 
 class Test(Model):
@@ -29,6 +30,7 @@ class TestParent(Model):
 
 class TestChild(TestParent):
     public = BooleanField(default=False)
+    permissions = ManyToManyField('auth.Permission', blank=True)
 
     class Meta(object):
         app_label = 'cachalot'
