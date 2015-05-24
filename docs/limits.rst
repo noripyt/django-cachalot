@@ -91,10 +91,14 @@ After that, use :ref:`the API <API>` to manually invalidate the tables
 you modified.
 
 Multiple Servers
-...............
+................
 
-Django-cachalot uses the current server time to generate table cache keys.
-These keys are later compared to cached results to determine if they are
-still valid. In a multi-server deployment, it's important that all servers
-have a synchronized clock; if they do not, invalidations may not happen
-correctly. A difference of even a few seconds can cause this to occur.
+Django-cachalot relies on the computer clock to handle invalidation.
+If you deploy the same Django project on multiple machines,
+but with a centralized cache server, all the machines serving Django need
+to have their clocks as synchronize as possible.
+Otherwise, invalidations will happen with a latency from one server to another.
+A difference of even a few seconds can be harmful, so double check this!
+
+To keep your clocks synchronised, use the
+`Network Time Protocol <http://en.wikipedia.org/wiki/Network_Time_Protocol>`_.
