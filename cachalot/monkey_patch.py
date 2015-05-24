@@ -16,8 +16,7 @@ if django_version >= (1, 7):
     from django.db.models.signals import post_migrate
 else:
     from django.db.models.signals import post_syncdb as post_migrate
-from django.db.models.sql.compiler import (
-    SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
+from django.db.models.sql.compiler import SQLCompiler
 from django.db.transaction import Atomic, get_connection
 from django.test import TransactionTestCase
 
@@ -26,10 +25,8 @@ from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
     _get_query_cache_key, _invalidate_tables,
-    _get_table_cache_keys, _get_tables_from_sql, RandomQueryException)
-
-
-WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
+    _get_table_cache_keys, _get_tables_from_sql, RandomQueryException,
+    WRITE_COMPILERS)
 
 
 PATCHED = False
@@ -102,9 +99,9 @@ def _patch_compiler(original):
 
 def _patch_write_compiler(original):
     @wraps(original)
-    def inner(compiler, *args, **kwargs):
-        _invalidate_tables(cachalot_caches.get_cache(), compiler)
-        return original(compiler, *args, **kwargs)
+    def inner(write_compiler, *args, **kwargs):
+        _invalidate_tables(cachalot_caches.get_cache(), write_compiler)
+        return original(write_compiler, *args, **kwargs)
 
     inner.original = original
     return inner

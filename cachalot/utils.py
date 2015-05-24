@@ -7,6 +7,8 @@ from time import time
 import django
 from django.db import connections
 from django.db.models.sql import Query
+from django.db.models.sql.compiler import (
+    SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
 DJANGO_GTE_1_7 = django.VERSION[:2] >= (1, 7)
 if DJANGO_GTE_1_7:
@@ -16,6 +18,9 @@ else:
 
 from .settings import cachalot_settings
 from .signals import post_invalidation
+
+
+WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
 
 class RandomQueryException(Exception):
@@ -125,11 +130,11 @@ def _invalidate_table_cache_keys(cache, table_cache_keys):
     cache.set_many(d, None)
 
 
-def _invalidate_tables(cache, compiler):
-    db_alias = compiler.using
-    tables = _get_tables(compiler.query, db_alias)
-    table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
-    _invalidate_table_cache_keys(cache, table_cache_keys)
+def _invalidate_tables(cache, write_compiler):
+    db_alias = write_compiler.using
 
-    for table in tables:
-        post_invalidation.send(table, db_alias=db_alias)
+    table = write_compiler.query.get_meta().db_table
+    table_cache_key = _get_table_cache_key(db_alias, table)
+    _invalidate_table_cache_keys(cache, (table_cache_key,))
+
+    post_invalidation.send(table, db_alias=db_alias)
