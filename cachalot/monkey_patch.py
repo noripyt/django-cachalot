@@ -26,7 +26,7 @@ from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
     _get_query_cache_key, _invalidate_tables,
-    _get_table_cache_keys, _get_tables_from_sql)
+    _get_table_cache_keys, _get_tables_from_sql, RandomQueryException)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -84,18 +84,17 @@ def _patch_compiler(original):
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
         if not cachalot_settings.CACHALOT_ENABLED \
-                or isinstance(compiler, WRITE_COMPILERS) \
-                or (not cachalot_settings.CACHALOT_CACHE_RANDOM
-                    and '?' in compiler.query.order_by):
+                or isinstance(compiler, WRITE_COMPILERS):
             return execute_query_func()
 
         try:
             cache_key = _get_query_cache_key(compiler)
-        except EmptyResultSet:
+            table_cache_keys = _get_table_cache_keys(compiler)
+        except (EmptyResultSet, RandomQueryException):
             return execute_query_func()
 
         return _get_result_or_execute_query(
-            execute_query_func, cache_key, _get_table_cache_keys(compiler))
+            execute_query_func, cache_key, table_cache_keys)
 
     inner.original = original
     return inner

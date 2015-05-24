@@ -18,6 +18,10 @@ from .settings import cachalot_settings
 from .signals import post_invalidation
 
 
+class RandomQueryException(Exception):
+    pass
+
+
 def get_query_cache_key(compiler):
     """
     Generates a cache key from a SQLCompiler.
@@ -88,8 +92,11 @@ def _find_subqueries(children):
 
 
 def _get_tables(query, db_alias):
+    if '?' in query.order_by and not cachalot_settings.CACHALOT_CACHE_RANDOM:
+        raise RandomQueryException
+
     tables = set(query.table_map)
-    tables.add(query.model._meta.db_table)
+    tables.add(query.get_meta().db_table)
     subquery_constraints = _find_subqueries(query.where.children
                                             + query.having.children)
     for subquery in subquery_constraints:
