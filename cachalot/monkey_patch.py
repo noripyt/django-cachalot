@@ -16,16 +16,19 @@ if django_version >= (1, 7):
     from django.db.models.signals import post_migrate
 else:
     from django.db.models.signals import post_syncdb as post_migrate
-from django.db.models.sql.compiler import SQLCompiler
+from django.db.models.sql.compiler import (
+    SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.transaction import Atomic, get_connection
 
 from .api import invalidate_all, invalidate_tables, invalidate_models
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_query_cache_key, _invalidate_tables,
-    _get_table_cache_keys, _get_tables_from_sql, UncachableQuery,
-    WRITE_COMPILERS)
+    _get_query_cache_key, _invalidate_table,
+    _get_table_cache_keys, _get_tables_from_sql, UncachableQuery)
+
+
+WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
 
 PATCHED = False
@@ -92,17 +95,15 @@ def _patch_compiler(original):
         return _get_result_or_execute_query(
             execute_query_func, cache_key, table_cache_keys)
 
-    inner.original = original
     return inner
 
 
 def _patch_write_compiler(original):
     @wraps(original)
     def inner(write_compiler, *args, **kwargs):
-        _invalidate_tables(cachalot_caches.get_cache(), write_compiler)
+        _invalidate_table(cachalot_caches.get_cache(), write_compiler)
         return original(write_compiler, *args, **kwargs)
 
-    inner.original = original
     return inner
 
 
@@ -125,7 +126,6 @@ def _patch_cursor():
                     invalidate_tables(tables, db_alias=cursor.db.alias)
             return out
 
-        inner.original = original
         return inner
 
     CursorWrapper.execute = _patch_cursor_execute(CursorWrapper.execute)
@@ -139,7 +139,6 @@ def _patch_atomic():
             cachalot_caches.enter_atomic()
             original(self)
 
-        inner.original = original
         return inner
 
     def patch_exit(original):
@@ -150,7 +149,6 @@ def _patch_atomic():
             cachalot_caches.exit_atomic(exc_type is None
                                         and not needs_rollback)
 
-        inner.original = original
         return inner
 
     Atomic.__enter__ = patch_enter(Atomic.__enter__)
@@ -158,12 +156,10 @@ def _patch_atomic():
 
 if django_version >= (1, 7):
     def _invalidate_on_migration(sender, **kwargs):
-        db_alias = kwargs['using']
-        invalidate_models(sender.get_models(), db_alias=db_alias)
+        invalidate_models(sender.get_models(), db_alias=kwargs['using'])
 else:
     def _invalidate_on_migration(sender, **kwargs):
-        db_alias = kwargs['db']
-        invalidate_all(db_alias=db_alias)
+        invalidate_all(db_alias=kwargs['db'])
 
 
 def patch():

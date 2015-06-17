@@ -7,8 +7,6 @@ from time import time
 import django
 from django.db import connections
 from django.db.models.sql import Query
-from django.db.models.sql.compiler import (
-    SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
 DJANGO_GTE_1_7 = django.VERSION[:2] >= (1, 7)
 if DJANGO_GTE_1_7:
@@ -18,9 +16,6 @@ else:
 
 from .settings import cachalot_settings
 from .signals import post_invalidation
-
-
-WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
 
 class UncachableQuery(Exception):
@@ -133,7 +128,7 @@ def _invalidate_table_cache_keys(cache, table_cache_keys):
     cache.set_many(d, None)
 
 
-def _invalidate_tables(cache, write_compiler):
+def _invalidate_table(cache, write_compiler):
     db_alias = write_compiler.using
 
     table = write_compiler.query.get_meta().db_table
