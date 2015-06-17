@@ -6,6 +6,7 @@ try:
 except ImportError:  # For Python 2.6
     from unittest2 import skipIf
 
+from django import VERSION as django_version
 from django.conf import settings
 from django.core.cache import DEFAULT_CACHE_ALIAS
 from django.db import connection
@@ -16,6 +17,12 @@ from .models import Test
 
 
 class SettingsTestCase(TransactionTestCase):
+    def setUp(self):
+        if django_version >= (1, 7) and connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
+
     @override_settings(CACHALOT_ENABLED=False)
     def test_decorator(self):
         with self.assertNumQueries(1):

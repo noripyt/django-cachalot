@@ -25,6 +25,10 @@ class WriteTestCase(TransactionTestCase):
 
     def setUp(self):
         self.is_sqlite = connection.vendor == 'sqlite'
+        if django_version >= (1, 7) and connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
 
     def test_create(self):
         with self.assertNumQueries(1):
