@@ -23,7 +23,7 @@ from .signals import post_invalidation
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
 
-class RandomQueryException(Exception):
+class UncachableQuery(Exception):
     pass
 
 
@@ -98,7 +98,7 @@ def _find_subqueries(children):
 
 def _get_tables(query, db_alias):
     if '?' in query.order_by and not cachalot_settings.CACHALOT_CACHE_RANDOM:
-        raise RandomQueryException
+        raise UncachableQuery
 
     tables = set(query.table_map)
     tables.add(query.get_meta().db_table)
@@ -111,6 +111,9 @@ def _get_tables(query, db_alias):
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         additional_tables = _get_tables_from_sql(connections[db_alias], sql)
         tables.update(additional_tables)
+
+    if not tables.isdisjoint(cachalot_settings.CACHALOT_UNCACHABLE_TABLES):
+        raise UncachableQuery
     return tables
 
 

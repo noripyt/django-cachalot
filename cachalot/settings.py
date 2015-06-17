@@ -6,6 +6,7 @@ class Settings(object):
     CACHALOT_CACHE = 'default'
     CACHALOT_CACHE_RANDOM = False
     CACHALOT_INVALIDATE_RAW = True
+    CACHALOT_UNCACHABLE_TABLES = frozenset(('django_migrations',))
     CACHALOT_QUERY_KEYGEN = 'cachalot.utils.get_query_cache_key'
     CACHALOT_TABLE_KEYGEN = 'cachalot.utils.get_table_cache_key'
 

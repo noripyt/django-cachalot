@@ -75,6 +75,17 @@ Settings
 :Description: If set to ``False``, disables automatic invalidation on raw
               SQL queries – read :ref:`Raw queries limits` for more info
 
+``CACHALOT_UNCACHABLE_TABLES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``frozenset(('django_migrations',))``
+:Description:
+  Sequence of SQL table names that will be ignored by django-cachalot.
+  Queries using a table mentioned in this setting will not be cached.
+  Always keep ``'django_migrations'`` in it, otherwise you may face
+  some issues, especially during tests.
+  Use a frozenset over other sequence types for a tiny performance boost.
+
 ``CACHALOT_QUERY_KEYGEN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

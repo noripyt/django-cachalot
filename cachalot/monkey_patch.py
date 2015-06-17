@@ -18,14 +18,13 @@ else:
     from django.db.models.signals import post_syncdb as post_migrate
 from django.db.models.sql.compiler import SQLCompiler
 from django.db.transaction import Atomic, get_connection
-from django.test import TransactionTestCase
 
-from .api import invalidate_all, invalidate_tables
+from .api import invalidate_all, invalidate_tables, invalidate_models
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
     _get_query_cache_key, _invalidate_tables,
-    _get_table_cache_keys, _get_tables_from_sql, RandomQueryException,
+    _get_table_cache_keys, _get_tables_from_sql, UncachableQuery,
     WRITE_COMPILERS)
 
 
@@ -87,7 +86,7 @@ def _patch_compiler(original):
         try:
             cache_key = _get_query_cache_key(compiler)
             table_cache_keys = _get_table_cache_keys(compiler)
-        except (EmptyResultSet, RandomQueryException):
+        except (EmptyResultSet, UncachableQuery):
             return execute_query_func()
 
         return _get_result_or_execute_query(
@@ -157,25 +156,14 @@ def _patch_atomic():
     Atomic.__enter__ = patch_enter(Atomic.__enter__)
     Atomic.__exit__ = patch_exit(Atomic.__exit__)
 
-
-def _patch_tests():
-    def patch_transaction_test_case(original):
-        @wraps(original)
-        def inner(*args, **kwargs):
-            out = original(*args, **kwargs)
-            invalidate_all()
-            return out
-
-        inner.original = original
-        return inner
-
-    TransactionTestCase._fixture_setup = patch_transaction_test_case(
-        TransactionTestCase._fixture_setup)
-
-
-def _invalidate_on_migration(sender, **kwargs):
-    db_alias = kwargs['using'] if django_version >= (1, 7) else kwargs['db']
-    invalidate_all(db_alias=db_alias)
+if django_version >= (1, 7):
+    def _invalidate_on_migration(sender, **kwargs):
+        db_alias = kwargs['using']
+        invalidate_models(sender.get_models(), db_alias=db_alias)
+else:
+    def _invalidate_on_migration(sender, **kwargs):
+        db_alias = kwargs['db']
+        invalidate_all(db_alias=db_alias)
 
 
 def patch():
@@ -187,7 +175,6 @@ def patch():
         south_post_migrate.connect(_invalidate_on_migration)
 
     _patch_cursor()
-    _patch_tests()
     _patch_atomic()
     _patch_orm()
 
