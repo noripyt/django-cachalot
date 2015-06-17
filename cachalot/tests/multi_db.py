@@ -6,6 +6,7 @@ try:
 except ImportError:  # For Python 2.6
     from unittest2 import skipIf
 
+from django import VERSION as django_version
 from django.conf import settings
 from django.db import DEFAULT_DB_ALIAS, connections
 from django.test import TransactionTestCase
@@ -23,7 +24,13 @@ class MultiDatabaseTestCase(TransactionTestCase):
         self.t2 = Test.objects.create(name='test2')
         self.db_alias2 = next(alias for alias in settings.DATABASES
                               if alias != DEFAULT_DB_ALIAS)
-        self.is_sqlite2 = connections[self.db_alias2].vendor == 'sqlite'
+        connection2 = connections[self.db_alias2]
+        self.is_sqlite2 = connection2.vendor == 'sqlite'
+        self.is_mysql2 = connection2.vendor == 'mysql'
+        if django_version >= (1, 7) and self.is_mysql2:
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection2.cursor()
 
     def test_read(self):
         with self.assertNumQueries(1):
