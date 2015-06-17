@@ -101,3 +101,21 @@ class SettingsTestCase(TransactionTestCase):
                 cursor.close()
         with self.assertNumQueries(0):
             list(Test.objects.all())
+
+    def test_uncachable_tables(self):
+        with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
+
+        with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
