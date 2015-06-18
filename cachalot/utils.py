@@ -70,8 +70,8 @@ def _get_tables_from_sql(connection, lowercased_sql):
 
 def _find_subqueries(children):
     for child in children:
-        if isinstance(child, SubqueryConstraint):
-            if isinstance(child.query_object, Query):
+        if child.__class__ is SubqueryConstraint:
+            if child.query_object.__class__ is Query:
                 yield child.query_object
             else:
                 yield child.query_object.query
@@ -80,9 +80,9 @@ def _find_subqueries(children):
             if DJANGO_GTE_1_7:
                 if hasattr(child, 'rhs'):
                     rhs = child.rhs
-            elif isinstance(child, tuple):
+            elif child.__class__ is tuple:
                 rhs = child[-1]
-            if isinstance(rhs, Query):
+            if rhs.__class__ is Query:
                 yield rhs
             elif hasattr(rhs, 'query'):
                 yield rhs.query
@@ -102,7 +102,7 @@ def _get_tables(query, db_alias):
     for subquery in subquery_constraints:
         tables.update(_get_tables(subquery, db_alias))
     if query.extra_select or hasattr(query, 'subquery') \
-            or any(isinstance(c, ExtraWhere) for c in query.where.children):
+            or any(c.__class__ is ExtraWhere for c in query.where.children):
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         additional_tables = _get_tables_from_sql(connections[db_alias], sql)
         tables.update(additional_tables)

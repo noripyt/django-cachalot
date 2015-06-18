@@ -47,6 +47,9 @@ def _unset_raw_connection(original):
     return inner
 
 
+TUPLE_OR_LIST = (tuple, list)
+
+
 def _get_result_or_execute_query(execute_query_func, cache_key,
                                  table_cache_keys):
     cache = cachalot_caches.get_cache()
@@ -68,8 +71,7 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
             return result
 
     result = execute_query_func()
-    if isinstance(result, Iterable) \
-            and not isinstance(result, (tuple, list)):
+    if isinstance(result, Iterable) and result.__class__ not in TUPLE_OR_LIST:
         result = list(result)
 
     cache.set(cache_key, (time(), result), None)
@@ -83,7 +85,7 @@ def _patch_compiler(original):
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
         if not cachalot_settings.CACHALOT_ENABLED \
-                or isinstance(compiler, WRITE_COMPILERS):
+                or compiler.__class__ in WRITE_COMPILERS:
             return execute_query_func()
 
         try:
