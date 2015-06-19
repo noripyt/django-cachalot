@@ -637,15 +637,21 @@ class ReadTestCase(TransactionTestCase):
             list(Test.objects.extra(tables=['Clémentine']))
         cursor.execute('DROP TABLE %s;' % table_name)
 
-    def test_binary_field(self):
+    def test_unknown_parameter_type(self):
         """
-        Tests if queries on binary data are not cached.
-        Since binary fields use different classes with no clear way to hash
-        their values, it’s wiser not to cache them.
+        Tests if queries with an unknown parameter type are not cached.
 
-        The only exception is MySQL, which serializes binary to a simple
-        Python bytes (str in Python 2).
+        We don’t cache parameters with an unknown type because we don’t know
+        how to hash them.
+
+        Here we use a binary field, as it uses special parameters
+        on PostgreSQL and SQLite (but not on MySQL).
+        A similar result would be obtained using a geographic field, but it’s
+        more complex to test, since geographic database backends have a few
+        side effects, such as changing the number of queries
+        of a bulk_create of n objects from 1 to n.
         """
+
         is_mysql = connection.vendor == 'mysql'
 
         with self.assertNumQueries(1):
