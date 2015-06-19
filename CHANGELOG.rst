@@ -1,6 +1,22 @@
 What’s new in django-cachalot?
 ==============================
 
+1.0.3
+-----
+
+- Fixes an invalidation issue that could rarely occur when querying on a
+  ``BinaryField`` with PostgreSQL, or with some geographic queries
+  (there was a small chance that a same query with different parameters
+  could erroneously give the same result as the previous one)
+- Adds a ``CACHALOT_UNCACHABLE_TABLES`` setting
+- Fixes a Django 1.7 migrations invalidation issue in tests
+  (that was leading to this error half of the time:
+  ``RuntimeError: Error creating new content types. Please make sure
+  contenttypes is migrated before trying to migrate apps individually.``)
+- Optimises tests when using django-cachalot
+  by avoid several useless cache invalidations
+
+
 1.0.2
 -----
 
