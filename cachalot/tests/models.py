@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
-    ManyToManyField)
+    ManyToManyField, BinaryField)
 
 
 class Test(Model):
@@ -15,6 +15,7 @@ class Test(Model):
     date = DateField(null=True, blank=True)
     datetime = DateTimeField(null=True, blank=True)
     permission = ForeignKey('auth.Permission', null=True, blank=True)
+    bin = BinaryField(null=True, blank=True)
 
     class Meta(object):
         app_label = 'cachalot'

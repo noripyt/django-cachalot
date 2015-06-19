@@ -119,6 +119,24 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t2])
 
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.filter(
+                date__gt=datetime.date(1900, 1, 1)))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.filter(
+                date__gt=datetime.date(1900, 1, 1)))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.t2])
+
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.filter(
+                datetime__lt=datetime.datetime(1900, 1, 1)))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.filter(
+                datetime__lt=datetime.datetime(1900, 1, 1)))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.t1])
+
     def test_filter_empty(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(public=True,
@@ -618,3 +636,29 @@ class ReadTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             list(Test.objects.extra(tables=['Clémentine']))
         cursor.execute('DROP TABLE %s;' % table_name)
+
+    def test_binary_field(self):
+        """
+        Tests if queries on binary data are not cached.
+        Since binary fields use different classes with no clear way to hash
+        their values, it’s wiser not to cache them.
+
+        The only exception is MySQL, which serializes binary to a simple
+        Python bytes (str in Python 2).
+        """
+        is_mysql = connection.vendor == 'mysql'
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(bin=None))
+        with self.assertNumQueries(0):
+            list(Test.objects.filter(bin=None))
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(bin=b'abc'))
+        with self.assertNumQueries(0 if is_mysql else 1):
+            list(Test.objects.filter(bin=b'abc'))
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(bin=b'def'))
+        with self.assertNumQueries(0 if is_mysql else 1):
+            list(Test.objects.filter(bin=b'def'))

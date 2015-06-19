@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(null=True, blank=True)),
                 ('owner', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True)),
+                ('bin', models.BinaryField(null=True, blank=True)),
             ],
             options={
                 'ordering': ('name',),
