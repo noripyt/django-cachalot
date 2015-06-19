@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 from hashlib import sha1
 from time import time
-from types import NoneType
 
 import django
 from django.db import connections
@@ -24,7 +23,7 @@ class UncachableQuery(Exception):
     pass
 
 
-CACHABLE_PARAM_TYPES = (bool, int, binary_type, text_type, NoneType)
+CACHABLE_PARAM_TYPES = (bool, int, binary_type, text_type, type(None))
 
 def get_query_cache_key(compiler):
     """
