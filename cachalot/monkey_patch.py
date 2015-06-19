@@ -85,7 +85,7 @@ def _patch_compiler(original):
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
         if not cachalot_settings.CACHALOT_ENABLED \
-                or compiler.__class__ in WRITE_COMPILERS:
+                or isinstance(compiler, WRITE_COMPILERS):
             return execute_query_func()
 
         try:
