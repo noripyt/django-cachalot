@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from hashlib import sha1
 from time import time
+from types import NoneType
 
 import django
 from django.db import connections
@@ -13,6 +14,7 @@ if DJANGO_GTE_1_7:
     from django.utils.module_loading import import_string
 else:
     from django.utils.module_loading import import_by_path as import_string
+from django.utils.six import text_type, binary_type
 
 from .settings import cachalot_settings
 from .signals import post_invalidation
@@ -21,6 +23,8 @@ from .signals import post_invalidation
 class UncachableQuery(Exception):
     pass
 
+
+CACHABLE_PARAM_TYPES = (bool, int, binary_type, text_type, NoneType)
 
 def get_query_cache_key(compiler):
     """
@@ -36,6 +40,8 @@ def get_query_cache_key(compiler):
     :rtype: str
     """
     sql, params = compiler.as_sql()
+    if any(p.__class__ not in CACHABLE_PARAM_TYPES for p in params):
+        raise UncachableQuery
     cache_key = '%s:%s:%s' % (compiler.using, sql, params)
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
