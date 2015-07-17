@@ -55,6 +55,9 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
     cache = cachalot_caches.get_cache()
     data = cache.get_many(table_cache_keys + [cache_key])
 
+    if data == None:
+        return execute_query_func()
+
     new_table_cache_keys = set(table_cache_keys)
     new_table_cache_keys.difference_update(data)
 
