@@ -21,8 +21,7 @@ class AtomicCache(dict):
                 data[k] = self[k]
         missing_keys = set(keys)
         missing_keys.difference_update(data)
-        missing_items = self.parent_cache.get_many(missing_keys)
-        missing_items = missing_items if not missing_items == None else {}
+        missing_items = self.parent_cache.get_many(missing_keys) or {}
         data.update(missing_items)
         return data
 

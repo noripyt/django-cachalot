@@ -47,8 +47,7 @@ class CachalotPanel(Panel):
             model_cache_keys = dict(
                 [(_get_table_cache_key(db_alias, model._meta.db_table), model)
                  for model in models])
-            cached_items = cache.get_many(model_cache_keys.keys())
-            cached_items = cached_items if not cached_items == None else {}
+            cached_items = cache.get_many(model_cache_keys.keys()) or {}
             for cache_key, timestamp in cached_items.items():
                 invalidation = datetime.fromtimestamp(timestamp)
                 model = model_cache_keys[cache_key]
