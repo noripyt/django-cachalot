@@ -3,8 +3,13 @@
 from __future__ import unicode_literals
 from threading import local
 
-# TODO: Replace with caches[CACHALOT_CACHE] when we drop Django 1.6 support.
-from django.core.cache import get_cache as get_django_cache
+import django
+
+if django.VERSION >= (1,7):
+    from django.core.cache import caches
+    get_django_cache = lambda cache_alias: caches[cache_alias]
+else:
+    from django.core.cache import get_cache as get_django_cache
 
 from .settings import cachalot_settings
 from .transaction import AtomicCache
