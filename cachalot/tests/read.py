@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 
 from django.contrib.auth.models import Group, Permission, User
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
@@ -302,6 +303,23 @@ class ReadTestCase(TransactionTestCase):
             data2 = [t.owner for t in Test.objects.all()]
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.user, self.admin])
+
+    def test_many_to_many(self):
+        u = User.objects.create_user('test_user')
+        ct = ContentType.objects.get_for_model(User)
+        u.user_permissions.add(
+            Permission.objects.create(
+                name='Can discuss', content_type=ct, codename='discuss'),
+            Permission.objects.create(
+                name='Can touch', content_type=ct, codename='touch'),
+            Permission.objects.create(
+                name='Can cuddle', content_type=ct, codename='cuddle'))
+        with self.assertNumQueries(1):
+            data1 = [p.codename for p in u.user_permissions.all()]
+        with self.assertNumQueries(0):
+            data2 = [p.codename for p in u.user_permissions.all()]
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, ['cuddle', 'discuss', 'touch'])
 
     def test_subquery(self):
         with self.assertNumQueries(1):

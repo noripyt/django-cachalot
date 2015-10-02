@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.models import User, Permission, Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.management import call_command
 from django.db import connection, transaction
@@ -284,6 +285,35 @@ class WriteTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             data8 = [t.owner.username for t in Test.objects.all() if t.owner]
         self.assertListEqual(data8, ['user1', 'user2', 'user3'])
+
+    def test_invalidate_many_to_many(self):
+        u = User.objects.create_user('test_user')
+        ct = ContentType.objects.get_for_model(User)
+        discuss = Permission.objects.create(
+            name='Can discuss', content_type=ct, codename='discuss')
+        touch = Permission.objects.create(
+            name='Can touch', content_type=ct, codename='touch')
+        cuddle = Permission.objects.create(
+            name='Can cuddle', content_type=ct, codename='cuddle')
+        u.user_permissions.add(discuss, touch, cuddle)
+        with self.assertNumQueries(1):
+            data1 = [p.codename for p in u.user_permissions.all()]
+        self.assertListEqual(data1, ['cuddle', 'discuss', 'touch'])
+
+        touch.name = 'Can lick'
+        touch.codename = 'lick'
+        touch.save()
+
+        with self.assertNumQueries(1):
+            data2 = [p.codename for p in u.user_permissions.all()]
+        self.assertListEqual(data2, ['cuddle', 'discuss', 'lick'])
+
+        Permission.objects.filter(pk=discuss.pk).update(
+            name='Can finger', codename='finger')
+
+        with self.assertNumQueries(1):
+            data3 = [p.codename for p in u.user_permissions.all()]
+        self.assertListEqual(data3, ['cuddle', 'finger', 'lick'])
 
     def test_invalidate_aggregate(self):
         with self.assertNumQueries(1):
@@ -789,6 +819,14 @@ class WriteTestCase(TransactionTestCase):
             modified_t_child = TestChild.objects.get()
             self.assertEqual(modified_t_child.pk, t_child.pk)
             self.assertEqual(modified_t_child.name, 'modified')
+
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
+            TestChild.objects.filter(pk=t_child.pk).update(name='modified2')
+
+        with self.assertNumQueries(1):
+            modified2_t_child = TestChild.objects.get()
+            self.assertEqual(modified2_t_child.pk, t_child.pk)
+            self.assertEqual(modified2_t_child.name, 'modified2')
 
     def test_raw_insert(self):
         with self.assertNumQueries(1):
