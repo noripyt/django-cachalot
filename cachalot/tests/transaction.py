@@ -138,7 +138,7 @@ class AtomicTestCase(TransactionTestCase):
     def test_unsuccessful_nested_read_atomic(self):
         is_sqlite = connection.vendor == 'sqlite'
 
-        with self.assertNumQueries(5 if is_sqlite else 4):
+        with self.assertNumQueries(6 if is_sqlite else 5):
             with transaction.atomic():
                 try:
                     with transaction.atomic():
@@ -172,7 +172,7 @@ class AtomicTestCase(TransactionTestCase):
     def test_unsuccessful_nested_write_atomic(self):
         is_sqlite = connection.vendor == 'sqlite'
 
-        with self.assertNumQueries(13 if is_sqlite else 12):
+        with self.assertNumQueries(16 if is_sqlite else 15):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
                 try:
