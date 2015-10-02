@@ -19,9 +19,6 @@ Caches your Django ORM queries and automatically invalidates them.
 .. image:: http://img.shields.io/scrutinizer/g/BertrandBordage/django-cachalot/master.svg?style=flat-square
    :target: https://scrutinizer-ci.com/g/BertrandBordage/django-cachalot/
 
-.. image:: http://img.shields.io/gratipay/BertrandBordage.svg?style=flat-square
-   :target: https://gratipay.com/BertrandBordage/
-
 Since version 1.0.0 it is **safe for production**.
 
 
