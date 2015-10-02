@@ -1,8 +1,7 @@
 from optparse import make_option
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
 from django.core.management.base import BaseCommand
-from django.db.models import get_app, get_model, get_models
+from django.apps import apps
 from ...api import invalidate_all, invalidate_models
 
 
@@ -26,13 +25,11 @@ class Command(BaseCommand):
         models = []
         for arg in args:
             try:
-                app = get_app(arg)
-            except ImproperlyConfigured:
+                models.extend(apps.get_app_config(arg).get_models())
+            except LookupError:
                 app_label = '.'.join(arg.split('.')[:-1])
                 model_name = arg.split('.')[-1]
-                models.append(get_model(app_label, model_name))
-            else:
-                models.extend(get_models(app))
+                models.append(apps.get_model(app_label, model_name))
 
         cache_str = '' if cache_alias is None else "on cache '%s'" % cache_alias
         db_str = '' if db_alias is None else "for database '%s'" % db_alias
