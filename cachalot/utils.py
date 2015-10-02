@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+import datetime
 from hashlib import sha1
 from time import time
 
@@ -18,7 +19,10 @@ class UncachableQuery(Exception):
     pass
 
 
-CACHABLE_PARAM_TYPES = (bool, int, binary_type, text_type, type(None))
+CACHABLE_PARAM_TYPES = (
+    bool, int, binary_type, text_type, type(None),
+    datetime.date, datetime.time, datetime.datetime, datetime.timedelta
+)
 
 def get_query_cache_key(compiler):
     """
