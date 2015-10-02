@@ -20,6 +20,10 @@ class WriteTestCase(TransactionTestCase):
 
     def setUp(self):
         self.is_sqlite = connection.vendor == 'sqlite'
+        if connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
 
     def test_create(self):
         with self.assertNumQueries(1):
@@ -365,6 +369,16 @@ class WriteTestCase(TransactionTestCase):
                 User.objects.filter(user_permissions__in=g.permissions.all())
             )
         self.assertListEqual(data10, [])
+
+        with self.assertNumQueries(1):
+            data11 = list(User.objects.exclude(user_permissions=None))
+        self.assertListEqual(data11, [u])
+
+        u.user_permissions.clear()
+
+        with self.assertNumQueries(1):
+            data12 = list(User.objects.exclude(user_permissions=None))
+        self.assertListEqual(data12, [])
 
     def test_invalidate_nested_subqueries(self):
         with self.assertNumQueries(1):

@@ -119,6 +119,24 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t2])
 
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.filter(
+                date__gt=datetime.date(1900, 1, 1)))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.filter(
+                date__gt=datetime.date(1900, 1, 1)))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.t2])
+
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.filter(
+                datetime__lt=datetime.datetime(1900, 1, 1)))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.filter(
+                datetime__lt=datetime.datetime(1900, 1, 1)))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.t1])
+
     def test_filter_empty(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(public=True,
@@ -172,6 +190,12 @@ class ReadTestCase(TransactionTestCase):
             list(Test.objects.order_by('?'))
         with self.assertNumQueries(1):
             list(Test.objects.order_by('?'))
+
+    def test_random_order_by_subquery(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(pk__in=Test.objects.order_by('?')))
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(pk__in=Test.objects.order_by('?')))
 
     def test_reverse(self):
         with self.assertNumQueries(1):
@@ -300,6 +324,15 @@ class ReadTestCase(TransactionTestCase):
                 ).distinct())
         self.assertListEqual(data6, data5)
         self.assertListEqual(data6, [self.t1])
+
+        with self.assertNumQueries(1):
+            data7 = list(
+                TestChild.objects.exclude(permissions__isnull=True))
+        with self.assertNumQueries(0):
+            data8 = list(
+                TestChild.objects.exclude(permissions__isnull=True))
+        self.assertListEqual(data7, data8)
+        self.assertListEqual(data7, [])
 
     def test_aggregate(self):
         Test.objects.create(name='test3', owner=self.user)
@@ -602,3 +635,35 @@ class ReadTestCase(TransactionTestCase):
             list(Test.objects.extra(tables=['Clémentine']))
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE %s;' % table_name)
+
+    def test_unknown_parameter_type(self):
+        """
+        Tests if queries with an unknown parameter type are not cached.
+
+        We don’t cache parameters with an unknown type because we don’t know
+        how to hash them.
+
+        Here we use a binary field, as it uses special parameters
+        on PostgreSQL and SQLite (but not on MySQL).
+        A similar result would be obtained using a geographic field, but it’s
+        more complex to test, since geographic database backends have a few
+        side effects, such as changing the number of queries
+        of a bulk_create of n objects from 1 to n.
+        """
+
+        is_mysql = connection.vendor == 'mysql'
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(bin=None))
+        with self.assertNumQueries(0):
+            list(Test.objects.filter(bin=None))
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(bin=b'abc'))
+        with self.assertNumQueries(0 if is_mysql else 1):
+            list(Test.objects.filter(bin=b'abc'))
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(bin=b'def'))
+        with self.assertNumQueries(0 if is_mysql else 1):
+            list(Test.objects.filter(bin=b'def'))

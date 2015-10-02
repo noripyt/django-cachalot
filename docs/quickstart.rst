@@ -73,6 +73,17 @@ Settings
 :Description: If set to ``False``, disables automatic invalidation on raw
               SQL queries – read :ref:`Raw queries limits` for more info
 
+``CACHALOT_UNCACHABLE_TABLES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``frozenset(('django_migrations',))``
+:Description:
+  Sequence of SQL table names that will be ignored by django-cachalot.
+  Queries using a table mentioned in this setting will not be cached.
+  Always keep ``'django_migrations'`` in it, otherwise you may face
+  some issues, especially during tests.
+  Use a frozenset over other sequence types for a tiny performance boost.
+
 ``CACHALOT_QUERY_KEYGEN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -93,7 +104,6 @@ Dynamic overriding
 ~~~~~~~~~~~~~~~~~~
 
 Django-cachalot is built so that its settings can be dynamically changed.
-
 For example:
 
 .. code:: python
@@ -110,3 +120,43 @@ For example:
 
     # Globally disables SQL caching until you set it back to True
     settings.CACHALOT_ENABLED = False
+
+
+Signal
+......
+
+``cachalot.signals.post_invalidation`` is available if you need to do something
+just after a cache invalidation (when you modify something in a SQL table).
+``sender`` is the name of the SQL table invalidated, and a keyword argument
+``db_alias`` explains which database is affected by the invalidation.
+Be careful when you specify ``sender``, as it is sensible to string type.
+To be sure, use ``Model._meta.db_table``.
+
+Example:
+
+.. code:: python
+
+    from cachalot.signals import post_invalidation
+    from django.dispatch import receiver
+    from django.core.mail import mail_admins
+    from django.contrib.auth import *
+
+    # This prints a message to the console after each table invalidation
+    def invalidation_debug(sender, **kwargs):
+        db_alias = kwargs['db_alias']
+        print('%s was invalidated in the DB configured as %s'
+              % (sender, db_alias))
+
+    post_invalidation.connect(invalidation_debug)
+
+    # Using the `receiver` decorator is just a nicer way
+    # to write the same thing as `signal.connect`.
+    # Here we specify `sender` so that the function is executed only if
+    # the table invalidated is the one specified.
+    # We also connect it several times to be executed for several senders.
+    @receiver(post_invalidation, sender=User.groups.through._meta.db_table)
+    @receiver(post_invalidation, sender=User.user_permissions.through._meta.db_table)
+    @receiver(post_invalidation, sender=Group.permissions.through._meta.db_table)
+    def warn_admin(sender, **kwargs):
+        mail_admins('User permissions changed',
+                    'Someone probably gained or lost Django permissions.')

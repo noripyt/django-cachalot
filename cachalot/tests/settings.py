@@ -13,6 +13,12 @@ from .models import Test
 
 
 class SettingsTestCase(TransactionTestCase):
+    def setUp(self):
+        if connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
+
     @override_settings(CACHALOT_ENABLED=False)
     def test_decorator(self):
         with self.assertNumQueries(1):
@@ -97,3 +103,21 @@ class SettingsTestCase(TransactionTestCase):
                                    % Test._meta.db_table)
         with self.assertNumQueries(0):
             list(Test.objects.all())
+
+    def test_uncachable_tables(self):
+        with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
+
+        with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())

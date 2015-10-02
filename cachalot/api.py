@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.db import connections
 
 from .cache import cachalot_caches
 from .utils import _get_table_cache_key, _invalidate_table_cache_keys
@@ -84,4 +85,7 @@ def invalidate_all(cache_alias=None, db_alias=None):
     """
 
     for cache_alias, db_alias in _aliases_iterator(cache_alias, db_alias):
-        cachalot_caches.invalidate_all(cache_alias, db_alias)
+        tables = connections[db_alias].introspection.table_names()
+        table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
+        _invalidate_table_cache_keys(cachalot_caches.get_cache(cache_alias),
+                                     table_cache_keys)

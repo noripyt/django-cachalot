@@ -11,14 +11,13 @@ from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.transaction import Atomic, get_connection
-from django.test import TransactionTestCase
 
-from .api import invalidate_all, invalidate_tables
+from .api import invalidate_all, invalidate_tables, invalidate_models
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_query_cache_key, _invalidate_tables,
-    _get_table_cache_keys, _get_tables_from_sql)
+    _get_query_cache_key, _invalidate_table,
+    _get_table_cache_keys, _get_tables_from_sql, UncachableQuery)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -31,6 +30,9 @@ def _unset_raw_connection(original):
         compiler.connection.raw = True
         return out
     return inner
+
+
+TUPLE_OR_LIST = (tuple, list)
 
 
 def _get_result_or_execute_query(execute_query_func, cache_key,
@@ -54,8 +56,7 @@ def _get_result_or_execute_query(execute_query_func, cache_key,
             return result
 
     result = execute_query_func()
-    if isinstance(result, Iterable) \
-            and not isinstance(result, (tuple, list)):
+    if isinstance(result, Iterable) and result.__class__ not in TUPLE_OR_LIST:
         result = list(result)
 
     cache.set(cache_key, (time(), result), None)
@@ -69,30 +70,27 @@ def _patch_compiler(original):
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
         if not cachalot_settings.CACHALOT_ENABLED \
-                or isinstance(compiler, WRITE_COMPILERS) \
-                or (not cachalot_settings.CACHALOT_CACHE_RANDOM
-                    and '?' in compiler.query.order_by):
+                or isinstance(compiler, WRITE_COMPILERS):
             return execute_query_func()
 
         try:
             cache_key = _get_query_cache_key(compiler)
-        except EmptyResultSet:
+            table_cache_keys = _get_table_cache_keys(compiler)
+        except (EmptyResultSet, UncachableQuery):
             return execute_query_func()
 
         return _get_result_or_execute_query(
-            execute_query_func, cache_key, _get_table_cache_keys(compiler))
+            execute_query_func, cache_key, table_cache_keys)
 
-    inner.original = original
     return inner
 
 
 def _patch_write_compiler(original):
     @wraps(original)
-    def inner(compiler, *args, **kwargs):
-        _invalidate_tables(cachalot_caches.get_cache(), compiler)
-        return original(compiler, *args, **kwargs)
+    def inner(write_compiler, *args, **kwargs):
+        _invalidate_table(cachalot_caches.get_cache(), write_compiler)
+        return original(write_compiler, *args, **kwargs)
 
-    inner.original = original
     return inner
 
 
@@ -115,7 +113,6 @@ def _patch_cursor():
                     invalidate_tables(tables, db_alias=cursor.db.alias)
             return out
 
-        inner.original = original
         return inner
 
     CursorWrapper.execute = _patch_cursor_execute(CursorWrapper.execute)
@@ -129,7 +126,6 @@ def _patch_atomic():
             cachalot_caches.enter_atomic()
             original(self)
 
-        inner.original = original
         return inner
 
     def patch_exit(original):
@@ -140,37 +136,19 @@ def _patch_atomic():
             cachalot_caches.exit_atomic(exc_type is None
                                         and not needs_rollback)
 
-        inner.original = original
         return inner
 
     Atomic.__enter__ = patch_enter(Atomic.__enter__)
     Atomic.__exit__ = patch_exit(Atomic.__exit__)
 
 
-def _patch_tests():
-    def patch_transaction_test_case(original):
-        @wraps(original)
-        def inner(*args, **kwargs):
-            out = original(*args, **kwargs)
-            invalidate_all()
-            return out
-
-        inner.original = original
-        return inner
-
-    TransactionTestCase._fixture_setup = patch_transaction_test_case(
-        TransactionTestCase._fixture_setup)
-
-
 def _invalidate_on_migration(sender, **kwargs):
-    db_alias = kwargs['using']
-    invalidate_all(db_alias=db_alias)
+    invalidate_models(sender.get_models(), db_alias=kwargs['using'])
 
 
 def patch():
     post_migrate.connect(_invalidate_on_migration)
 
     _patch_cursor()
-    _patch_tests()
     _patch_atomic()
     _patch_orm()

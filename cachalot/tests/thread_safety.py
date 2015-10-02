@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from threading import Thread
 
+from django import VERSION as django_version
 from django.db import connection, transaction
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
@@ -22,6 +23,12 @@ class TestThread(Thread):
 
 @skipUnlessDBFeature('test_db_allows_multiple_connections')
 class ThreadSafetyTestCase(TransactionTestCase):
+    def setUp(self):
+        if django_version >= (1, 7) and connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
+
     def test_concurrent_caching(self):
         t1 = TestThread().start_and_join()
         t = Test.objects.create(name='test')

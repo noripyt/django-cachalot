@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+from django import VERSION as django_version
 from django.contrib.auth.models import User
 from django.db import connection, transaction
 from django.test import TransactionTestCase
@@ -10,6 +11,12 @@ from .models import Test
 
 
 class AtomicTestCase(TransactionTestCase):
+    def setUp(self):
+        if django_version >= (1, 7) and connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
+
     def test_successful_read_atomic(self):
         is_sqlite = connection.vendor == 'sqlite'
 

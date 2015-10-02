@@ -23,6 +23,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(null=True, blank=True)),
                 ('owner', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True)),
+                ('bin', models.BinaryField(null=True, blank=True)),
             ],
             options={
                 'ordering': ('name',),
@@ -40,6 +41,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('testparent_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='cachalot.TestParent')),
                 ('public', models.BooleanField(default=False)),
+                ('permissions', models.ManyToManyField('auth.Permission', blank=True))
             ],
             bases=('cachalot.testparent',),
         ),

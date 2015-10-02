@@ -1,6 +1,44 @@
 What’s new in django-cachalot?
 ==============================
 
+1.0.3
+-----
+
+- Fixes an invalidation issue that could rarely occur when querying on a
+  ``BinaryField`` with PostgreSQL, or with some geographic queries
+  (there was a small chance that a same query with different parameters
+  could erroneously give the same result as the previous one)
+- Adds a ``CACHALOT_UNCACHABLE_TABLES`` setting
+- Fixes a Django 1.7 migrations invalidation issue in tests
+  (that was leading to this error half of the time:
+  ``RuntimeError: Error creating new content types. Please make sure
+  contenttypes is migrated before trying to migrate apps individually.``)
+- Optimises tests when using django-cachalot
+  by avoid several useless cache invalidations
+
+
+1.0.2
+-----
+
+- Fixes an ``AttributeError`` occurring when excluding through a many-to-many
+  relation on a child model (using multi-table inheritance)
+- Stops caching queries with random subqueries – for example
+  ``User.objects.filter(pk__in=User.objects.order_by('?'))``
+- Optimises automatic invalidation
+- Adds a note about clock synchronisation
+
+
+1.0.1
+-----
+
+- Fixes an invalidation issue discovered by Helen Warren that was occurring
+  when updating a ``ManyToManyField`` after executing using ``.exclude``
+  on that relation. For example, ``Permission.objects.all().delete()`` was not
+  invalidating ``User.objects.exclude(user_permissions=None)``
+- Fixes a ``UnicodeDecodeError`` introduced with python-memcached 1.54
+- Adds a ``post_invalidation`` signal
+
+
 1.0.0
 -----
 

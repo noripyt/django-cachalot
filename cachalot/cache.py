@@ -4,11 +4,9 @@ from __future__ import unicode_literals
 from threading import local
 
 from django.core.cache import caches
-from django.db import connections
 
 from .settings import cachalot_settings
 from .transaction import AtomicCache
-from .utils import _get_table_cache_key, _invalidate_table_cache_keys
 
 
 class CacheHandler(local):
@@ -41,12 +39,6 @@ class CacheHandler(local):
         if commit:
             for atomic_cache in atomic_caches:
                 atomic_cache.commit()
-
-    def invalidate_all(self, cache_alias, db_alias):
-        tables = connections[db_alias].introspection.table_names()
-        table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
-        _invalidate_table_cache_keys(cachalot_caches.get_cache(cache_alias),
-                                     table_cache_keys)
 
 
 cachalot_caches = CacheHandler()
