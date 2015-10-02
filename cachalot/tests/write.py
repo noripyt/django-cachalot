@@ -234,6 +234,57 @@ class WriteTestCase(TransactionTestCase):
         self.assertEqual(len(data3), 1)
         self.assertDictEqual(data3[0], {'name': 'test2', 'public': True})
 
+    def test_invalidate_foreign_key(self):
+        with self.assertNumQueries(1):
+            data1 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data1, [])
+
+        u1 = User.objects.create_user('user1')
+        Test.objects.bulk_create([Test(name='test1', owner=u1),
+                                  Test(name='test2')])
+
+        with self.assertNumQueries(2):
+            data2 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data2, ['user1'])
+
+        Test.objects.create(name='test3')
+
+        with self.assertNumQueries(1):
+            data3 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data3, ['user1'])
+
+        t2 = Test.objects.get(name='test2')
+        t2.owner = u1
+        t2.save()
+
+        with self.assertNumQueries(1):
+            data4 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data4, ['user1', 'user1'])
+
+        u2 = User.objects.create_user('user2')
+        Test.objects.filter(name='test3').update(owner=u2)
+
+        with self.assertNumQueries(3):
+            data5 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data5, ['user1', 'user1', 'user2'])
+
+        User.objects.filter(username='user2').update(username='user3')
+
+        with self.assertNumQueries(2):
+            data6 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data6, ['user1', 'user1', 'user3'])
+
+        u2 = User.objects.create_user('user2')
+        Test.objects.filter(name='test2').update(owner=u2)
+
+        with self.assertNumQueries(4):
+            data7 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data7, ['user1', 'user2', 'user3'])
+
+        with self.assertNumQueries(0):
+            data8 = [t.owner.username for t in Test.objects.all() if t.owner]
+        self.assertListEqual(data8, ['user1', 'user2', 'user3'])
+
     def test_invalidate_aggregate(self):
         with self.assertNumQueries(1):
             self.assertEqual(User.objects.aggregate(n=Count('test'))['n'], 0)

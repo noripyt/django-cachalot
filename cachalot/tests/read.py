@@ -295,6 +295,14 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, [datetime.datetime(1789, 7, 14, 16),
                                      datetime.datetime(1944, 6, 6, 6)])
 
+    def test_foreign_key(self):
+        with self.assertNumQueries(3):
+            data1 = [t.owner for t in Test.objects.all()]
+        with self.assertNumQueries(0):
+            data2 = [t.owner for t in Test.objects.all()]
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.user, self.admin])
+
     def test_subquery(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(owner__in=User.objects.all()))
