@@ -137,7 +137,7 @@ class AtomicTestCase(TransactionTestCase):
 
     def test_unsuccessful_nested_read_atomic(self):
         is_sqlite = connection.vendor == 'sqlite'
-        if django_version == (1, 7):
+        if django_version[:2] == (1, 7):
             # In Django 1.7, savepoints were not released after a rollback,
             # leading to fewer queries (= the number of non-root
             # transaction.atomic reverted in the whole process).
@@ -178,7 +178,7 @@ class AtomicTestCase(TransactionTestCase):
 
     def test_unsuccessful_nested_write_atomic(self):
         is_sqlite = connection.vendor == 'sqlite'
-        if django_version == (1, 7):
+        if django_version[:2] == (1, 7):
             # In Django 1.7, savepoints were not released after a rollback,
             # leading to fewer queries (= the number of non-root
             # transaction.atomic reverted in the whole process).
