@@ -4,6 +4,9 @@ services:
   - memcached
   - redis-server
 
+addons:
+  postgresql: 9.4
+
 env:
   - TOXENV=py2.7-django1.7-sqlite3-pylibmc
   - TOXENV=py2.7-django1.7-postgresql-pylibmc
