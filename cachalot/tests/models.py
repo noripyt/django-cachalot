@@ -2,8 +2,8 @@
 
 from __future__ import unicode_literals
 
+from django import VERSION as django_version
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, IntegerRangeField
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField)
@@ -31,7 +31,10 @@ class TestChild(TestParent):
     permissions = ManyToManyField('auth.Permission', blank=True)
 
 
-class PostgresModel(Model):
-    int_array = ArrayField(IntegerField(null=True, blank=True), size=3,
-                           null=True, blank=True)
-    int_range = IntegerRangeField(null=True, blank=True)
+if django_version >= (1, 8):
+    from django.contrib.postgres.fields import ArrayField, IntegerRangeField
+
+    class PostgresModel(Model):
+        int_array = ArrayField(IntegerField(null=True, blank=True), size=3,
+                               null=True, blank=True)
+        int_range = IntegerRangeField(null=True, blank=True)

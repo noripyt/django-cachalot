@@ -2,8 +2,8 @@
 
 from __future__ import unicode_literals
 
+from django import VERSION as django_version
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField, IntegerRangeField
 from django.db import models, migrations
 
 
@@ -47,6 +47,12 @@ class Migration(migrations.Migration):
             ],
             bases=('cachalot.testparent',),
         ),
+    ]
+
+if django_version >= (1, 8):
+    from django.contrib.postgres.fields import ArrayField, IntegerRangeField
+
+    Migration.operations.append(
         migrations.CreateModel(
             name='PostgresModel',
             fields=[
@@ -57,5 +63,5 @@ class Migration(migrations.Migration):
                     null=True, blank=True)),
                 ('int_range', IntegerRangeField(null=True, blank=True)),
             ],
-        ),
-    ]
+        )
+    )

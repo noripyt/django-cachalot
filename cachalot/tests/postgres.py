@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from unittest import skipUnless
 
+from django import VERSION as django_version
 from django.db import connection
 from django.test import TransactionTestCase
 from psycopg2._range import NumericRange
@@ -10,8 +11,8 @@ from psycopg2._range import NumericRange
 from .models import PostgresModel
 
 
-@skipUnless(connection.vendor == 'postgresql',
-            'This test is for PostgreSQL only')
+@skipUnless(connection.vendor == 'postgresql' and django_version[:2] >= (1, 8),
+            'This test is only for PostgreSQL and Django >= 1.8')
 class PostgresReadTest(TransactionTestCase):
     def setUp(self):
         self.obj = PostgresModel.objects.create(
