@@ -6,3 +6,4 @@ from .multi_db import MultiDatabaseTestCase
 from .settings import SettingsTestCase
 from .api import APITestCase, CommandTestCase
 from .signals import SignalsTestCase
+from .postgres import PostgresReadTest

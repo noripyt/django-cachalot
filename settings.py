@@ -29,6 +29,9 @@ for alias in DATABASES:
 DATABASES['default'] = DATABASES.pop(os.environ.get('DB_ENGINE', 'sqlite3'))
 
 
+DATABASE_ROUTERS = ['cachalot.tests.db_router.PostgresRouter']
+
+
 CACHES = {
     'redis': {
         'BACKEND': 'django_redis.cache.RedisCache',
@@ -90,7 +93,7 @@ INSTALLED_APPS = [
 
 
 MIGRATION_MODULES = {
-    'cachalot': 'cachalot.tests.migrations'
+    'cachalot': 'cachalot.tests.migrations',
 }
 
 

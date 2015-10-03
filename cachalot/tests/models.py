@@ -3,9 +3,10 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField, IntegerRangeField
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
-    ManyToManyField, BinaryField)
+    ManyToManyField, BinaryField, IntegerField)
 
 
 class Test(Model):
@@ -28,3 +29,9 @@ class TestParent(Model):
 class TestChild(TestParent):
     public = BooleanField(default=False)
     permissions = ManyToManyField('auth.Permission', blank=True)
+
+
+class PostgresModel(Model):
+    int_array = ArrayField(IntegerField(null=True, blank=True), size=3,
+                           null=True, blank=True)
+    int_range = IntegerRangeField(null=True, blank=True)

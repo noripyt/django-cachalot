@@ -1,8 +1,10 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
+
 from __future__ import unicode_literals
 
-from django.db import models, migrations
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField, IntegerRangeField
+from django.db import models, migrations
 
 
 class Migration(migrations.Migration):
@@ -44,5 +46,16 @@ class Migration(migrations.Migration):
                 ('permissions', models.ManyToManyField('auth.Permission', blank=True))
             ],
             bases=('cachalot.testparent',),
+        ),
+        migrations.CreateModel(
+            name='PostgresModel',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False,
+                                        auto_created=True, primary_key=True)),
+                ('int_array', ArrayField(
+                    models.IntegerField(null=True, blank=True), size=3,
+                    null=True, blank=True)),
+                ('int_range', IntegerRangeField(null=True, blank=True)),
+            ],
         ),
     ]
