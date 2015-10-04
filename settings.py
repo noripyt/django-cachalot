@@ -3,6 +3,8 @@
 from __future__ import unicode_literals
 import os
 
+from django import VERSION as django_version
+
 
 DATABASES = {
     'sqlite3': {
@@ -89,8 +91,12 @@ INSTALLED_APPS = [
     'cachalot',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.postgres',  # Enables the unaccent lookup.
 ]
+
+if django_version >= (1, 8):
+    INSTALLED_APPS.append(
+        'django.contrib.postgres',  # Enables the unaccent lookup.
+    )
 
 
 MIGRATION_MODULES = {
