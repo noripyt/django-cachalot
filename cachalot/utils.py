@@ -19,10 +19,10 @@ class UncachableQuery(Exception):
     pass
 
 
-CACHABLE_PARAM_TYPES = (
+CACHABLE_PARAM_TYPES = frozenset((
     bool, int, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta
-)
+))
 
 def get_query_cache_key(compiler):
     """
