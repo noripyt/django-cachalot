@@ -73,6 +73,8 @@ Settings
 :Description: If set to ``False``, disables automatic invalidation on raw
               SQL queries – read :ref:`Raw queries limits` for more info
 
+.. _CACHALOT_UNCACHABLE_TABLES:
+
 ``CACHALOT_UNCACHABLE_TABLES``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

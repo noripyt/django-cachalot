@@ -52,6 +52,16 @@ Locmem is a just a ``dict`` stored in a single Python process.
 It’s not shared between processes, so don’t use locmem with django-cachalot
 in a multi-processes project, if you use RQ or Celery for instance.
 
+Filebased
+.........
+
+Filebased, a simple persistent cache implemented in Django, has a small bug
+(`#25501 <https://code.djangoproject.com/ticket/25501>`_):
+it cannot cache some objects, like psycopg2 ranges.
+If you use range fields from `django.contrib.postgres` and your Django
+version is affected by this bug, you need to add the tables using range fields
+to :ref:`CACHALOT_UNCACHABLE_TABLES`.
+
 MySQL
 .....
 
