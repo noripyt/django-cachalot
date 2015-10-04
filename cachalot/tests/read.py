@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 import datetime
+from unittest import skipIf
 
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
@@ -9,7 +10,9 @@ from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
 from django.db.transaction import TransactionManagementError
-from django.test import TransactionTestCase, skipUnlessDBFeature
+from django.test import (
+    TransactionTestCase, skipUnlessDBFeature, override_settings)
+from pytz import UTC
 
 from ..utils import _get_table_cache_key
 from .models import Test, TestChild
@@ -295,6 +298,19 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [datetime.datetime(1789, 7, 14, 16),
                                      datetime.datetime(1944, 6, 6, 6)])
+
+    @skipIf(connection.vendor == 'mysql',
+            'Time zones are not supported by MySQL.')
+    @override_settings(USE_TZ=True)
+    def test_datetimes_with_time_zones(self):
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.datetimes('datetime', 'hour'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.datetimes('datetime', 'hour'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [
+            datetime.datetime(1789, 7, 14, 16, tzinfo=UTC),
+            datetime.datetime(1944, 6, 6, 6, tzinfo=UTC)])
 
     def test_foreign_key(self):
         with self.assertNumQueries(3):

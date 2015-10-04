@@ -102,4 +102,9 @@ PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 SECRET_KEY = 'it’s not important but we have to set it'
 
 
+USE_TZ = False  # Time zones are not supported by MySQL,
+                # we only enable it in tests when needed.
+TIME_ZONE = 'UTC'
+
+
 CACHALOT_ENABLED = True
