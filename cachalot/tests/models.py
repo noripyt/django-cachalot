@@ -32,9 +32,18 @@ class TestChild(TestParent):
 
 
 if django_version >= (1, 8):
-    from django.contrib.postgres.fields import ArrayField, IntegerRangeField
+    from django.contrib.postgres.fields import (
+        ArrayField, HStoreField,
+        IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
+
 
     class PostgresModel(Model):
         int_array = ArrayField(IntegerField(null=True, blank=True), size=3,
                                null=True, blank=True)
+
+        hstore = HStoreField(null=True, blank=True)
+
         int_range = IntegerRangeField(null=True, blank=True)
+        float_range = FloatRangeField(null=True, blank=True)
+        date_range = DateRangeField(null=True, blank=True)
+        datetime_range = DateTimeRangeField(null=True, blank=True)

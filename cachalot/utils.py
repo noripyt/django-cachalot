@@ -19,10 +19,32 @@ class UncachableQuery(Exception):
     pass
 
 
-CACHABLE_PARAM_TYPES = frozenset((
+CACHABLE_PARAM_TYPES = {
     bool, int, binary_type, text_type, type(None),
-    datetime.date, datetime.time, datetime.datetime, datetime.timedelta
-))
+    datetime.date, datetime.time, datetime.datetime, datetime.timedelta,
+}
+
+try:
+    from psycopg2._range import (
+        NumericRange, DateRange, DateTimeRange, DateTimeTZRange)
+except ImportError:
+    pass
+else:
+    CACHABLE_PARAM_TYPES.update((
+        NumericRange, DateRange, DateTimeRange, DateTimeTZRange))
+
+
+def check_parameter_types(params):
+    for p in params:
+        cl = p.__class__
+        if cl not in CACHABLE_PARAM_TYPES:
+            if cl is list or cl is tuple:
+                check_parameter_types(p)
+            elif cl is dict:
+                check_parameter_types(p.items())
+            else:
+                raise UncachableQuery
+
 
 def get_query_cache_key(compiler):
     """
@@ -38,8 +60,7 @@ def get_query_cache_key(compiler):
     :rtype: str
     """
     sql, params = compiler.as_sql()
-    if any(p.__class__ not in CACHABLE_PARAM_TYPES for p in params):
-        raise UncachableQuery
+    check_parameter_types(params)
     cache_key = '%s:%s:%s' % (compiler.using, sql, params)
     return sha1(cache_key.encode('utf-8')).hexdigest()
 

@@ -13,5 +13,6 @@ class PostgresRouter(object):
                 else 'default')
 
     def allow_migrate(self, db, app_label, model=None, **hints):
-        if model is not None and self.in_postgres(model):
+        if hints.get('extension') in ('hstore', 'unaccent') \
+                or (model is not None and self.in_postgres(model)):
             return db == self.get_postgresql_alias()

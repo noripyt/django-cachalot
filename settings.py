@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'cachalot',
     'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.postgres',  # Enables the unaccent lookup.
 ]
 
 
