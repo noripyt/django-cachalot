@@ -15,10 +15,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL('CREATE EXTENSION hstore;',
-                          hints={'extension': 'hstore'}),
-        migrations.RunSQL('CREATE EXTENSION unaccent;',
-                          hints={'extension': 'unaccent'}),
         migrations.CreateModel(
             name='Test',
             fields=[
@@ -58,7 +54,11 @@ if django_version >= (1, 8):
         ArrayField, HStoreField,
         IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
 
-    Migration.operations.append(
+    Migration.operations.extend((
+        migrations.RunSQL('CREATE EXTENSION hstore;',
+                          hints={'extension': 'hstore'}),
+        migrations.RunSQL('CREATE EXTENSION unaccent;',
+                          hints={'extension': 'unaccent'}),
         migrations.CreateModel(
             name='PostgresModel',
             fields=[
@@ -73,5 +73,5 @@ if django_version >= (1, 8):
                 ('date_range', DateRangeField(null=True, blank=True)),
                 ('datetime_range', DateTimeRangeField(null=True, blank=True)),
             ],
-        )
-    )
+        ),
+    ))
