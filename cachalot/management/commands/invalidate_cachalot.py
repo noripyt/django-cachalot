@@ -40,6 +40,6 @@ class Command(BaseCommand):
                                                      cache_str, db_str]))
                               + '...')
 
-        invalidate(models, cache_alias=cache_alias, db_alias=db_alias)
+        invalidate(*models, cache_alias=cache_alias, db_alias=db_alias)
         if verbosity > 0:
             self.stdout.write('Cache keys successfully invalidated.')

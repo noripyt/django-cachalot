@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+from time import time, sleep
 from unittest import skipIf
 
 from django.conf import settings
@@ -34,7 +35,7 @@ class APITestCase(TransactionTestCase):
             data2 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data2, ['test1'])
 
-        invalidate(['cachalot_test'])
+        invalidate('cachalot_test')
 
         with self.assertNumQueries(1):
             data3 = list(Test.objects.values_list('name', flat=True))
@@ -55,7 +56,7 @@ class APITestCase(TransactionTestCase):
             data2 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data2, ['test1'])
 
-        invalidate([Test])
+        invalidate(Test)
 
         with self.assertNumQueries(1):
             data3 = list(Test.objects.values_list('name', flat=True))
@@ -88,6 +89,23 @@ class APITestCase(TransactionTestCase):
 
         with self.assertNumQueries(1):
             Test.objects.get()
+
+    def test_get_last_invalidation(self):
+        invalidate()
+        timestamp = get_last_invalidation()
+        self.assertAlmostEqual(timestamp, time(), delta=0.1)
+
+        sleep(0.1)
+
+        invalidate('cachalot_test')
+        timestamp = get_last_invalidation('cachalot_test')
+        self.assertAlmostEqual(timestamp, time(), delta=0.1)
+
+        timestamp = get_last_invalidation('cachalot_testparent')
+        self.assertNotAlmostEqual(timestamp, time(), delta=0.1)
+        timestamp = get_last_invalidation('cachalot_testparent',
+                                          'cachalot_test')
+        self.assertAlmostEqual(timestamp, time(), delta=0.1)
 
 
 class CommandTestCase(TransactionTestCase):

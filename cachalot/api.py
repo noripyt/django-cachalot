@@ -11,7 +11,7 @@ from .cache import cachalot_caches
 from .utils import _get_table_cache_key, _invalidate_table_cache_keys
 
 
-__all__ = ('invalidate',)
+__all__ = ('invalidate', 'get_last_invalidation')
 
 
 def _get_table_cache_keys_per_cache(tables, cache_alias, db_alias):
@@ -35,11 +35,12 @@ def _get_tables(tables_or_models):
             for o in tables_or_models]
 
 
-def invalidate(tables_or_models=(), cache_alias=None, db_alias=None):
+def invalidate(*tables_or_models, **kwargs):
     """
     Clears what was cached by django-cachalot implying one or more SQL tables
-    or models from ``tables_or_models``.  If ``tables_or_models``
-    is not specified, all tables found in the database are invalidated.
+    or models from ``tables_or_models``.
+    If ``tables_or_models`` is not specified, all tables found in the database
+    (including those outside Django) are invalidated.
 
     If ``cache_alias`` is specified, it only clears the SQL queries stored
     on this cache, otherwise queries from all caches are cleared.
@@ -47,8 +48,8 @@ def invalidate(tables_or_models=(), cache_alias=None, db_alias=None):
     If ``db_alias`` is specified, it only clears the SQL queries executed
     on this database, otherwise queries from all databases are cleared.
 
-    :arg tables_or_models: SQL tables names
-    :type tables_or_models: iterable of strings or models, or NoneType
+    :arg tables_or_models: SQL tables names or models (or combination of both)
+    :type tables_or_models: tuple of strings or models
     :arg cache_alias: Alias from the Django ``CACHES`` setting
     :type cache_alias: string or NoneType
     :arg db_alias: Alias from the Django ``DATABASES`` setting
@@ -56,9 +57,56 @@ def invalidate(tables_or_models=(), cache_alias=None, db_alias=None):
     :returns: Nothing
     :rtype: NoneType
     """
+    # TODO: Replace with positional arguments when we drop Python 2 support.
+    cache_alias = kwargs.pop('cache_alias', None)
+    db_alias = kwargs.pop('db_alias', None)
+    for k in kwargs:
+        raise TypeError(
+            "invalidate() got an unexpected keyword argument '%s'" % k)
 
     table_cache_keys_per_cache = _get_table_cache_keys_per_cache(
         _get_tables(tables_or_models), cache_alias, db_alias)
     for cache_alias, table_cache_keys in table_cache_keys_per_cache.items():
         _invalidate_table_cache_keys(cachalot_caches.get_cache(cache_alias),
                                      table_cache_keys)
+
+
+def get_last_invalidation(*tables_or_models, **kwargs):
+    """
+    Returns the timestamp of the most recent invalidation of the given
+    ``tables_or_models``.  If ``tables_or_models`` is not specified,
+    all tables found in the database (including those outside Django) are used.
+
+    If ``cache_alias`` is specified, it only clears the SQL queries stored
+    on this cache, otherwise queries from all caches are cleared.
+
+    If ``db_alias`` is specified, it only clears the SQL queries executed
+    on this database, otherwise queries from all databases are cleared.
+
+    :arg tables_or_models: SQL tables names or models (or combination of both)
+    :type tables_or_models: tuple of strings or models
+    :arg cache_alias: Alias from the Django ``CACHES`` setting
+    :type cache_alias: string or NoneType
+    :arg db_alias: Alias from the Django ``DATABASES`` setting
+    :type db_alias: string or NoneType
+    :returns: The timestamp of the most recent invalidation
+    :rtype: float
+    """
+    # TODO: Replace with positional arguments when we drop Python 2 support.
+    cache_alias = kwargs.pop('cache_alias', None)
+    db_alias = kwargs.pop('db_alias', None)
+    for k in kwargs:
+        raise TypeError("get_last_invalidation() got an unexpected "
+                        "keyword argument '%s'" % k)
+
+    last_invalidation = 0.0
+    table_cache_keys_per_cache = _get_table_cache_keys_per_cache(
+        _get_tables(tables_or_models), cache_alias, db_alias)
+    for cache_alias, table_cache_keys in table_cache_keys_per_cache.items():
+        invalidations = cachalot_caches.get_cache(
+            cache_alias).get_many(table_cache_keys).values()
+        if invalidations:
+            current_last_invalidation = max(invalidations)
+            if current_last_invalidation > last_invalidation:
+                last_invalidation = current_last_invalidation
+    return last_invalidation

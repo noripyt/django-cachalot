@@ -110,7 +110,7 @@ def _patch_cursor():
                 sql = sql.lower()
                 if 'update' in sql or 'insert' in sql or 'delete' in sql:
                     tables = _get_tables_from_sql(cursor.db, sql)
-                    invalidate(tables, db_alias=cursor.db.alias)
+                    invalidate(*tables, db_alias=cursor.db.alias)
             return out
 
         return inner
@@ -143,7 +143,7 @@ def _patch_atomic():
 
 
 def _invalidate_on_migration(sender, **kwargs):
-    invalidate(sender.get_models(), db_alias=kwargs['using'])
+    invalidate(*sender.get_models(), db_alias=kwargs['using'])
 
 
 def patch():

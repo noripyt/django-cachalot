@@ -3,8 +3,9 @@
 API
 ---
 
-Use these tools if the automatic behaviour of django-cachalot is not enough.
-See :ref:`Raw queries limits`.
+Use these tools to interact with django-cachalot, especially if you face
+:ref:`Raw queries limits` or if you need to create a cache key from the
+last table invalidation timestamp.
 
 .. automodule:: cachalot.api
    :members:
