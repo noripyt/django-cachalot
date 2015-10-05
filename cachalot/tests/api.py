@@ -34,7 +34,7 @@ class APITestCase(TransactionTestCase):
             data2 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data2, ['test1'])
 
-        invalidate_tables(['cachalot_test'])
+        invalidate(['cachalot_test'])
 
         with self.assertNumQueries(1):
             data3 = list(Test.objects.values_list('name', flat=True))
@@ -55,7 +55,7 @@ class APITestCase(TransactionTestCase):
             data2 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data2, ['test1'])
 
-        invalidate_models([Test])
+        invalidate([Test])
 
         with self.assertNumQueries(1):
             data3 = list(Test.objects.values_list('name', flat=True))
@@ -68,7 +68,7 @@ class APITestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get()
 
-        invalidate_all()
+        invalidate()
 
         with self.assertNumQueries(1):
             Test.objects.get()
@@ -81,7 +81,7 @@ class APITestCase(TransactionTestCase):
             with self.assertNumQueries(0):
                 Test.objects.get()
 
-            invalidate_all()
+            invalidate()
 
             with self.assertNumQueries(1):
                 Test.objects.get()

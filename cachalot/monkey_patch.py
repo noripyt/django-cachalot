@@ -12,7 +12,7 @@ from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.transaction import Atomic, get_connection
 
-from .api import invalidate_all, invalidate_tables, invalidate_models
+from .api import invalidate
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
@@ -110,7 +110,7 @@ def _patch_cursor():
                 sql = sql.lower()
                 if 'update' in sql or 'insert' in sql or 'delete' in sql:
                     tables = _get_tables_from_sql(cursor.db, sql)
-                    invalidate_tables(tables, db_alias=cursor.db.alias)
+                    invalidate(tables, db_alias=cursor.db.alias)
             return out
 
         return inner
@@ -143,7 +143,7 @@ def _patch_atomic():
 
 
 def _invalidate_on_migration(sender, **kwargs):
-    invalidate_models(sender.get_models(), db_alias=kwargs['using'])
+    invalidate(sender.get_models(), db_alias=kwargs['using'])
 
 
 def patch():

@@ -30,7 +30,7 @@ import pandas as pd
 import psycopg2
 
 import cachalot
-from cachalot.api import invalidate_all
+from cachalot.api import invalidate
 from cachalot.tests.models import Test
 
 
@@ -126,7 +126,7 @@ class Benchmark(object):
     def bench_once(self, context, num_queries, invalidate_before=False):
         for _ in range(self.n):
             if invalidate_before:
-                invalidate_all(db_alias=self.db_alias)
+                invalidate(db_alias=self.db_alias)
             with AssertNumQueries(num_queries, using=self.db_alias):
                 start = time()
                 self.query_function(self.db_alias)

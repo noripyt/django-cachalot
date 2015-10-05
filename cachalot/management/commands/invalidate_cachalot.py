@@ -2,7 +2,7 @@ from optparse import make_option
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.apps import apps
-from ...api import invalidate_all, invalidate_models
+from ...api import invalidate
 
 
 class Command(BaseCommand):
@@ -40,10 +40,6 @@ class Command(BaseCommand):
                                                      cache_str, db_str]))
                               + '...')
 
-        if args:
-            invalidate_models(models,
-                              cache_alias=cache_alias, db_alias=db_alias)
-        else:
-            invalidate_all(cache_alias=cache_alias, db_alias=db_alias)
+        invalidate(models, cache_alias=cache_alias, db_alias=db_alias)
         if verbosity > 0:
             self.stdout.write('Cache keys successfully invalidated.')
