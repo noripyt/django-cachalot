@@ -16,6 +16,8 @@ from time import time
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'settings')
 
 import django
+django.setup()
+
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.core.cache import get_cache
@@ -259,8 +261,6 @@ def create_data(using):
 
 
 if __name__ == '__main__':
-    django.setup()
-
     write_conditions()
 
     old_db_names = {}
