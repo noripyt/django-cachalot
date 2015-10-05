@@ -145,9 +145,9 @@ class SettingsTestCase(TransactionTestCase):
             # However, if we only fetch data from the 'cachalot_testchild'
             # table, it’s cachable.
             with self.assertNumQueries(1):
-                list(TestChild.objects.only('public'))
+                list(TestChild.objects.values('public'))
             with self.assertNumQueries(0):
-                list(TestChild.objects.only('public'))
+                list(TestChild.objects.values('public'))
 
     def test_uncachable_tables(self):
         with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
