@@ -4,12 +4,13 @@ from __future__ import unicode_literals
 from unittest import skipIf
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.cache import DEFAULT_CACHE_ALIAS
 from django.db import connection
 from django.test import TransactionTestCase
 from django.test.utils import override_settings
 
-from .models import Test
+from .models import Test, TestParent, TestChild
 
 
 class SettingsTestCase(TransactionTestCase):
@@ -104,6 +105,50 @@ class SettingsTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             list(Test.objects.all())
 
+    def test_only_cachable_tables(self):
+        with self.settings(CACHALOT_ONLY_CACHABLE_TABLES=('cachalot_test',)):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(0):
+                list(Test.objects.all())
+
+            with self.assertNumQueries(1):
+                list(TestParent.objects.all())
+            with self.assertNumQueries(1):
+                list(TestParent.objects.all())
+
+            with self.assertNumQueries(1):
+                list(Test.objects.select_related('owner'))
+            with self.assertNumQueries(1):
+                list(Test.objects.select_related('owner'))
+
+        with self.assertNumQueries(1):
+            list(TestParent.objects.all())
+        with self.assertNumQueries(0):
+            list(TestParent.objects.all())
+
+        with self.settings(CACHALOT_ONLY_CACHABLE_TABLES=(
+                'cachalot_test', 'cachalot_testchild', 'auth_user')):
+            with self.assertNumQueries(1):
+                list(Test.objects.select_related('owner'))
+            with self.assertNumQueries(0):
+                list(Test.objects.select_related('owner'))
+
+            # TestChild uses multi-table inheritance, and since its parent,
+            # 'cachalot_testparent', is not cachable, a basic
+            # TestChild query can’t be cached
+            with self.assertNumQueries(1):
+                list(TestChild.objects.all())
+            with self.assertNumQueries(1):
+                list(TestChild.objects.all())
+
+            # However, if we only fetch data from the 'cachalot_testchild'
+            # table, it’s cachable.
+            with self.assertNumQueries(1):
+                list(TestChild.objects.only('public'))
+            with self.assertNumQueries(0):
+                list(TestChild.objects.only('public'))
+
     def test_uncachable_tables(self):
         with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
             with self.assertNumQueries(1):
@@ -121,3 +166,23 @@ class SettingsTestCase(TransactionTestCase):
                 list(Test.objects.all())
             with self.assertNumQueries(1):
                 list(Test.objects.all())
+
+    def test_only_cachable_and_uncachable_table(self):
+        with self.settings(
+                CACHALOT_ONLY_CACHABLE_TABLES=('cachalot_test',
+                                               'cachalot_testparent'),
+                CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+
+            with self.assertNumQueries(1):
+                list(TestParent.objects.all())
+            with self.assertNumQueries(0):
+                list(TestParent.objects.all())
+
+            with self.assertNumQueries(1):
+                list(User.objects.all())
+            with self.assertNumQueries(1):
+                list(User.objects.all())

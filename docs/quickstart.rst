@@ -73,6 +73,17 @@ Settings
 :Description: If set to ``False``, disables automatic invalidation on raw
               SQL queries – read :ref:`Raw queries limits` for more info
 
+
+``CACHALOT_ONLY_CACHABLE_TABLES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``frozenset()``
+:Description:
+  Sequence of SQL table names that will be the only ones django-cachalot
+  will cache. Only queries with a subset of these tables will be cached.
+  Use a frozenset over other sequence types for a tiny performance boost.
+
+
 .. _CACHALOT_UNCACHABLE_TABLES:
 
 ``CACHALOT_UNCACHABLE_TABLES``
