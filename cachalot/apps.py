@@ -9,6 +9,17 @@ VALID_DATABASE_ENGINES = {
     'django.db.backends.sqlite3',
     'django.db.backends.postgresql_psycopg2',
     'django.db.backends.mysql',
+
+    # GeoDjango
+    'django.contrib.gis.db.backends.spatialite',
+    'django.contrib.gis.db.backends.postgis',
+    'django.contrib.gis.db.backends.mysql',
+
+    # django-transaction-hooks
+    'transaction_hooks.backends.sqlite3',
+    'transaction_hooks.backends.postgis',
+    'transaction_hooks.backends.postgresql_psycopg2',
+    'transaction_hooks.backends.mysql',
 }
 
 
