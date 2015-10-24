@@ -105,8 +105,8 @@ Multiple Servers
 
 Django-cachalot relies on the computer clock to handle invalidation.
 If you deploy the same Django project on multiple machines,
-but with a centralized cache server, all the machines serving Django need
-to have their clocks as synchronized as possible.
+but with a centralised cache server, all the machines serving Django need
+to have their clocks as synchronised as possible.
 Otherwise, invalidations will happen with a latency from one server to another.
 A difference of even a few seconds can be harmful, so double check this!
 
