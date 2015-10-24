@@ -1,11 +1,36 @@
 Quick start
 -----------
 
+Should you use it?
+..................
+
+Django-cachalot is the perfect speedup tool for most Django projects.
+It will speedup a website of 100 000 visits per month without any problem.
+In fact, **the more visitors you have, the faster the website becomes**.
+That’s because every possible SQL query on the project ends up being cached.
+
+Django-cachalot is especially efficient in the Django administration website
+since it’s unfortunately badly optimised (use foreign keys in list_editable
+if you need to be convinced).
+
+However, it’s not suited for projects where there is **a high number
+of modifications per minute** on each table, like a social network with
+more than a 30 messages per minute. Django-cachalot may still give a small
+speedup in such cases, but it may also slow things a bit
+(in the worst case scenario, a 20% slowdown,
+according to :ref:`the benchmark <Benchmark>`).
+If you have a website like that, optimising your SQL database and queries
+is the number one thing you have to do.
+
+There is also an obvious case where you don’t need django-cachalot:
+when the project is already fast enough (all pages load in less than 300 ms).
+Like any other dependency, django-cachalot is a potential source of problems
+(even though it’s currently bug free).
+Don’t use dependencies you can avoid, a “future you” may thank you for that.
+
 Requirements
 ............
 
-- **If using multiple servers, it is critical that the servers' clocks are synchronized.**
-  More detail here: http://django-cachalot.readthedocs.org/en/latest/limits.html#multiple-servers
 - Django 1.7 or 1.8
 - Python 2.7, 3.2, 3.3, or 3.4
 - a cache configured as ``'default'`` with one of these backends:
@@ -29,7 +54,9 @@ Usage
 
 #. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
-#. Be aware of :ref:`the few limits <limits>`
+#. If you use multiple servers with a common cache server,
+   :ref:`double check their clock synchronisation <multiple servers>`
+#. Be aware of :ref:`the few other limits <limits>`
 #. If you use
    `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
@@ -83,6 +110,10 @@ Settings
 :Description:
   Sequence of SQL table names that will be the only ones django-cachalot
   will cache. Only queries with a subset of these tables will be cached.
+  The sequence being empty (as it is by default) doesn’t mean that no table
+  can be cached: it disables this setting, so any table can be cache.
+  :ref:`CACHALOT_UNCACHABLE_TABLES` has more weight than this:
+  if you add a table to both settings, it will never be cached.
   Use a frozenset over other sequence types for a tiny performance boost.
 
 
@@ -135,6 +166,53 @@ For example:
 
     # Globally disables SQL caching until you set it back to True
     settings.CACHALOT_ENABLED = False
+
+
+Template tag
+............
+
+`Caching template fragments <https://docs.djangoproject.com/en/1.8/topics/cache/#template-fragment-caching>`_
+can be extremely powerful to speedup a Django application.  However, it often
+means you have to adapt your models to get a relevant cache key, typically
+by adding a timestamp that refers to the last modification of the object.
+
+But modifying your models and caching template fragments leads
+to stale contents most of the time. There’s a simple reason to that: we rarely
+only display the data from one model, we often want to display related data,
+such as the number of books written by someone, display a quote from a book
+of this author, display similar authors, etc. In such situations,
+**it’s impossible to cache template fragments and avoid stale rendered data**.
+
+Fortunately, django-cachalot provides an easy way to fix this issue,
+by simply checking when was the last time data changed in the given models
+or tables.  The API function
+:meth:`get_last_invalidation <cachalot.api.get_last_invalidation>` does that,
+and we provided a ``get_last_invalidation`` template tag to directly
+use it in templates.  It works exactly the same as the API function.
+
+Example of a quite heavy nested loop with a lot of SQL queries
+(considering no prefetch has been done)::
+
+    {% load cachalot cache %}
+
+    {% get_last_invalidation 'auth.User' 'library.Book' 'library.Author' as last_invalidation %}
+    {% cache 3600 short_user_profile last_invalidation %}
+      {{ user }} has borrowed these books:
+      {% for book in user.borrowed_books.all %}
+        <div class="book">
+          {{ book }} ({{ book.pages.count }} pages)
+          <span class="authors">
+            {% for author in book.authors.all %}
+              {{ author }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          </span>
+        </div>
+      {% endfor %}
+    {% endcache %}
+
+``cache_alias`` and ``db_alias`` keywords arguments of this template tag
+are also available (see
+:meth:`cachalot.api.get_last_invalidation`).
 
 
 Signal

@@ -77,11 +77,11 @@ def get_last_invalidation(*tables_or_models, **kwargs):
     ``tables_or_models``.  If ``tables_or_models`` is not specified,
     all tables found in the database (including those outside Django) are used.
 
-    If ``cache_alias`` is specified, it only clears the SQL queries stored
-    on this cache, otherwise queries from all caches are cleared.
+    If ``cache_alias`` is specified, it only fetches invalidations
+    in this cache, otherwise invalidations in all caches are fetched.
 
-    If ``db_alias`` is specified, it only clears the SQL queries executed
-    on this database, otherwise queries from all databases are cleared.
+    If ``db_alias`` is specified, it only fetches invalidations
+    for this database, otherwise invalidations for all databases are fetched.
 
     :arg tables_or_models: SQL tables names or models (or combination of both)
     :type tables_or_models: tuple of strings or models

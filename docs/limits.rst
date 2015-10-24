@@ -100,8 +100,10 @@ In such cases, you may want to partially disable this behaviour by
 After that, use :ref:`the API <API>` to manually invalidate the tables
 you modified.
 
-Multiple Servers
-................
+.. _Multiple servers:
+
+Multiple servers clock synchronisation
+......................................
 
 Django-cachalot relies on the computer clock to handle invalidation.
 If you deploy the same Django project on multiple machines,
