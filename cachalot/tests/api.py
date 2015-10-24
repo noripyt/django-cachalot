@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.core.cache import DEFAULT_CACHE_ALIAS
 from django.core.management import call_command
 from django.db import connection, transaction, DEFAULT_DB_ALIAS
+from django.template import Template, Context
 from django.test import TransactionTestCase
 
 from ..api import *
@@ -106,6 +107,38 @@ class APITestCase(TransactionTestCase):
         timestamp = get_last_invalidation('cachalot_testparent',
                                           'cachalot_test')
         self.assertAlmostEqual(timestamp, time(), delta=0.1)
+
+    def test_get_last_invalidation_template_tag(self):
+        original_timestamp = Template("{{ timestamp }}").render(Context({
+            'timestamp': get_last_invalidation('auth.Group', 'cachalot_test')
+        }))
+
+        template = Template("""
+        {% load cachalot %}
+        {% get_last_invalidation 'auth.Group' 'cachalot_test' as timestamp %}
+        {{ timestamp }}
+        """)
+        timestamp = template.render(Context()).strip()
+
+        self.assertNotEqual(timestamp, '')
+        self.assertNotEqual(timestamp, '0.0')
+        self.assertAlmostEqual(float(timestamp), float(original_timestamp),
+                               delta=0.1)
+
+        template = Template("""
+        {% load cachalot cache %}
+        {% get_last_invalidation 'auth.Group' 'cachalot_test' as timestamp %}
+        {% cache 10 cache_key_name timestamp %}
+            {{ content }}
+        {% endcache %}
+        """)
+        content = template.render(Context({'content': 'something'})).strip()
+        self.assertEqual(content, 'something')
+        content = template.render(Context({'content': 'anything'})).strip()
+        self.assertEqual(content, 'something')
+        invalidate('cachalot_test')
+        content = template.render(Context({'content': 'yet another'})).strip()
+        self.assertEqual(content, 'yet another')
 
 
 class CommandTestCase(TransactionTestCase):
