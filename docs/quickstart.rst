@@ -4,6 +4,8 @@ Quick start
 Requirements
 ............
 
+- **If using multiple servers, it is critical that the servers' clocks are synchronized.**
+  More detail here: http://django-cachalot.readthedocs.org/en/latest/limits.html#multiple-servers
 - Django 1.7 or 1.8
 - Python 2.7, 3.2, 3.3, or 3.4
 - a cache configured as ``'default'`` with one of these backends:
