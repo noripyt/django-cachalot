@@ -1,33 +1,6 @@
 Quick start
 -----------
 
-Should you use it?
-..................
-
-Django-cachalot is the perfect speedup tool for most Django projects.
-It will speedup a website of 100 000 visits per month without any problem.
-In fact, **the more visitors you have, the faster the website becomes**.
-That’s because every possible SQL query on the project ends up being cached.
-
-Django-cachalot is especially efficient in the Django administration website
-since it’s unfortunately badly optimised (use foreign keys in list_editable
-if you need to be convinced).
-
-However, it’s not suited for projects where there is **a high number
-of modifications per minute** on each table, like a social network with
-more than a 30 messages per minute. Django-cachalot may still give a small
-speedup in such cases, but it may also slow things a bit
-(in the worst case scenario, a 20% slowdown,
-according to :ref:`the benchmark <Benchmark>`).
-If you have a website like that, optimising your SQL database and queries
-is the number one thing you have to do.
-
-There is also an obvious case where you don’t need django-cachalot:
-when the project is already fast enough (all pages load in less than 300 ms).
-Like any other dependency, django-cachalot is a potential source of problems
-(even though it’s currently bug free).
-Don’t use dependencies you can avoid, a “future you” may thank you for that.
-
 Requirements
 ............
 
@@ -40,14 +13,14 @@ Requirements
     (using either python-memcached or pylibmc)
   - `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
   - `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
-    (but it’s not shared between processes, see :ref:`Limits`)
+    (but it’s not shared between processes, see :ref:`locmem limits <Locmem>`)
 
 - one of these databases:
 
   - PostgreSQL
   - SQLite
   - MySQL (but you probably don’t need django-cachalot in this case,
-    see :ref:`Limits`)
+    see :ref:`MySQL limits <MySQL>`)
 
 Usage
 .....
@@ -56,16 +29,18 @@ Usage
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. If you use multiple servers with a common cache server,
    :ref:`double check their clock synchronisation <multiple servers>`
+#. If you modify data outside Django
+   – typically after restoring a SQL database –, run
+   ``./manage.py invalidate_cachalot``
 #. Be aware of :ref:`the few other limits <limits>`
 #. If you use
    `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
    to your ``DEBUG_TOOLBAR_PANELS``
-#. If you need to invalidate all django-cachalot cache keys from an external script
-   – typically after restoring a SQL database –, simply run
-   ``./manage.py invalidate_cachalot``
 #. Enjoy!
 
+
+.. _Settings:
 
 Settings
 ........
@@ -100,7 +75,7 @@ Settings
 
 :Default: ``True``
 :Description: If set to ``False``, disables automatic invalidation on raw
-              SQL queries – read :ref:`Raw queries limits` for more info
+              SQL queries – read :ref:`raw queries limits <Raw SQL queries>` for more info
 
 
 ``CACHALOT_ONLY_CACHABLE_TABLES``
@@ -168,6 +143,8 @@ For example:
     settings.CACHALOT_ENABLED = False
 
 
+.. _Template tag:
+
 Template tag
 ............
 
@@ -214,6 +191,8 @@ Example of a quite heavy nested loop with a lot of SQL queries
 are also available (see
 :meth:`cachalot.api.get_last_invalidation`).
 
+
+.. _Signal:
 
 Signal
 ......

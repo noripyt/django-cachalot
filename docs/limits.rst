@@ -44,6 +44,7 @@ memcached. If you use Ubuntu and installed the package, you can modify
 per cache key to 10 MB, and if you want increase the already existing ``-m 64``
 to something like ``-m 1000`` to set the maximum cache size to 1 GB.
 
+.. _Locmem:
 
 Locmem
 ......
@@ -62,6 +63,8 @@ If you use range fields from `django.contrib.postgres` and your Django
 version is affected by this bug, you need to add the tables using range fields
 to :ref:`CACHALOT_UNCACHABLE_TABLES`.
 
+.. _MySQL:
+
 MySQL
 .....
 
@@ -72,7 +75,7 @@ Django-cachalot will slow down your queries if that query cache is enabled.
 If it’s not enabled, django-cachalot will make queries much faster.
 But you should probably better enable the query cache instead.
 
-.. _Raw queries limits:
+.. _Raw SQL queries:
 
 Raw SQL queries
 ...............

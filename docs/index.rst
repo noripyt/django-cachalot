@@ -24,6 +24,7 @@ Caches your Django ORM queries and automatically invalidates them.
 .. toctree::
    :maxdepth: 2
 
+   introduction
    quickstart
    limits
    api
