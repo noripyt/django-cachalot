@@ -122,18 +122,18 @@ The smaller issue is that each time you execute a new SQL query,
 django-cache-machine needs to fetch the “flush list” from the cache,
 update it and add it back to the cache.  This means we have to make two
 cache calls in addition of the cache call to store the SQL query results.
-It may seem small tiny, but when your cache size increases,
+It may seem tiny, but when your cache size increases,
 the “flush lists” start becoming huge (a list of hundreds of cache keys
 for each database object), leading to an exponentially growing cache size
-and a longer time to fetch the always-growing “flush list”.
-So **bad memory and CPU usage**.
+and a longer time to fetch the always-growing “flush lists”.
+So **bad memory and CPU usage when reading data**.
 
 The second issue is only linked to the per object invalidation.
 When django-cache-machine invalidates an object, it also needs to invalidate
 the queries of the related objects, otherwise they may contain stale data.
 Django-cache-machine invalidates foreign keys only, not many-to-many
-or generic foreign keys (because… I don’t know).  This degrades performance
-at each writing operation to the database, because it needs to fetch
+or generic foreign keys (because… I don’t know).  **This degrades performance
+of each writing operation to the database**, because it needs to fetch
 related objects, fetch “flush lists” and delete these cache keys.
 And of course it can’t invalidate basic queries such as count or empty queries
 (probably aggregations too, but I’m not sure).
@@ -165,9 +165,9 @@ I measured, one single call of this command by django-cacheops
 slows down any database save by 50 ms to 3.5 seconds,
 depending on your database and cache sizes.
 The problem is also that django-cacheops runs this command several times
-at each save.  Suppose you have a model with 3 many-to-many. Suppose you save
-an object with 3 related objects each many-to-many. django-cacheops will run
-the Redis ``KEYS`` command at least 10 times!  If you have
+at each save.  Suppose you have a model with 3 many-to-many andyou save
+an object with 3 related objects per many-to-many. django-cacheops
+will therefore run the Redis ``KEYS`` command at least 10 times!  If you have
 a large cache and database, it means **you can wait 30 seconds
 while this object is saved!**
 
@@ -178,7 +178,7 @@ other users or even blocking them until the command is finished.
 In a general way, the workflow of django-cacheops is totally unoptimised.
 When an object is modified, an ``invalidate_obj`` function is called,
 calling an ``invalidate_dict`` function, calling the ``manage.py invalidate``
-command with a serialized version of the object (yes!)
+command with a serialized version of the object (!?)
 calling an ``invalidate_model`` function that calls the Redis ``KEYS`` command
 to get all the cache keys from that model then delete them.
 And as I said above, it executes all that N times,
@@ -186,13 +186,12 @@ N being the number of related objects to the current object,
 even though multiple objects have the same model and we therefore
 don’t need to invalidate the model multiple times.
 
-**To sum up, django-cacheops has a terrible performance,
-but is reliable on what it handles.
-If you set it up correctly and never use some features such as
+**To sum up, django-cacheops has a terrible performance when modifying data,
+and is reliable on what it handles.**
+But you probably need features it doesn’t handle, such as
 transactions (used by Django admin),
 multi-table inheritance, or
-raw queries (the three features being used by Wagtail and django CMS),
-you’re good to go.**
+``cursor.execute`` (the three features being used by Wagtail and django CMS)…
 
 Number of lines of code
 ~~~~~~~~~~~~~~~~~~~~~~~
