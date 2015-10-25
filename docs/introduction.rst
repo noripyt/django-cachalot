@@ -67,10 +67,10 @@ Features
 ======================================================== ========= ============= =========
 Feature                                                  cachalot  cache-machine cacheops
 ======================================================== ========= ============= =========
-Type of invalidation                                     per table per object    per table
-CPU & memory performance                                 optimal   bad           terrible
 Easy to install                                          ✔         ✘             quite
 Cache agnostic                                           ✔         ✔             ✘
+Type of invalidation                                     per table per object    per table
+CPU & memory performance                                 optimal   bad           terrible
 Reliable                                                 ✔         ✘             quite
 Handles ``QuerySet.count``                               ✔         ✘             ✔
 Handles empty queries                                    ✔         ✘             ✔
