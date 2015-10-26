@@ -165,7 +165,7 @@ I measured, one single call of this command by django-cacheops
 slows down any database save by 50 ms to 3.5 seconds,
 depending on your database and cache sizes.
 The problem is also that django-cacheops runs this command several times
-at each save.  Suppose you have a model with 3 many-to-many andyou save
+at each save.  Suppose you have a model with 3 many-to-many and you save
 an object with 3 related objects per many-to-many. django-cacheops
 will therefore run the Redis ``KEYS`` command at least 10 times!  If you have
 a large cache and database, it means **you can wait 30 seconds
