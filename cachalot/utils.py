@@ -155,10 +155,7 @@ def _invalidate_table_cache_keys(cache, table_cache_keys):
     cache.set_many(d, None)
 
 
-def _invalidate_table(cache, write_compiler):
-    db_alias = write_compiler.using
-
-    table = write_compiler.query.get_meta().db_table
+def _invalidate_table(cache, db_alias, table):
     table_cache_key = _get_table_cache_key(db_alias, table)
     _invalidate_table_cache_keys(cache, (table_cache_key,))
 

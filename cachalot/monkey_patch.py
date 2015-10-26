@@ -35,9 +35,8 @@ def _unset_raw_connection(original):
 TUPLE_OR_LIST = (tuple, list)
 
 
-def _get_result_or_execute_query(execute_query_func, cache_key,
-                                 table_cache_keys):
-    cache = cachalot_caches.get_cache()
+def _get_result_or_execute_query(execute_query_func, cache,
+                                 cache_key, table_cache_keys):
     data = cache.get_many(table_cache_keys + [cache_key])
 
     new_table_cache_keys = set(table_cache_keys)
@@ -80,7 +79,9 @@ def _patch_compiler(original):
             return execute_query_func()
 
         return _get_result_or_execute_query(
-            execute_query_func, cache_key, table_cache_keys)
+            execute_query_func,
+            cachalot_caches.get_cache(db_alias=compiler.using),
+            cache_key, table_cache_keys)
 
     return inner
 
@@ -88,7 +89,10 @@ def _patch_compiler(original):
 def _patch_write_compiler(original):
     @wraps(original)
     def inner(write_compiler, *args, **kwargs):
-        _invalidate_table(cachalot_caches.get_cache(), write_compiler)
+        db_alias = write_compiler.using
+        table = write_compiler.query.get_meta().db_table
+        _invalidate_table(cachalot_caches.get_cache(db_alias=db_alias),
+                          db_alias, table)
         return original(write_compiler, *args, **kwargs)
 
     return inner
@@ -123,7 +127,7 @@ def _patch_atomic():
     def patch_enter(original):
         @wraps(original)
         def inner(self):
-            cachalot_caches.enter_atomic()
+            cachalot_caches.enter_atomic(self.using)
             original(self)
 
         return inner
@@ -133,8 +137,8 @@ def _patch_atomic():
         def inner(self, exc_type, exc_value, traceback):
             needs_rollback = get_connection(self.using).needs_rollback
             original(self, exc_type, exc_value, traceback)
-            cachalot_caches.exit_atomic(exc_type is None
-                                        and not needs_rollback)
+            cachalot_caches.exit_atomic(
+                self.using, exc_type is None and not needs_rollback)
 
         return inner
 

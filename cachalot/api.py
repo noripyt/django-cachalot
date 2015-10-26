@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from collections import defaultdict
 
 from django.conf import settings
 from django.db import connections
@@ -14,11 +13,10 @@ from .utils import _get_table_cache_key, _invalidate_table_cache_keys
 __all__ = ('invalidate', 'get_last_invalidation')
 
 
-def _get_table_cache_keys_per_cache(tables, cache_alias, db_alias):
+def _get_table_cache_keys_per_cache_and_db(tables, cache_alias, db_alias):
     no_tables = not tables
     cache_aliases = settings.CACHES if cache_alias is None else (cache_alias,)
     db_aliases = settings.DATABASES if db_alias is None else (db_alias,)
-    table_cache_keys_per_cache = defaultdict(list)
     for db_alias in db_aliases:
         if no_tables:
             tables = connections[db_alias].introspection.table_names()
@@ -26,8 +24,7 @@ def _get_table_cache_keys_per_cache(tables, cache_alias, db_alias):
             table_cache_keys = [
                 _get_table_cache_key(db_alias, t) for t in tables]
             if table_cache_keys:
-                table_cache_keys_per_cache[cache_alias].extend(table_cache_keys)
-    return table_cache_keys_per_cache
+                yield cache_alias, db_alias, table_cache_keys
 
 
 def _get_tables(tables_or_models):
@@ -64,11 +61,11 @@ def invalidate(*tables_or_models, **kwargs):
         raise TypeError(
             "invalidate() got an unexpected keyword argument '%s'" % k)
 
-    table_cache_keys_per_cache = _get_table_cache_keys_per_cache(
+    table_cache_keys_per_cache = _get_table_cache_keys_per_cache_and_db(
         _get_tables(tables_or_models), cache_alias, db_alias)
-    for cache_alias, table_cache_keys in table_cache_keys_per_cache.items():
-        _invalidate_table_cache_keys(cachalot_caches.get_cache(cache_alias),
-                                     table_cache_keys)
+    for cache_alias, db_alias, table_cache_keys in table_cache_keys_per_cache:
+        _invalidate_table_cache_keys(
+            cachalot_caches.get_cache(cache_alias, db_alias), table_cache_keys)
 
 
 def get_last_invalidation(*tables_or_models, **kwargs):
@@ -100,11 +97,11 @@ def get_last_invalidation(*tables_or_models, **kwargs):
                         "keyword argument '%s'" % k)
 
     last_invalidation = 0.0
-    table_cache_keys_per_cache = _get_table_cache_keys_per_cache(
+    table_cache_keys_per_cache = _get_table_cache_keys_per_cache_and_db(
         _get_tables(tables_or_models), cache_alias, db_alias)
-    for cache_alias, table_cache_keys in table_cache_keys_per_cache.items():
+    for cache_alias, db_alias, table_cache_keys in table_cache_keys_per_cache:
         invalidations = cachalot_caches.get_cache(
-            cache_alias).get_many(table_cache_keys).values()
+            cache_alias, db_alias).get_many(table_cache_keys).values()
         if invalidations:
             current_last_invalidation = max(invalidations)
             if current_last_invalidation > last_invalidation:

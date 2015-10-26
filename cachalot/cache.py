@@ -1,9 +1,11 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+from collections import defaultdict
 from threading import local
 
 from django.core.cache import caches
+from django.db import DEFAULT_DB_ALIAS
 
 from .settings import cachalot_settings
 from .transaction import AtomicCache
@@ -13,29 +15,35 @@ class CacheHandler(local):
     @property
     def atomic_caches(self):
         if not hasattr(self, '_atomic_caches'):
-            self._atomic_caches = []
+            self._atomic_caches = defaultdict(list)
         return self._atomic_caches
 
-    def get_atomic_cache(self, cache_alias, level):
-        if cache_alias not in self.atomic_caches[level]:
-            self.atomic_caches[level][cache_alias] = AtomicCache(
-                self.get_cache(cache_alias, level-1))
-        return self.atomic_caches[level][cache_alias]
+    def get_atomic_cache(self, cache_alias, db_alias, level):
+        if cache_alias not in self.atomic_caches[db_alias][level]:
+            self.atomic_caches[db_alias][level][cache_alias] = AtomicCache(
+                self.get_cache(cache_alias, db_alias, level-1))
+        return self.atomic_caches[db_alias][level][cache_alias]
 
-    def get_cache(self, cache_alias=None, atomic_level=-1):
+    def get_cache(self, cache_alias=None, db_alias=None, atomic_level=-1):
+        if db_alias is None:
+            db_alias = DEFAULT_DB_ALIAS
         if cache_alias is None:
             cache_alias = cachalot_settings.CACHALOT_CACHE
 
-        min_level = -len(self.atomic_caches)
+        min_level = -len(self.atomic_caches[db_alias])
         if atomic_level < min_level:
             return caches[cache_alias]
-        return self.get_atomic_cache(cache_alias, atomic_level)
+        return self.get_atomic_cache(cache_alias, db_alias, atomic_level)
 
-    def enter_atomic(self):
-        self.atomic_caches.append({})
+    def enter_atomic(self, db_alias):
+        if db_alias is None:
+            db_alias = DEFAULT_DB_ALIAS
+        self.atomic_caches[db_alias].append({})
 
-    def exit_atomic(self, commit):
-        atomic_caches = self.atomic_caches.pop().values()
+    def exit_atomic(self, db_alias, commit):
+        if db_alias is None:
+            db_alias = DEFAULT_DB_ALIAS
+        atomic_caches = self.atomic_caches[db_alias].pop().values()
         if commit:
             for atomic_cache in atomic_caches:
                 atomic_cache.commit()
