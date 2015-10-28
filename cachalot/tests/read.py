@@ -735,7 +735,9 @@ class ParameterTypeTestCase(TransactionTestCase):
             data2 = list(Test.objects.values_list('a_float', flat=True).filter(
                 a_float__isnull=False).order_by('a_float'))
         self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [0.123456789, 12345.6789])
+        self.assertEqual(len(data2), 2)
+        self.assertAlmostEqual(data2[0], 0.123456789, delta=0.0001)
+        self.assertAlmostEqual(data2[1], 0.123456789, delta=0.0001)
 
         with self.assertNumQueries(1):
             Test.objects.get(a_float=0.123456789)
