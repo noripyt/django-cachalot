@@ -1,15 +1,10 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-from django.contrib.auth.models import User
-
-
-try:
-    from unittest import skipIf
-except ImportError:  # For Python 2.6
-    from unittest2 import skipIf
+from unittest import skipIf
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import DEFAULT_DB_ALIAS
 from django.test import TransactionTestCase
 
