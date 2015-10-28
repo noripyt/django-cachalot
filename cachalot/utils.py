@@ -13,6 +13,7 @@ from django.utils.six import text_type, binary_type
 
 from .settings import cachalot_settings
 from .signals import post_invalidation
+from .transaction import AtomicCache
 
 
 class UncachableQuery(Exception):
@@ -145,18 +146,21 @@ def _get_table_cache_keys(compiler):
     return [_get_table_cache_key(db_alias, t) for t in tables]
 
 
-def _invalidate_table_cache_keys(cache, table_cache_keys):
-    if hasattr(cache, 'to_be_invalidated'):
-        cache.to_be_invalidated.update(table_cache_keys)
+def _invalidate_tables(cache, db_alias, tables):
     now = time()
     d = {}
-    for k in table_cache_keys:
-        d[k] = now
+    for table in tables:
+        d[_get_table_cache_key(db_alias, table)] = now
     cache.set_many(d, None)
+
+    if isinstance(cache, AtomicCache):
+        cache.to_be_invalidated.update(tables)
 
 
 def _invalidate_table(cache, db_alias, table):
-    table_cache_key = _get_table_cache_key(db_alias, table)
-    _invalidate_table_cache_keys(cache, (table_cache_key,))
+    cache.set(_get_table_cache_key(db_alias, table), time(), None)
 
-    post_invalidation.send(table, db_alias=db_alias)
+    if isinstance(cache, AtomicCache):
+        cache.to_be_invalidated.add(table)
+    else:
+        post_invalidation.send(table, db_alias=db_alias)

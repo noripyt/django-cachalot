@@ -204,6 +204,14 @@ just after a cache invalidation (when you modify something in a SQL table).
 Be careful when you specify ``sender``, as it is sensible to string type.
 To be sure, use ``Model._meta.db_table``.
 
+This signal is not directly triggered during transactions,
+it waits until the current transaction ends.  This signal is also triggered
+when invalidating using the API or the ``manage.py`` command.  Be careful
+when using multiple databases, if you invalidate all databases by simply
+calling ``invalidate()``, this signal will be triggered one time
+for each database and for each model.  If you have 3 databases and 20 models,
+``invalidate()`` will trigger the signal 60 times.
+
 Example:
 
 .. code:: python
