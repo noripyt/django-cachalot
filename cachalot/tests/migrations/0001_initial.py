@@ -56,6 +56,10 @@ if django_version >= (1, 8):
         IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
 
     Migration.operations.extend((
+        migrations.AddField('Test', 'duration',
+                            models.DurationField(null=True, blank=True)),
+        migrations.AddField('Test', 'uuid',
+                            models.UUIDField(null=True, blank=True)),
         migrations.RunSQL('CREATE EXTENSION hstore;',
                           hints={'extension': 'hstore'}),
         migrations.RunSQL('CREATE EXTENSION unaccent;',

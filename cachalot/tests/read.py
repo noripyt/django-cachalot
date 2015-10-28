@@ -3,7 +3,9 @@
 from __future__ import unicode_literals
 import datetime
 from unittest import skipIf
+from uuid import UUID
 
+from django import VERSION as django_version
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -712,10 +714,6 @@ class ReadTestCase(TransactionTestCase):
             list(Test.objects.filter(bin=b'def'))
 
     def test_ipv4_address(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.values('ip'))
-        with self.assertNumQueries(0):
-            list(Test.objects.values('ip'))
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test3', ip='127.0.0.1')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
@@ -730,15 +728,11 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, ['127.0.0.1', '192.168.0.1'])
 
         with self.assertNumQueries(1):
-            list(Test.objects.filter(ip='127.0.0.1'))
+            Test.objects.get(ip='127.0.0.1')
         with self.assertNumQueries(0):
-            list(Test.objects.filter(ip='127.0.0.1'))
+            Test.objects.get(ip='127.0.0.1')
 
     def test_ipv6_address(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.values('ip'))
-        with self.assertNumQueries(0):
-            list(Test.objects.values('ip'))
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test3', ip='2001:db8:a0b:12f0::1/64')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
@@ -754,6 +748,57 @@ class ReadTestCase(TransactionTestCase):
             '2001:db8:0:85a3::ac1f:8001', '2001:db8:a0b:12f0::1/64'])
 
         with self.assertNumQueries(1):
-            list(Test.objects.filter(ip='2001:db8:0:85a3::ac1f:8001'))
+            Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
         with self.assertNumQueries(0):
-            list(Test.objects.filter(ip='2001:db8:0:85a3::ac1f:8001'))
+            Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
+
+    @skipIf(django_version[2:] == (1, 7),
+            'DurationField is not available in Django 1.7')
+    def test_duration(self):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test3', duration=datetime.timedelta(30))
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test4', duration=datetime.timedelta(60))
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list(
+                'duration', flat=True).filter(
+                duration__isnull=False).order_by('duration'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list(
+                'duration', flat=True).filter(
+                duration__isnull=False).order_by('duration'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [
+            datetime.timedelta(30), datetime.timedelta(60)])
+
+        with self.assertNumQueries(1):
+            Test.objects.get(duration=datetime.timedelta(30))
+        with self.assertNumQueries(0):
+            Test.objects.get(duration=datetime.timedelta(30))
+
+    @skipIf(django_version[2:] == (1, 7),
+            'UUIDField is not available in Django 1.7')
+    def test_uuid(self):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test3',
+                                uuid='1cc401b7-09f4-4520-b8d0-c267576d196b')
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test4',
+                                uuid='ebb3b6e1-1737-4321-93e3-4c35d61ff491')
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list(
+                'uuid', flat=True).filter(
+                uuid__isnull=False).order_by('uuid'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list(
+                'uuid', flat=True).filter(
+                uuid__isnull=False).order_by('uuid'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [
+            UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'),
+            UUID('ebb3b6e1-1737-4321-93e3-4c35d61ff491')])
+
+        with self.assertNumQueries(1):
+            Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))
+        with self.assertNumQueries(0):
+            Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))

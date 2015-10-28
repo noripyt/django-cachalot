@@ -7,6 +7,8 @@ from django.conf import settings
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField, GenericIPAddressField)
+if django_version >= (1, 8):
+    from django.db.models import DurationField, UUIDField
 
 
 class Test(Model):
@@ -18,6 +20,9 @@ class Test(Model):
     permission = ForeignKey('auth.Permission', null=True, blank=True)
     bin = BinaryField(null=True, blank=True)
     ip = GenericIPAddressField(null=True, blank=True)
+    if django_version >= (1, 8):
+        duration = DurationField(null=True, blank=True)
+        uuid = UUIDField(null=True, blank=True)
 
     class Meta(object):
         ordering = ('name',)
