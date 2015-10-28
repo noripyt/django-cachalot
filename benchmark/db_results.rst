@@ -1,3 +1,3 @@
-- mysql      is 2.0× slower then 1.0× faster
-- postgresql is 1.1× slower then 13.4× faster
+- mysql      is 1.6× slower then 1.0× faster
+- postgresql is 1.1× slower then 14.1× faster
 - sqlite     is 1.1× slower then 8.6× faster
