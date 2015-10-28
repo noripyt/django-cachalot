@@ -47,6 +47,8 @@ class ReadTestCase(TransactionTestCase):
             name='test2', owner=self.admin, public=True,
             date='1944-06-06', datetime='1944-06-06T06:35:00')
 
+        self.is_sqlite = connection.vendor == 'sqlite'
+
     def test_empty(self):
         with self.assertNumQueries(0):
             data1 = list(Test.objects.none())
@@ -595,8 +597,7 @@ class ReadTestCase(TransactionTestCase):
             self.assertListEqual(data2, [self.t2, self.t1])
 
     def test_table_inheritance(self):
-        is_sqlite = connection.vendor == 'sqlite'
-        with self.assertNumQueries(3 if is_sqlite else 2):
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):
@@ -709,3 +710,50 @@ class ReadTestCase(TransactionTestCase):
             list(Test.objects.filter(bin=b'def'))
         with self.assertNumQueries(0 if is_mysql else 1):
             list(Test.objects.filter(bin=b'def'))
+
+    def test_ipv4_address(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.values('ip'))
+        with self.assertNumQueries(0):
+            list(Test.objects.values('ip'))
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test3', ip='127.0.0.1')
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test4', ip='192.168.0.1')
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list('ip', flat=True).filter(
+                ip__isnull=False).order_by('ip'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list('ip', flat=True).filter(
+                ip__isnull=False).order_by('ip'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, ['127.0.0.1', '192.168.0.1'])
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(ip='127.0.0.1'))
+        with self.assertNumQueries(0):
+            list(Test.objects.filter(ip='127.0.0.1'))
+
+    def test_ipv6_address(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.values('ip'))
+        with self.assertNumQueries(0):
+            list(Test.objects.values('ip'))
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test3', ip='2001:db8:a0b:12f0::1/64')
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test4', ip='2001:db8:0:85a3::ac1f:8001')
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list('ip', flat=True).filter(
+                ip__isnull=False).order_by('ip'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list('ip', flat=True).filter(
+                ip__isnull=False).order_by('ip'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [
+            '2001:db8:0:85a3::ac1f:8001', '2001:db8:a0b:12f0::1/64'])
+
+        with self.assertNumQueries(1):
+            list(Test.objects.filter(ip='2001:db8:0:85a3::ac1f:8001'))
+        with self.assertNumQueries(0):
+            list(Test.objects.filter(ip='2001:db8:0:85a3::ac1f:8001'))

@@ -6,7 +6,7 @@ from django import VERSION as django_version
 from django.conf import settings
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
-    ManyToManyField, BinaryField, IntegerField)
+    ManyToManyField, BinaryField, IntegerField, GenericIPAddressField)
 
 
 class Test(Model):
@@ -17,6 +17,7 @@ class Test(Model):
     datetime = DateTimeField(null=True, blank=True)
     permission = ForeignKey('auth.Permission', null=True, blank=True)
     bin = BinaryField(null=True, blank=True)
+    ip = GenericIPAddressField(null=True, blank=True)
 
     class Meta(object):
         ordering = ('name',)

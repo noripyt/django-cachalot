@@ -26,6 +26,7 @@ class Migration(migrations.Migration):
                 ('owner', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True)),
                 ('bin', models.BinaryField(null=True, blank=True)),
+                ('ip', models.GenericIPAddressField(null=True, blank=True)),
             ],
             options={
                 'ordering': ('name',),
