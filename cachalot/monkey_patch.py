@@ -88,6 +88,7 @@ def _patch_compiler(original):
 
 def _patch_write_compiler(original):
     @wraps(original)
+    @_unset_raw_connection
     def inner(write_compiler, *args, **kwargs):
         db_alias = write_compiler.using
         table = write_compiler.query.get_meta().db_table

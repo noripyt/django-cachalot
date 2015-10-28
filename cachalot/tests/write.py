@@ -586,7 +586,7 @@ class WriteTestCase(TransactionTestCase):
             permissions = list(Permission.objects.all()[:5])
             group.permissions.add(*permissions)
             u.groups.add(group)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             data4 = list(Test.objects.select_related('owner')
                          .prefetch_related('owner__groups__permissions'))
             self.assertListEqual(data4, [t1])
