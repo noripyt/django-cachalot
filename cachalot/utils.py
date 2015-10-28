@@ -26,13 +26,13 @@ CACHABLE_PARAM_TYPES = {
 }
 
 try:
-    from psycopg2._range import (
-        NumericRange, DateRange, DateTimeRange, DateTimeTZRange)
+    from psycopg2.extras import (
+        NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet)
 except ImportError:
     pass
 else:
     CACHABLE_PARAM_TYPES.update((
-        NumericRange, DateRange, DateTimeRange, DateTimeTZRange))
+        NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet))
 
 
 def check_parameter_types(params):
