@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import datetime
 from unittest import skipIf
 from uuid import UUID
+from decimal import Decimal
 
 from django import VERSION as django_version
 from django.contrib.auth.models import Group, Permission, User
@@ -741,6 +742,25 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(a_float=0.123456789)
 
+    def test_decimal(self):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test1', a_decimal=Decimal('123.45'))
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test1', a_decimal=Decimal('12.3'))
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list('a_decimal', flat=True).filter(
+                a_decimal__isnull=False).order_by('a_decimal'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list('a_decimal', flat=True).filter(
+                a_decimal__isnull=False).order_by('a_decimal'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [Decimal('12.3'), Decimal('123.45')])
+
+        with self.assertNumQueries(1):
+            Test.objects.get(a_decimal=Decimal('123.45'))
+        with self.assertNumQueries(0):
+            Test.objects.get(a_decimal=Decimal('123.45'))
+
     def test_ipv4_address(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test1', ip='127.0.0.1')
@@ -780,7 +800,7 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
 
-    @skipIf(django_version[2:] == (1, 7),
+    @skipIf(django_version[:2] == (1, 7),
             'DurationField is not available in Django 1.7')
     def test_duration(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
@@ -804,7 +824,7 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(duration=datetime.timedelta(30))
 
-    @skipIf(django_version[2:] == (1, 7),
+    @skipIf(django_version[:2] == (1, 7),
             'UUIDField is not available in Django 1.7')
     def test_uuid(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):

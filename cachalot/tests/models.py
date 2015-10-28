@@ -7,7 +7,7 @@ from django.conf import settings
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
-    FloatField)
+    FloatField, DecimalField)
 if django_version >= (1, 8):
     from django.db.models import DurationField, UUIDField
 
@@ -20,7 +20,11 @@ class Test(Model):
     datetime = DateTimeField(null=True, blank=True)
     permission = ForeignKey('auth.Permission', null=True, blank=True)
 
+    # We can’t use the exact names `float` or `decimal` as database column name
+    # since it fails on MySQL.
     a_float = FloatField(null=True, blank=True)
+    a_decimal = DecimalField(null=True, blank=True,
+                             max_digits=5, decimal_places=2)
     bin = BinaryField(null=True, blank=True)
     ip = GenericIPAddressField(null=True, blank=True)
     if django_version >= (1, 8):

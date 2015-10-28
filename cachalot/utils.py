@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 import datetime
+from decimal import Decimal
 from hashlib import sha1
 from time import time
 from uuid import UUID
@@ -22,7 +23,7 @@ class UncachableQuery(Exception):
 
 
 CACHABLE_PARAM_TYPES = {
-    bool, int, float, binary_type, text_type, type(None),
+    bool, int, float, Decimal, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
 
