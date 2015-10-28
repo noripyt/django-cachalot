@@ -6,7 +6,8 @@ from django import VERSION as django_version
 from django.conf import settings
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
-    ManyToManyField, BinaryField, IntegerField, GenericIPAddressField)
+    ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
+    FloatField)
 if django_version >= (1, 8):
     from django.db.models import DurationField, UUIDField
 
@@ -18,6 +19,8 @@ class Test(Model):
     date = DateField(null=True, blank=True)
     datetime = DateTimeField(null=True, blank=True)
     permission = ForeignKey('auth.Permission', null=True, blank=True)
+
+    a_float = FloatField(null=True, blank=True)
     bin = BinaryField(null=True, blank=True)
     ip = GenericIPAddressField(null=True, blank=True)
     if django_version >= (1, 8):

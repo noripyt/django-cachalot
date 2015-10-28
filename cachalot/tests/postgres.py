@@ -11,10 +11,11 @@ from django.core.cache import caches
 from django.core.cache.backends.filebased import FileBasedCache
 from django.db import connection
 from django.test import TransactionTestCase, override_settings
-from psycopg2._range import NumericRange, DateRange, DateTimeTZRange
+from psycopg2.extras import NumericRange, DateRange, DateTimeTZRange
 from pytz import timezone
 
-from .models import PostgresModel, Test
+if django_version[:2] >= (1, 8):
+    from .models import PostgresModel, Test
 
 
 @skipUnless(connection.vendor == 'postgresql' and django_version[:2] >= (1, 8),

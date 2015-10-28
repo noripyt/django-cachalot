@@ -22,7 +22,7 @@ class UncachableQuery(Exception):
 
 
 CACHABLE_PARAM_TYPES = {
-    bool, int, binary_type, text_type, type(None),
+    bool, int, float, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
 

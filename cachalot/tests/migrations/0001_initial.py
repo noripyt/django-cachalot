@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                 ('datetime', models.DateTimeField(null=True, blank=True)),
                 ('owner', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
                 ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True)),
+                ('a_float', models.FloatField(null=True, blank=True)),
                 ('bin', models.BinaryField(null=True, blank=True)),
                 ('ip', models.GenericIPAddressField(null=True, blank=True)),
             ],

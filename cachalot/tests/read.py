@@ -681,6 +681,15 @@ class ReadTestCase(TransactionTestCase):
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE %s;' % table_name)
 
+
+class ParameterTypeTestCase(TransactionTestCase):
+    def setUp(self):
+        self.is_sqlite = connection.vendor == 'sqlite'
+        if connection.vendor == 'mysql':
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection.cursor()
+
     def test_unknown_parameter_type(self):
         """
         Tests if queries with an unknown parameter type are not cached.
@@ -713,11 +722,30 @@ class ReadTestCase(TransactionTestCase):
         with self.assertNumQueries(0 if is_mysql else 1):
             list(Test.objects.filter(bin=b'def'))
 
+    def test_float(self):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test1', a_float=0.123456789)
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
+            Test.objects.create(name='test2', a_float=12345.6789)
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list('a_float', flat=True).filter(
+                a_float__isnull=False).order_by('a_float'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list('a_float', flat=True).filter(
+                a_float__isnull=False).order_by('a_float'))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [0.123456789, 12345.6789])
+
+        with self.assertNumQueries(1):
+            Test.objects.get(a_float=0.123456789)
+        with self.assertNumQueries(0):
+            Test.objects.get(a_float=0.123456789)
+
     def test_ipv4_address(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test3', ip='127.0.0.1')
+            Test.objects.create(name='test1', ip='127.0.0.1')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test4', ip='192.168.0.1')
+            Test.objects.create(name='test2', ip='192.168.0.1')
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list('ip', flat=True).filter(
                 ip__isnull=False).order_by('ip'))
@@ -734,9 +762,9 @@ class ReadTestCase(TransactionTestCase):
 
     def test_ipv6_address(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test3', ip='2001:db8:a0b:12f0::1/64')
+            Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test4', ip='2001:db8:0:85a3::ac1f:8001')
+            Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list('ip', flat=True).filter(
                 ip__isnull=False).order_by('ip'))
@@ -756,9 +784,9 @@ class ReadTestCase(TransactionTestCase):
             'DurationField is not available in Django 1.7')
     def test_duration(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test3', duration=datetime.timedelta(30))
+            Test.objects.create(name='test1', duration=datetime.timedelta(30))
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test4', duration=datetime.timedelta(60))
+            Test.objects.create(name='test2', duration=datetime.timedelta(60))
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list(
                 'duration', flat=True).filter(
@@ -780,10 +808,10 @@ class ReadTestCase(TransactionTestCase):
             'UUIDField is not available in Django 1.7')
     def test_uuid(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test3',
+            Test.objects.create(name='test1',
                                 uuid='1cc401b7-09f4-4520-b8d0-c267576d196b')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.create(name='test4',
+            Test.objects.create(name='test2',
                                 uuid='ebb3b6e1-1737-4321-93e3-4c35d61ff491')
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list(
