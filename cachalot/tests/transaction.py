@@ -12,7 +12,7 @@ from .models import Test
 
 class AtomicTestCase(TransactionTestCase):
     def setUp(self):
-        if django_version >= (1, 7) and connection.vendor == 'mysql':
+        if connection.vendor == 'mysql':
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()

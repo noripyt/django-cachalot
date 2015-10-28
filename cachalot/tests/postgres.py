@@ -22,7 +22,7 @@ from .models import PostgresModel, Test
 @skipIf(isinstance(caches['default'], FileBasedCache)
         and python_version_tuple()[:2] == ('2', '7'),
         'Caching psycopg2 objects is not working with file-based cache '
-        'and Python 2.7.')
+        'and Python 2.7 (see https://code.djangoproject.com/ticket/25501).')
 @override_settings(USE_TZ=True)
 class PostgresReadTest(TransactionTestCase):
     def setUp(self):
