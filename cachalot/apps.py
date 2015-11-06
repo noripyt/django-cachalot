@@ -24,6 +24,7 @@ VALID_DATABASE_ENGINES = {
 
 
 VALID_CACHE_BACKENDS = {
+    'django.core.cache.backends.dummy.DummyCache',
     'django.core.cache.backends.locmem.LocMemCache',
     'django.core.cache.backends.filebased.FileBasedCache',
     'django_redis.cache.RedisCache',
