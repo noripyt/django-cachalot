@@ -5,9 +5,9 @@ from collections import defaultdict
 from datetime import datetime
 
 from debug_toolbar.panels import Panel
+from django.apps import apps
 from django.conf import settings
 from django.core.cache import cache
-from django.db.models.loading import get_models
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timesince import timesince
 
@@ -41,7 +41,7 @@ class CachalotPanel(Panel):
         self.collect_invalidations()
 
     def collect_invalidations(self):
-        models = get_models()
+        models = apps.get_models()
         data = defaultdict(list)
         for db_alias in settings.DATABASES:
             model_cache_keys = dict(
