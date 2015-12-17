@@ -84,6 +84,17 @@ class ReadTestCase(TransactionTestCase):
         self.assertEqual(data2, data1)
         self.assertEqual(data2, self.t1)
 
+    def test_get_string_unicode(self):
+        with self.assertNumQueries(1):
+            data1 = Test.objects.get(name='test1')
+        with self.assertNumQueries(0):
+            data2 = Test.objects.get(name=str('test1'))
+        with self.assertNumQueries(0):
+            data3 = Test.objects.get(name=unicode('test1'))
+        self.assertEqual(data1, self.t1)
+        self.assertEqual(data2, self.t1)
+        self.assertEqual(data3, self.t1)
+
     def test_first(self):
         with self.assertNumQueries(1):
             self.assertEqual(Test.objects.filter(name='bad').first(), None)
@@ -155,6 +166,17 @@ class ReadTestCase(TransactionTestCase):
                                              name='user'))
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [])
+
+    def test_filter_string_unicode(self):
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.filter(name='test1'))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.filter(name=str('test1')))
+        with self.assertNumQueries(0):
+            data3 = list(Test.objects.filter(name=unicode('test1')))
+        self.assertEqual(data1, [self.t1])
+        self.assertEqual(data2, [self.t1])
+        self.assertEqual(data3, [self.t1])
 
     def test_exclude(self):
         with self.assertNumQueries(1):
