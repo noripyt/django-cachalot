@@ -20,7 +20,7 @@ django.setup()
 
 from django.conf import settings
 from django.contrib.auth.models import User, Group
-from django.core.cache import get_cache
+from django.core.cache import caches
 from django.db import connections, connection
 from django.test.utils import CaptureQueriesContext, override_settings
 from django.utils.encoding import force_text
@@ -174,7 +174,7 @@ class Benchmark(object):
             self.db_vendor = connections[self.db_alias].vendor
             print('Benchmarking %s…' % self.db_vendor)
             for cache_alias in settings.CACHES:
-                cache = get_cache(cache_alias)
+                cache = caches[cache_alias]
                 self.cache_name = cache.__class__.__name__[:-5].lower()
                 with override_settings(CACHALOT_CACHE=cache_alias):
                     self.execute_benchmark()
