@@ -8,7 +8,9 @@ from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
     FloatField, DecimalField)
-if django_version >= (1, 8):
+
+DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
+if DJANGO_GTE_1_8:
     from django.db.models import DurationField, UUIDField
 
 
@@ -27,7 +29,7 @@ class Test(Model):
                              max_digits=5, decimal_places=2)
     bin = BinaryField(null=True, blank=True)
     ip = GenericIPAddressField(null=True, blank=True)
-    if django_version >= (1, 8):
+    if DJANGO_GTE_1_8:
         duration = DurationField(null=True, blank=True)
         uuid = UUIDField(null=True, blank=True)
 
@@ -44,7 +46,7 @@ class TestChild(TestParent):
     permissions = ManyToManyField('auth.Permission', blank=True)
 
 
-if django_version >= (1, 8):
+if DJANGO_GTE_1_8:
     from django.contrib.postgres.fields import (
         ArrayField, HStoreField,
         IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)

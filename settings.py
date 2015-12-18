@@ -91,7 +91,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
 ]
 
-if django_version >= (1, 8):
+if django_version[:2] >= (1, 8):
     INSTALLED_APPS.append(
         'django.contrib.postgres',  # Enables the unaccent lookup.
     )

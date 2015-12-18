@@ -19,7 +19,7 @@ from .signals import post_invalidation
 from .transaction import AtomicCache
 
 
-DJANGO_LTE_1_8 = django_version <= (1, 8)
+DJANGO_LTE_1_8 = django_version[:2] <= (1, 8)
 
 
 class UncachableQuery(Exception):

@@ -52,7 +52,7 @@ class Migration(migrations.Migration):
         ),
     ]
 
-if django_version >= (1, 8):
+if django_version[:2] >= (1, 8):
     from django.contrib.postgres.fields import (
         ArrayField, HStoreField,
         IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)

@@ -14,11 +14,12 @@ from django.test import TransactionTestCase, override_settings
 from psycopg2.extras import NumericRange, DateRange, DateTimeTZRange
 from pytz import timezone
 
-if django_version >= (1, 8):
+DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
+if DJANGO_GTE_1_8:
     from .models import PostgresModel, Test
 
 
-@skipUnless(connection.vendor == 'postgresql' and django_version >= (1, 8),
+@skipUnless(connection.vendor == 'postgresql' and DJANGO_GTE_1_8,
             'This test is only for PostgreSQL and Django >= 1.8')
 @skipIf(isinstance(caches['default'], FileBasedCache)
         and python_version_tuple()[:2] == ('2', '7'),
