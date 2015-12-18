@@ -7,6 +7,7 @@ from hashlib import sha1
 from time import time
 from uuid import UUID
 
+from django import VERSION as django_version
 from django.db import connections
 from django.db.models.sql import Query
 from django.db.models.sql.where import ExtraWhere, SubqueryConstraint
@@ -16,6 +17,9 @@ from django.utils.six import text_type, binary_type
 from .settings import cachalot_settings
 from .signals import post_invalidation
 from .transaction import AtomicCache
+
+
+DJANGO_LTE_1_8 = django_version <= (1, 8)
 
 
 class UncachableQuery(Exception):
@@ -124,8 +128,10 @@ def _get_tables(query, db_alias):
 
     tables = set(query.table_map)
     tables.add(query.get_meta().db_table)
-    subquery_constraints = _find_subqueries(query.where.children
-                                            + query.having.children)
+    children = query.where.children
+    if DJANGO_LTE_1_8:
+        children += query.having.children
+    subquery_constraints = _find_subqueries(children)
     for subquery in subquery_constraints:
         tables.update(_get_tables(subquery, db_alias))
     if query.extra_select or hasattr(query, 'subquery') \
