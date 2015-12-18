@@ -15,8 +15,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'cachalot',
         'USER': 'cachalot',
-        'HOST': 'localhost',
-        'PORT': '5432',
     },
     'mysql': {
         'ENGINE': 'django.db.backends.mysql',
@@ -43,7 +41,7 @@ CACHES = {
             # a compatible pickle version to avoid unpickling errors when
             # running a Python 2 test after a Python 3 test.
             'PICKLE_VERSION': 2,
-        }
+        },
     },
     'memcached': {
         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
@@ -65,7 +63,7 @@ CACHES = {
         'LOCATION': '/tmp/django_cache',
         'OPTIONS': {
             'MAX_ENTRIES': 10e9,  # (See locmem)
-        }
+        },
     }
 }
 
