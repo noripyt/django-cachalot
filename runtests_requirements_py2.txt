@@ -5,3 +5,4 @@ MySQL-python
 django-redis
 python-memcached
 pylibmc
+pytz
