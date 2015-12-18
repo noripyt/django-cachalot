@@ -128,10 +128,9 @@ def _get_tables(query, db_alias):
 
     tables = set(query.table_map)
     tables.add(query.get_meta().db_table)
-    children = query.where.children
-    if DJANGO_LTE_1_8:
-        children += query.having.children
-    subquery_constraints = _find_subqueries(children)
+    subquery_constraints = _find_subqueries(
+        query.where.children + query.having.children if DJANGO_LTE_1_8
+        else query.where.children)
     for subquery in subquery_constraints:
         tables.update(_get_tables(subquery, db_alias))
     if query.extra_select or hasattr(query, 'subquery') \
