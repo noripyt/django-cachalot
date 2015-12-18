@@ -1,11 +1,9 @@
 language: python
 
-python:
-  - 2.7
-  - 3.2
-  - 3.3
-  - 3.4
-  - 3.5
+# We say we use Python 3.5 otherwise we only access by default
+# to Python 2.7, 3.2, 3.3, & 3.4
+
+python: 3.5
 
 services:
   - memcached
