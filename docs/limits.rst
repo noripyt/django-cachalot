@@ -117,3 +117,29 @@ A difference of even a few seconds can be harmful, so double check this!
 
 To keep your clocks synchronised, use the
 `Network Time Protocol <http://en.wikipedia.org/wiki/Network_Time_Protocol>`_.
+
+Replication server
+..................
+
+If you use multiple databases where at least one is a replica of another,
+django-cachalot has no way to know that the replica is modified
+automatically, since it happens outside Django.
+The SQL queries cached for the replica will therefore not be invalidated,
+and you will see some stale queries results.
+
+To fix this problem, you need to tell django-cachalot to also invalidate
+the replica when the primary database is invalidated.
+Suppose your primary database has the ``'default'`` database alias
+in ``DATABASES``, and your replica has the ``'replica'`` alias.
+Use :ref:`the signal <Signal>` and :meth:`cachalot.api.invalidate` this way:
+
+.. code:: python
+
+    from cachalot.api import invalidate
+    from cachalot.signals import post_invalidation
+    from django.dispatch import receiver
+
+    @receiver(post_invalidation)
+    def invalidate_replica(sender, **kwargs):
+        if kwargs['db_alias'] == 'default':
+            invalidate(sender, db_alias='replica')
