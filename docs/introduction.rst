@@ -69,18 +69,15 @@ Feature                                                  cachalot  cache-machine
 ======================================================== ========= ============= ==========
 Easy to install                                          ✔         ✘             quite
 Cache agnostic                                           ✔         ✔             ✘
-Type of invalidation                                     per table per object    per object
+Type of invalidation                                     per table per object    per query
 CPU performance                                          excellent excellent     excellent
 Memory performance                                       excellent good          excellent
 Reliable                                                 ✔         ✘             ✘
 Handles transactions                                     ✔         ✘             ✘
 Handles Django admin save                                ✔         ✘             ✘
-Handles ManyToManyField                                  ✔         ✘             ✘
-Handles reverse relations                                ✔         ✘             ✘
 Handles multi-table inheritance                          ✔         ✔             ✘
 Handles ``QuerySet.count``                               ✔         ✘             ✔
 Handles ``QuerySet.aggregate``/``annotate``              ✔         ✔             ✘
-Handles ``QuerySet.bulk_create``                         ✔         ✘             ✘
 Handles ``QuerySet.update``                              ✔         ✘             ✘
 Handles ``QuerySet.select_related``/``prefetch_related`` ✔         ✘             ✘
 Handles ``QuerySet.extra``                               ✔         ✘             ✘
@@ -90,7 +87,6 @@ Handles subqueries                                       ✔         ✔        
 Handles querysets generating a SQL ``HAVING`` keyword    ✔         ✔             ✘
 Handles ``cursor.execute``                               ✔         ✘             ✘
 Handles the Django command ``flush``                     ✔         ✘             ✘
-Handles the Django command ``loaddata``                  ✔         ✘             ✘
 ======================================================== ========= ============= ==========
 
 Explanations
