@@ -15,7 +15,7 @@ if you need to be convinced).
 
 However, it’s not suited for projects where there is **a high number
 of modifications per minute** on each table, like a social network with
-more than a 30 messages per minute. Django-cachalot may still give a small
+more than a 50 messages per minute. Django-cachalot may still give a small
 speedup in such cases, but it may also slow things a bit
 (in the worst case scenario, a 20% slowdown,
 according to :ref:`the benchmark <Benchmark>`).
@@ -73,6 +73,7 @@ Type of invalidation                                  per table per object    pe
 CPU performance                                       excellent excellent     excellent
 Memory performance                                    excellent good          excellent
 Reliable                                              ✔         ✘             ✘
+Useful for > 50 modifications per minute              ✘         ✔             ✔
 Handles transactions                                  ✔         ✘             ✘
 Handles Django admin save                             ✔         ✘             ✘
 Handles multi-table inheritance                       ✔         ✔             ✘
