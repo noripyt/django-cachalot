@@ -64,30 +64,30 @@ to the other popular automatic ORM caches at the moment:
 Features
 ~~~~~~~~
 
-======================================================== ========= ============= ==========
-Feature                                                  cachalot  cache-machine cacheops
-======================================================== ========= ============= ==========
-Easy to install                                          ✔         ✘             quite
-Cache agnostic                                           ✔         ✔             ✘
-Type of invalidation                                     per table per object    per query
-CPU performance                                          excellent excellent     excellent
-Memory performance                                       excellent good          excellent
-Reliable                                                 ✔         ✘             ✘
-Handles transactions                                     ✔         ✘             ✘
-Handles Django admin save                                ✔         ✘             ✘
-Handles multi-table inheritance                          ✔         ✔             ✘
-Handles ``QuerySet.count``                               ✔         ✘             ✔
-Handles ``QuerySet.aggregate``/``annotate``              ✔         ✔             ✘
-Handles ``QuerySet.update``                              ✔         ✘             ✘
-Handles ``QuerySet.select_related``/``prefetch_related`` ✔         ✘             ✘
-Handles ``QuerySet.extra``                               ✔         ✘             ✘
-Handles ``QuerySet.values``/``values_list``              ✔         ✘             ✔
-Handles ``QuerySet.dates``/``datetimes``                 ✔         ✘             ✔
-Handles subqueries                                       ✔         ✔             ✘
-Handles querysets generating a SQL ``HAVING`` keyword    ✔         ✔             ✘
-Handles ``cursor.execute``                               ✔         ✘             ✘
-Handles the Django command ``flush``                     ✔         ✘             ✘
-======================================================== ========= ============= ==========
+===================================================== ========= ============= ==========
+Feature                                               cachalot  cache-machine cacheops
+===================================================== ========= ============= ==========
+Easy to install                                       ✔         ✘             quite
+Cache agnostic                                        ✔         ✔             ✘
+Type of invalidation                                  per table per object    per query
+CPU performance                                       excellent excellent     excellent
+Memory performance                                    excellent good          excellent
+Reliable                                              ✔         ✘             ✘
+Handles transactions                                  ✔         ✘             ✘
+Handles Django admin save                             ✔         ✘             ✘
+Handles multi-table inheritance                       ✔         ✔             ✘
+Handles ``QuerySet.count``                            ✔         ✘             ✔
+Handles ``QuerySet.aggregate``/``annotate``           ✔         ✔             ✘
+Handles ``QuerySet.update``                           ✔         ✘             ✘
+Handles ``QuerySet.select_related``                   ✔         ✔             ✘
+Handles ``QuerySet.extra``                            ✔         ✘             ✘
+Handles ``QuerySet.values``/``values_list``           ✔         ✘             ✔
+Handles ``QuerySet.dates``/``datetimes``              ✔         ✘             ✔
+Handles subqueries                                    ✔         ✔             ✘
+Handles querysets generating a SQL ``HAVING`` keyword ✔         ✔             ✘
+Handles ``cursor.execute``                            ✔         ✘             ✘
+Handles the Django command ``flush``                  ✔         ✘             ✘
+===================================================== ========= ============= ==========
 
 Explanations
 ''''''''''''
