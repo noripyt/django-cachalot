@@ -56,7 +56,7 @@ Features
 Comparison with similar tools
 .............................
 
-This comparison was done in October 2015.  It compares django-cachalot
+This comparison was done in December 2015.  It compares django-cachalot
 to the other popular automatic ORM caches at the moment:
 `django-cache-machine <https://github.com/django-cache-machine/django-cache-machine>`_
 & `django-cacheops <https://github.com/Suor/django-cacheops>`_.
@@ -64,134 +64,71 @@ to the other popular automatic ORM caches at the moment:
 Features
 ~~~~~~~~
 
-======================================================== ========= ============= =========
+======================================================== ========= ============= ==========
 Feature                                                  cachalot  cache-machine cacheops
-======================================================== ========= ============= =========
+======================================================== ========= ============= ==========
 Easy to install                                          ✔         ✘             quite
 Cache agnostic                                           ✔         ✔             ✘
-Type of invalidation                                     per table per object    per table
-CPU & memory performance                                 optimal   bad           terrible
-Reliable                                                 ✔         ✘             quite
+Type of invalidation                                     per table per object    per object
+CPU performance                                          excellent excellent     excellent
+Memory performance                                       excellent good          excellent
+Reliable                                                 ✔         ✘             ✘
+Handles transactions                                     ✔         ✘             ✘
+Handles Django admin save                                ✔         ✘             ✘
+Handles ManyToManyField                                  ✔         ✘             ✘
+Handles reverse relations                                ✔         ✘             ✘
+Handles multi-table inheritance                          ✔         ✔             ✘
 Handles ``QuerySet.count``                               ✔         ✘             ✔
-Handles empty queries                                    ✔         ✘             ✔
-Handles multi-table inheritance                          ✔         probably not  ✘
-Handles proxy models                                     ✔         ✘             ✔
-Handles many-to-many fields                              ✔         ✘             ✔
-Handles transactions                                     ✔         probably not  ✘
-Handles ``QuerySet.aggregate``/``annotate``              ✔         probably not  ✘
-Handles ``QuerySet.bulk_create``/``update``/``delete``   ✔         probably not  ✘
-Handles ``QuerySet.select_related``/``prefetch_related`` ✔         partially     ✘
+Handles ``QuerySet.aggregate``/``annotate``              ✔         ✔             ✘
+Handles ``QuerySet.bulk_create``                         ✔         ✘             ✘
+Handles ``QuerySet.update``                              ✔         ✘             ✘
+Handles ``QuerySet.select_related``/``prefetch_related`` ✔         ✘             ✘
+Handles ``QuerySet.extra``                               ✔         ✘             ✘
+Handles ``QuerySet.values``/``values_list``              ✔         ✘             ✔
+Handles ``QuerySet.dates``/``datetimes``                 ✔         ✘             ✔
+Handles subqueries                                       ✔         ✔             ✘
+Handles querysets generating a SQL ``HAVING`` keyword    ✔         ✔             ✘
 Handles ``cursor.execute``                               ✔         ✘             ✘
-Handles GeoDjango                                        ✔         maybe         ✔
-Handles django.contrib.postgres                          ✔         maybe         partially
-======================================================== ========= ============= =========
-
-To find if a package supports a feature, I searched in the documentation,
-the issues, the tests and the code.
-I really tried to avoid writing “maybe”, “probably not”, etc.
-Unfortunately, the absence of tests for such cases and sometimes the confusion
-of the authors themselves about these features makes it difficult to know
-whether they support a feature or not.
+Handles the Django command ``flush``                     ✔         ✘             ✘
+Handles the Django command ``loaddata``                  ✔         ✘             ✘
+======================================================== ========= ============= ==========
 
 Explanations
-~~~~~~~~~~~~
+''''''''''''
 
-Of course, I can’t just throw a table with such
-“Reliable” and “CPU & memory performance” lines without explanation.
-My goal is not to start another stupid open source conflict, nor
-to be pretentious about my work.  I’m just trying to inform users here, so they
-can fully grasp the consequences of using one or another tool.
-I actually used django-cache-machine in production for a week
-and django-cacheops for a month.  On both solutions, I faced a lot
-of invalidation issues, and the bigger the cache became,
-the worst the performance was.
+“Handles [a feature]” means that the package correctly invalidates SQL queries
+using that feature. So if a package doesn’t handle a feature, you may get
+stale query results when using this feature.
+It does not mean that it caches a query with this feature, although
+django-cachalot caches all queries except random queries
+or those ran through ``cursor.execute``.
 
-I now know the reason of these issues: in short, this is due to
-their invalidation systems.  Read the following paragraphs for more detail.
+This comparison was done by running the test suite of cachalot against
+cache-machine & cacheops. This test suite is indeed relevant for other
+packages (such as cache-machine & cacheops) since most of it is written in
+a cachalot-independent way.
 
-django-cache-machine
-''''''''''''''''''''
+Similarly, the performance comparison was done using our benchmark,
+coupled with a memory measure.
 
-django-cache-machine is using “flush lists” to remember which SQL queries are
-linked to which objects.  This is the approach I chose when I created
-a prototype of django-cachalot, except it was invalidated per table,
-not per object like django-cache-machine does. Unfortunately, there are several
-important issues due to this approach that lead me to drop it.
+To me, cache-machine & cacheops are not reliable because of these reasons:
 
-The smaller issue is that each time you execute a new SQL query,
-django-cache-machine needs to fetch the “flush list” from the cache,
-update it and add it back to the cache.  This means we have to make two
-cache calls in addition of the cache call to store the SQL query results.
-It may seem tiny, but when your cache size increases,
-the “flush lists” start becoming huge (a list of hundreds of cache keys
-for each database object), leading to an exponentially growing cache size
-and a longer time to fetch the always-growing “flush lists”.
-So **bad memory and CPU usage when reading data**.
+- Neither cache-machine or cacheops handle transactions, which is critical.
+  **Transactions are used a lot in Django internals**: at least
+  in any Django admin save, many-to-many relations modification,
+  bulk creation or update, migrations, session save.
+  If an error occurs during one of these operations, good luck finding
+  if stale data is returned. The best you can do in this case is manually
+  clearing the cache.
+- If you use a query that’s not handled, you may get stale data. It ends up
+  ruining your database since it lets you save modifications to stale data,
+  therefore overwriting the latest version that’s in the database.
+  And you always end up using queries that are not handled since there is no
+  list of unhandled queries in the documentation of each module.
+- In the case of cache-machine, another issue is that it relies
+  on “flush lists”, which can’t work reliably when implemented in a cache
+  like this (see `cache-machine#107 <https://github.com/django-cache-machine/django-cache-machine/issues/107>`_).
 
-The second issue is only linked to the per object invalidation.
-When django-cache-machine invalidates an object, it also needs to invalidate
-the queries of the related objects, otherwise they may contain stale data.
-Django-cache-machine invalidates foreign keys only, not many-to-many
-or generic foreign keys (because… I don’t know).  **This degrades performance
-of each writing operation to the database**, because it needs to fetch
-related objects, fetch “flush lists” and delete these cache keys.
-And of course it can’t invalidate basic queries such as count or empty queries
-(probably aggregations too, but I’m not sure).
-
-And at last but not least: a critical issue.  It simply proves that the
-django-cache-machine team **doesn’t know how caches work**.
-Caches are fast because they are stupid: when your cache is full and
-needs room, it randomly fetches a few keys, selects the older ones if possible
-then deletes them.  This means that **a cache key with a 1 year timeout
-can be deleted before a cache key with a 1 minute timeout**.
-But django-cache-machine assumes its “flush lists” will always stay longer
-in cache than the saved query results will, because they have the same timeout
-and “flush list” are saved a few milli-seconds after query results.
-Until the cache is full, this is kind of true because no cache key is deleted.
-But when it is full, the “flush list” can be removed at any moment,
-so the other cache keys will never be invalidated until they are deleted.
-
-**To sum up, django-cache-machine has bad memory and CPU performance
-and is absolutely not reliable.**
-
-django-cacheops
-'''''''''''''''
-
-django-cacheops uses
-`a debug feature from Redis, KEYS, <http://redis.io/commands/KEYS>`_
-to invalidate cache keys (that’s why it only supports Redis).
-It’s a feature that becomes linearly slower as your cache size grows.
-I measured, one single call of this command by django-cacheops
-slows down any database save by 50 ms to 3.5 seconds,
-depending on your database and cache sizes.
-The problem is also that django-cacheops runs this command several times
-at each save.  Suppose you have a model with 3 many-to-many and you save
-an object with 3 related objects per many-to-many. django-cacheops
-will therefore run the Redis ``KEYS`` command at least 10 times!  If you have
-a large cache and database, it means **you can wait 30 seconds
-while this object is saved!**
-
-Another bad consequence of that use of the ``KEYS`` command is that Redis jumps
-to a 100% CPU usage when the command is running, degrading performance for
-other users or even blocking them until the command is finished.
-
-In a general way, the workflow of django-cacheops is totally unoptimised.
-When an object is modified, an ``invalidate_obj`` function is called,
-calling an ``invalidate_dict`` function, calling the ``manage.py invalidate``
-command with a serialized version of the object (!?)
-calling an ``invalidate_model`` function that calls the Redis ``KEYS`` command
-to get all the cache keys from that model then delete them.
-And as I said above, it executes all that N times,
-N being the number of related objects to the current object,
-even though multiple objects have the same model and we therefore
-don’t need to invalidate the model multiple times.
-
-**To sum up, django-cacheops has a terrible performance when modifying data,
-and is reliable on what it handles.**
-But you probably need features it doesn’t handle, such as
-transactions (used by Django admin),
-multi-table inheritance, or
-``cursor.execute`` (the three features being used by Wagtail and django CMS)…
 
 Number of lines of code
 ~~~~~~~~~~~~~~~~~~~~~~~
