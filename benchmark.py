@@ -25,7 +25,7 @@ from django.db import connections, connection
 from django.test.utils import CaptureQueriesContext, override_settings
 from django.utils.encoding import force_text
 import matplotlib.pyplot as plt
-import MySQLdb
+import _mysql
 import pandas as pd
 import psycopg2
 
@@ -83,7 +83,7 @@ def write_conditions():
 
     versions.update((
         ('psycopg2', psycopg2.__version__.split()[0]),
-        ('MySQLdb', MySQLdb.__version__),
+        ('mysqlclient', _mysql.__version__),
     ))
 
     with io.open(os.path.join('benchmark', 'conditions.rst'), 'w') as f:

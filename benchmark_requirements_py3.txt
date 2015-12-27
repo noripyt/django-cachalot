@@ -1,4 +1,0 @@
--r runtests_requirements_py3.txt
-
-pandas
-matplotlib
