@@ -56,16 +56,16 @@ if django_version[:2] >= (1, 8):
     from django.contrib.postgres.fields import (
         ArrayField, HStoreField,
         IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
-    from django.contrib.postgres.operations import (
-        HStoreExtension, UnaccentExtension)
 
     Migration.operations.extend((
         migrations.AddField('Test', 'duration',
                             models.DurationField(null=True, blank=True)),
         migrations.AddField('Test', 'uuid',
                             models.UUIDField(null=True, blank=True)),
-        HStoreExtension(),
-        UnaccentExtension(),
+        migrations.RunSQL('CREATE EXTENSION hstore;',
+                          hints={'extension': 'hstore'}),
+        migrations.RunSQL('CREATE EXTENSION unaccent;',
+                          hints={'extension': 'unaccent'}),
         migrations.CreateModel(
             name='PostgresModel',
             fields=[
