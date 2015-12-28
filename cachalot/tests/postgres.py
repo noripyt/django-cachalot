@@ -15,6 +15,7 @@ from psycopg2.extras import NumericRange, DateRange, DateTimeTZRange
 from pytz import timezone
 
 DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
+DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 if DJANGO_GTE_1_8:
     from .models import PostgresModel, Test
 
@@ -28,19 +29,41 @@ if DJANGO_GTE_1_8:
 @override_settings(USE_TZ=True)
 class PostgresReadTest(TransactionTestCase):
     def setUp(self):
-        PostgresModel.objects.create(
+        self.obj1 = PostgresModel(
             int_array=[1, 2, 3],
             hstore={'a': 'b', 'c': None},
             int_range=[1900, 2000], float_range=[-1e3, 9.87654321],
             date_range=['1678-03-04', '1741-07-28'],
             datetime_range=[datetime(1989, 1, 30, 12, 20,
                                      tzinfo=timezone('Europe/Paris')), None])
-        PostgresModel.objects.create(
+        if DJANGO_GTE_1_9:
+            self.obj1.json = {'a': 1, 'b': 2}
+        self.obj1.save()
+
+        self.obj2 = PostgresModel(
             int_array=[4, None, 6],
             hstore={'a': '1', 'b': '2'},
             int_range=[1989, None], float_range=[0.0, None],
             date_range=['1989-01-30', None],
             datetime_range=[None, None])
+        if DJANGO_GTE_1_9:
+            self.obj2.json = [
+                'something',
+                {
+                    'a': 1,
+                    'b': None,
+                    'c': 123.456,
+                    'd': True,
+                    'e': {
+                        'another': 'dict',
+                        'and yet': {
+                            'another': 'one',
+                            'with a list': [],
+                        },
+                    },
+                },
+            ]
+        self.obj2.save()
 
     def test_unaccent(self):
         Test.objects.create(name='Clémentine')
@@ -178,6 +201,85 @@ class PostgresReadTest(TransactionTestCase):
             data16 = [o.hstore for o in qs.all()]
         self.assertListEqual(data16, data15)
         self.assertListEqual(data16, [{'a': '1', 'b': '2'}])
+
+    @skipUnless(DJANGO_GTE_1_9,
+                'JSON field is only available in Django >= 1.9')
+    def test_json(self):
+        qs = PostgresModel.objects.all()
+        with self.assertNumQueries(1):
+            data1 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data2 = [o.json for o in qs.all()]
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.obj1.json, self.obj2.json])
+
+        # Tests an index.
+        qs = PostgresModel.objects.filter(json__0='something')
+        with self.assertNumQueries(1):
+            data3 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data4 = [o.json for o in qs.all()]
+        self.assertListEqual(data4, data3)
+        self.assertListEqual(data4, [self.obj2.json])
+
+        qs = PostgresModel.objects.filter(json__0__nonexistent_key='something')
+        with self.assertNumQueries(1):
+            data5 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data6 = [o.json for o in qs.all()]
+        self.assertListEqual(data6, data5)
+        self.assertListEqual(data6, [])
+
+        # Tests a path with spaces.
+        qs = PostgresModel.objects.filter(
+            **{'json__1__e__and yet__another': 'one'})
+        with self.assertNumQueries(1):
+            data7 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data8 = [o.json for o in qs.all()]
+        self.assertListEqual(data8, data7)
+        self.assertListEqual(data8, [self.obj2.json])
+
+        qs = PostgresModel.objects.filter(json__contains=['something'])
+        with self.assertNumQueries(1):
+            data9 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data10 = [o.json for o in qs.all()]
+        self.assertListEqual(data10, data9)
+        self.assertListEqual(data10, [self.obj2.json])
+
+        qs = PostgresModel.objects.filter(
+            json__contained_by={'a': 1, 'b': 2, 'any': 'thing'})
+        with self.assertNumQueries(1):
+            data11 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data12 = [o.json for o in qs.all()]
+        self.assertListEqual(data12, data11)
+        self.assertListEqual(data12, [self.obj1.json])
+
+        qs = PostgresModel.objects.filter(json__has_key='a')
+        with self.assertNumQueries(1):
+            data13 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data14 = [o.json for o in qs.all()]
+        self.assertListEqual(data14, data13)
+        self.assertListEqual(data14, [self.obj1.json])
+
+        qs = PostgresModel.objects.filter(json__has_any_keys=['a', 'b', 'c'])
+        with self.assertNumQueries(1):
+            data15 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data16 = [o.json for o in qs.all()]
+        self.assertListEqual(data16, data15)
+        self.assertListEqual(data16, [self.obj1.json])
+
+        qs = PostgresModel.objects.filter(json__has_keys=['a', 'b'])
+        with self.assertNumQueries(1):
+            data17 = [o.json for o in qs.all()]
+        with self.assertNumQueries(0):
+            data18 = [o.json for o in qs.all()]
+        self.assertListEqual(data18, data17)
+        self.assertListEqual(data18, [self.obj1.json])
 
     def test_int_range(self):
         qs = PostgresModel.objects.all()

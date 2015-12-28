@@ -10,6 +10,7 @@ from django.db.models import (
     FloatField, DecimalField)
 
 DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
+DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 if DJANGO_GTE_1_8:
     from django.db.models import DurationField, UUIDField
 
@@ -50,6 +51,8 @@ if DJANGO_GTE_1_8:
     from django.contrib.postgres.fields import (
         ArrayField, HStoreField,
         IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
+    if DJANGO_GTE_1_9:
+        from django.contrib.postgres.fields import JSONField
 
 
     class PostgresModel(Model):
@@ -57,6 +60,9 @@ if DJANGO_GTE_1_8:
                                null=True, blank=True)
 
         hstore = HStoreField(null=True, blank=True)
+
+        if DJANGO_GTE_1_9:
+            json = JSONField(null=True, blank=True)
 
         int_range = IntegerRangeField(null=True, blank=True)
         float_range = FloatRangeField(null=True, blank=True)
