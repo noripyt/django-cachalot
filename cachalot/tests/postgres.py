@@ -18,6 +18,8 @@ DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
 DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 if DJANGO_GTE_1_8:
     from .models import PostgresModel, Test
+if DJANGO_GTE_1_9:
+    from django.contrib.postgres.functions import TransactionNow
 
 
 @skipUnless(connection.vendor == 'postgresql' and DJANGO_GTE_1_8,
@@ -416,3 +418,19 @@ class PostgresReadTest(TransactionTestCase):
             DateTimeTZRange(datetime(1989, 1, 30, 12, 20,
                                      tzinfo=timezone('Europe/Paris'))),
             DateTimeTZRange(bounds='()')])
+
+    @skipUnless(DJANGO_GTE_1_9,
+                'TransactionNow is only available in Django >= 1.9')
+    def test_transaction_now(self):
+        """
+        Checks that queries with a TransactionNow() parameter are not cached.
+        """
+        obj = Test.objects.create(datetime='1992-07-02T12:00:00')
+        qs = Test.objects.filter(
+            datetime__lte=TransactionNow())
+        with self.assertNumQueries(1):
+            obj1 = qs.get()
+        with self.assertNumQueries(1):
+            obj2 = qs.get()
+        self.assertEqual(obj1, obj2)
+        self.assertEqual(obj1, obj)

@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 import datetime
-from unittest import skipIf
+from unittest import skipIf, skipUnless
 from uuid import UUID
 from decimal import Decimal
 
@@ -19,6 +19,13 @@ from pytz import UTC
 
 from ..utils import _get_table_cache_key
 from .models import Test, TestChild
+
+
+DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
+DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
+
+if DJANGO_GTE_1_9:
+    from django.db.models.functions import Now
 
 
 class ReadTestCase(TransactionTestCase):
@@ -802,8 +809,8 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
 
-    @skipIf(django_version[:2] == (1, 7),
-            'DurationField is not available in Django 1.7')
+    @skipUnless(DJANGO_GTE_1_8,
+                'DurationField is only available in Django >= 1.8')
     def test_duration(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test1', duration=datetime.timedelta(30))
@@ -826,8 +833,7 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(duration=datetime.timedelta(30))
 
-    @skipIf(django_version[:2] == (1, 7),
-            'UUIDField is not available in Django 1.7')
+    @skipUnless(DJANGO_GTE_1_8, 'UUIDField is only available in Django >= 1.8')
     def test_uuid(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test1',
@@ -852,3 +858,18 @@ class ParameterTypeTestCase(TransactionTestCase):
             Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))
         with self.assertNumQueries(0):
             Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))
+
+    @skipUnless(DJANGO_GTE_1_9, 'Now is only available on Django >= 1.9')
+    def test_now(self):
+        """
+        Checks that queries with a Now() parameter are not cached.
+        """
+        obj = Test.objects.create(datetime='1992-07-02T12:00:00')
+        qs = Test.objects.filter(
+            datetime__lte=Now())
+        with self.assertNumQueries(1):
+            obj1 = qs.get()
+        with self.assertNumQueries(1):
+            obj2 = qs.get()
+        self.assertEqual(obj1, obj2)
+        self.assertEqual(obj1, obj)

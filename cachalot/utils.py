@@ -20,6 +20,7 @@ from .transaction import AtomicCache
 
 
 DJANGO_LTE_1_8 = django_version[:2] <= (1, 8)
+DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 
 
 class UncachableQuery(Exception):
@@ -30,6 +31,12 @@ CACHABLE_PARAM_TYPES = {
     bool, int, float, Decimal, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
+
+UNCACHABLE_FUNCS = set()
+if DJANGO_GTE_1_9:
+    from django.db.models.functions import Now
+    from django.contrib.postgres.functions import TransactionNow
+    UNCACHABLE_FUNCS.update((Now, TransactionNow))
 
 try:
     from psycopg2.extras import (
@@ -111,12 +118,13 @@ def _find_subqueries(children):
             rhs = None
             if hasattr(child, 'rhs'):
                 rhs = child.rhs
-            elif child.__class__ is tuple:
-                rhs = child[-1]
-            if rhs.__class__ is Query:
+            rhs_class = rhs.__class__
+            if rhs_class is Query:
                 yield rhs
             elif hasattr(rhs, 'query'):
                 yield rhs.query
+            elif rhs_class in UNCACHABLE_FUNCS:
+                raise UncachableQuery
         if hasattr(child, 'children'):
             for grand_child in _find_subqueries(child.children):
                 yield grand_child
