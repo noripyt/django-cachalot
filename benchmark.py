@@ -231,19 +231,21 @@ class Benchmark(object):
                 kind='barh', xerr=self.errors[v],
                 xlim=self.xlim, figsize=(15, 15), subplots=True, layout=(6, 2),
                 sharey=True, legend=False)
-            plt.gca().invert_yaxis()
             for row in axes:
                 for ax in row:
+                    ax.invert_yaxis()
+                    ax.xaxis.grid(True)
                     ax.set_ylabel('')
                     ax.set_xlabel('Time (s)')
             plt.savefig(os.path.join(RESULTS_PATH, '%s_%s.svg' % (param, v)))
 
     def plot_general(self, param):
         plt.figure()
-        self.means.plot(kind='barh', xerr=self.errors, xlim=self.xlim)
-        plt.gca().invert_yaxis()
-        plt.ylabel('')
-        plt.xlabel('Time (s)')
+        ax = self.means.plot(kind='barh', xerr=self.errors, xlim=self.xlim)
+        ax.invert_yaxis()
+        ax.xaxis.grid(True)
+        ax.set_ylabel('')
+        ax.set_xlabel('Time (s)')
         plt.savefig(os.path.join(RESULTS_PATH, '%s.svg' % param))
 
 
