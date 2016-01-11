@@ -296,7 +296,7 @@ if __name__ == '__main__':
         old_db_names[alias] = conn.settings_dict['NAME']
         conn.creation.create_test_db(autoclobber=True)
 
-        print("Populating database '%s'…" % alias)
+        print("Populating %s…" % connections[alias].vendor)
         create_data(alias)
 
     Benchmark().run()
