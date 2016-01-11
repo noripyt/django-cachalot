@@ -14,10 +14,7 @@ class AtomicCache(dict):
         self[k] = v
 
     def get_many(self, keys):
-        data = {}
-        for k in keys:
-            if k in self:
-                data[k] = self[k]
+        data = {k: self[k] for k in keys if k in self}
         missing_keys = set(keys)
         missing_keys.difference_update(data)
         data.update(self.parent_cache.get_many(missing_keys))

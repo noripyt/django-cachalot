@@ -16,8 +16,8 @@ from .api import invalidate
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
-    _get_query_cache_key, _invalidate_table,
-    _get_table_cache_keys, _get_tables_from_sql, UncachableQuery)
+    _get_query_cache_key, _get_table_cache_keys, _get_tables_from_sql,
+    _invalidate_table, UncachableQuery, TUPLE_OR_LIST)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -32,9 +32,6 @@ def _unset_raw_connection(original):
     return inner
 
 
-TUPLE_OR_LIST = (tuple, list)
-
-
 def _get_result_or_execute_query(execute_query_func, cache,
                                  cache_key, table_cache_keys):
     data = cache.get_many(table_cache_keys + [cache_key])
@@ -44,10 +41,7 @@ def _get_result_or_execute_query(execute_query_func, cache,
 
     if new_table_cache_keys:
         now = time()
-        d = {}
-        for k in new_table_cache_keys:
-            d[k] = now
-        cache.set_many(d, None)
+        cache.set_many({k: now for k in new_table_cache_keys}, None)
     elif cache_key in data:
         timestamp, result = data.pop(cache_key)
         table_times = data.values()

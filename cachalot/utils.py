@@ -26,6 +26,8 @@ class UncachableQuery(Exception):
     pass
 
 
+TUPLE_OR_LIST = {tuple, list}
+
 CACHABLE_PARAM_TYPES = {
     bool, int, float, Decimal, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
@@ -51,7 +53,7 @@ def check_parameter_types(params):
     for p in params:
         cl = p.__class__
         if cl not in CACHABLE_PARAM_TYPES:
-            if cl is list or cl is tuple:
+            if cl in TUPLE_OR_LIST:
                 check_parameter_types(p)
             elif cl is dict:
                 check_parameter_types(p.items())
@@ -154,16 +156,14 @@ def _get_tables(query, db_alias):
 
 def _get_table_cache_keys(compiler):
     db_alias = compiler.using
-    tables = _get_tables(compiler.query, db_alias)
-    return [_get_table_cache_key(db_alias, t) for t in tables]
+    return [_get_table_cache_key(db_alias, t)
+            for t in _get_tables(compiler.query, db_alias)]
 
 
 def _invalidate_tables(cache, db_alias, tables):
     now = time()
-    d = {}
-    for table in tables:
-        d[_get_table_cache_key(db_alias, table)] = now
-    cache.set_many(d, None)
+    cache.set_many(
+        {_get_table_cache_key(db_alias, t): now for t in tables}, None)
 
     if isinstance(cache, AtomicCache):
         cache.to_be_invalidated.update(tables)
