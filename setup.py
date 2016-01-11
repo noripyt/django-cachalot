@@ -2,7 +2,7 @@
 
 import os
 from setuptools import setup, find_packages
-from cachalot import version_string
+from cachalot import __version__
 
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
@@ -13,7 +13,7 @@ with open(os.path.join(CURRENT_PATH, 'requirements.txt')) as f:
 
 setup(
     name='django-cachalot',
-    version=version_string,
+    version=__version__,
     author='Bertrand Bordage',
     author_email='bordage.bertrand@gmail.com',
     url='https://github.com/BertrandBordage/django-cachalot',
