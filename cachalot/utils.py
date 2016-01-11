@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 import datetime
 from decimal import Decimal
-from hashlib import sha1
 from time import time
 from uuid import UUID
 
@@ -75,8 +74,7 @@ def get_query_cache_key(compiler):
     """
     sql, params = compiler.as_sql()
     check_parameter_types(params)
-    cache_key = '%s:%s:%s' % (compiler.using, sql, params)
-    return sha1(cache_key.encode('utf-8')).hexdigest()
+    return hash((compiler.using, sql, str(params)))
 
 
 def get_table_cache_key(db_alias, table):
@@ -90,8 +88,7 @@ def get_table_cache_key(db_alias, table):
     :return: A cache key
     :rtype: str
     """
-    cache_key = '%s:%s' % (db_alias, table)
-    return sha1(cache_key.encode('utf-8')).hexdigest()
+    return hash((db_alias, table))
 
 
 def _get_query_cache_key(compiler):
