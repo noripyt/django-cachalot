@@ -35,7 +35,26 @@ from cachalot.tests.models import Test
 
 
 RESULTS_PATH = 'benchmark/'
+DATA_PATH = '/var/lib/'
 CONTEXTS = ('Control', 'Cold cache', 'Hot cache')
+DIVIDER = 'divider'
+DISK_DATA_RE = re.compile(r'^MODEL="(.*)" MOUNTPOINT="(.*)"$')
+
+
+def get_disk_model_for_path(path):
+    out = force_text(check_output(['lsblk', '-Po', 'MODEL,MOUNTPOINT']))
+    mount_points = []
+    previous_model = None
+    for model, mount_point in [DISK_DATA_RE.match(line).groups()
+                               for line in out.split('\n') if line]:
+        if model:
+            previous_model = model.strip()
+        if mount_point:
+            mount_points.append((previous_model, mount_point))
+    mount_points = sorted(mount_points, key=lambda t: -len(t[1]))
+    for model, mount_point in mount_points:
+        if path.startswith(mount_point):
+            return model
 
 
 def write_conditions():
@@ -49,6 +68,9 @@ def write_conditions():
     with open('/proc/meminfo') as f:
         versions['RAM'] = re.search(r'^MemTotal:\s+(.+)$', f.read(),
                                     flags=re.MULTILINE).group(1)
+    versions.update((
+        ('Disk', get_disk_model_for_path(DATA_PATH)),
+    ))
     # OS
     linux_dist = ' '.join(platform.linux_distribution()).strip()
     if linux_dist:
@@ -58,8 +80,8 @@ def write_conditions():
 
     versions.update((
         ('Python', platform.python_version()),
-        ('Django', django.get_version()),
-        ('cachalot', cachalot.version_string),
+        ('Django', django.__version__),
+        ('cachalot', cachalot.__version__),
         ('sqlite', sqlite3.sqlite_version),
     ))
     # PostgreSQL
@@ -72,8 +94,8 @@ def write_conditions():
         cursor.execute('SELECT version();')
         versions['MySQL'] = cursor.fetchone()[0].split('-')[0]
     # Redis
-    out = force_text(check_output(['redis-cli',
-                                   'INFO', 'server'])).replace('\r', '')
+    out = force_text(
+        check_output(['redis-cli', 'INFO', 'server'])).replace('\r', '')
     versions['Redis'] = re.search(r'^redis_version:([\d\.]+)$', out,
                                   flags=re.MULTILINE).group(1)
     # memcached
@@ -92,7 +114,7 @@ def write_conditions():
                 'under the following conditions:\n\n' % Benchmark.n)
 
         def write_table_sep(char='='):
-            f.write(''.ljust(20, char) + ' ' + ''.ljust(50, char) + '\n')
+            f.write((char * 20) + ' ' + (char * 50) + '\n')
         write_table_sep()
         for k, v in versions.items():
             f.write(k.ljust(20) + ' ' + v + '\n')
@@ -231,9 +253,9 @@ class Benchmark(object):
                 kind='barh', xerr=self.errors[v],
                 xlim=self.xlim, figsize=(15, 15), subplots=True, layout=(6, 2),
                 sharey=True, legend=False)
+            plt.gca().invert_yaxis()
             for row in axes:
                 for ax in row:
-                    ax.invert_yaxis()
                     ax.xaxis.grid(True)
                     ax.set_ylabel('')
                     ax.set_xlabel('Time (s)')
@@ -263,6 +285,9 @@ def create_data(using):
 
 
 if __name__ == '__main__':
+    if not os.path.exists(RESULTS_PATH):
+        os.mkdir(RESULTS_PATH)
+
     write_conditions()
 
     old_db_names = {}
