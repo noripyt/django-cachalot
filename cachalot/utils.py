@@ -72,7 +72,7 @@ def get_query_cache_key(compiler):
     :arg compiler: A SQLCompiler that will generate the SQL query
     :type compiler: django.db.models.sql.compiler.SQLCompiler
     :return: A cache key
-    :rtype: str
+    :rtype: int
     """
     sql, params = compiler.as_sql()
     check_parameter_types(params)
@@ -88,7 +88,7 @@ def get_table_cache_key(db_alias, table):
     :arg table: Name of the SQL table
     :type table: str or unicode
     :return: A cache key
-    :rtype: str
+    :rtype: int
     """
     return hash((db_alias, table))
 
