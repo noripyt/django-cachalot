@@ -1,6 +1,17 @@
 What’s new in django-cachalot?
 ==============================
 
+1.2.0
+-----
+
+- Adds Django 1.9 support
+- Simplifies and speeds up cache keys hashing
+- Documents how to use django-cachalot with a replica database
+- Adds ``DummyCache`` to ``VALID_CACHE_BACKENDS``
+- Updates the comparison with django-cache-machine & django-cacheops by
+  checking features and measuring performance instead of relying on their
+  documentations and a 2-years-ago experience of them
+
 1.1.0
 -----
 
