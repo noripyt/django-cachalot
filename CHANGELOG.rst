@@ -1,8 +1,20 @@
 What’s new in django-cachalot?
 ==============================
 
+1.2.1
+-----
+
+**Mandatory update if you’re using django-cachalot 1.2.0.**
+
+This version reverts the cache keys hashing change from 1.2.0,
+as it was leading to a non-shared cache when Python used a random seed
+for hashing, which is the case by default on Python 3.3, 3.4, & 3.5,
+and also on 2.7 & 3.2 if you set ``PYTHONHASHSEED=random``.
+
 1.2.0
 -----
+
+**WARNING: This version is unsafe, it can lead to invalidation errors**
 
 - Adds Django 1.9 support
 - Simplifies and speeds up cache keys hashing
