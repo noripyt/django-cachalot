@@ -3,11 +3,7 @@
 from __future__ import unicode_literals
 import os
 
-
-if django_version[:2] >= (1, 9):
-    POSTGRES_ENGINE = 'django.db.backends.postgresql'
-else:
-    POSTGRES_ENGINE = 'django.db.backends.postgresql_psycopg2'
+from django import VERSION as django_version
 
 DATABASES = {
     'sqlite3': {
@@ -15,7 +11,7 @@ DATABASES = {
         'NAME': 'cachalot.sqlite3',
     },
     'postgresql': {
-        'ENGINE': POSTGRES_ENGINE,
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'cachalot',
         'USER': 'cachalot',
     },
@@ -25,6 +21,8 @@ DATABASES = {
         'USER': 'root',
     },
 }
+if django_version[:2] == (1, 8):
+    DATABASES['postgresql']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
 for alias in DATABASES:
     test_db_name = 'test_' + DATABASES[alias]['NAME']
     DATABASES[alias]['TEST'] = {'NAME': test_db_name}

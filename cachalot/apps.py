@@ -1,4 +1,3 @@
-from django import VERSION as django_version
 from django.apps import AppConfig
 from django.conf import settings
 from django.core.checks import register, Tags, Error, Warning
@@ -8,8 +7,10 @@ from .monkey_patch import patch
 
 VALID_DATABASE_ENGINES = {
     'django.db.backends.sqlite3',
-    'django.db.backends.postgresql_psycopg2',
+    'django.db.backends.postgresql',
     'django.db.backends.mysql',
+    # TODO: Remove when we drop Django 1.8 support.
+    'django.db.backends.postgresql_psycopg2',
 
     # GeoDjango
     'django.contrib.gis.db.backends.spatialite',
@@ -22,9 +23,6 @@ VALID_DATABASE_ENGINES = {
     'transaction_hooks.backends.postgresql_psycopg2',
     'transaction_hooks.backends.mysql',
 }
-
-if django_version[:2] >= (1, 9):
-    VALID_DATABASE_ENGINES.add('django.db.backends.postgresql')
 
 
 VALID_CACHE_BACKENDS = {
