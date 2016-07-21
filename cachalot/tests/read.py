@@ -21,7 +21,6 @@ from ..utils import _get_table_cache_key
 from .models import Test, TestChild
 
 
-DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
 DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 
 if DJANGO_GTE_1_9:
@@ -809,8 +808,6 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
 
-    @skipUnless(DJANGO_GTE_1_8,
-                'DurationField is only available in Django >= 1.8')
     def test_duration(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test1', duration=datetime.timedelta(30))
@@ -833,7 +830,6 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(duration=datetime.timedelta(30))
 
-    @skipUnless(DJANGO_GTE_1_8, 'UUIDField is only available in Django >= 1.8')
     def test_uuid(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test1',

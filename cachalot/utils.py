@@ -19,7 +19,6 @@ from .signals import post_invalidation
 from .transaction import AtomicCache
 
 
-DJANGO_LTE_1_8 = django_version[:2] <= (1, 8)
 DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 
 
@@ -138,9 +137,7 @@ def _get_tables(query, db_alias):
 
     tables = set(query.table_map)
     tables.add(query.get_meta().db_table)
-    subquery_constraints = _find_subqueries(
-        query.where.children + query.having.children if DJANGO_LTE_1_8
-        else query.where.children)
+    subquery_constraints = _find_subqueries(query.where.children)
     for subquery in subquery_constraints:
         tables.update(_get_tables(subquery, db_alias))
     if query.extra_select or hasattr(query, 'subquery') \

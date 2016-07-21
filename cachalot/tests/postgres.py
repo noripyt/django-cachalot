@@ -14,16 +14,18 @@ from django.test import TransactionTestCase, override_settings
 from psycopg2.extras import NumericRange, DateRange, DateTimeTZRange
 from pytz import timezone
 
-DJANGO_GTE_1_8 = django_version[:2] >= (1, 8)
+from .models import PostgresModel, Test
+
 DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
-if DJANGO_GTE_1_8:
-    from .models import PostgresModel, Test
 if DJANGO_GTE_1_9:
     from django.contrib.postgres.functions import TransactionNow
 
 
-@skipUnless(connection.vendor == 'postgresql' and DJANGO_GTE_1_8,
-            'This test is only for PostgreSQL and Django >= 1.8')
+# FIXME: Add tests for aggregations.
+
+
+@skipUnless(connection.vendor == 'postgresql',
+            'This test is only for PostgreSQL')
 @skipIf(isinstance(caches['default'], FileBasedCache)
         and python_version_tuple()[:2] == ('2', '7'),
         'Caching psycopg2 objects is not working with file-based cache '

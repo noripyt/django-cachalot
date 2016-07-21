@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 
 from django import VERSION as django_version
 from django.conf import settings
+from django.contrib.postgres.fields import (
+    ArrayField, HStoreField,
+    IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
 from django.db import models, migrations
 
 
@@ -50,14 +53,6 @@ class Migration(migrations.Migration):
             ],
             bases=('cachalot.testparent',),
         ),
-    ]
-
-if django_version[:2] >= (1, 8):
-    from django.contrib.postgres.fields import (
-        ArrayField, HStoreField,
-        IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
-
-    Migration.operations.extend((
         migrations.AddField('Test', 'duration',
                             models.DurationField(null=True, blank=True)),
         migrations.AddField('Test', 'uuid',
@@ -81,7 +76,8 @@ if django_version[:2] >= (1, 8):
                 ('datetime_range', DateTimeRangeField(null=True, blank=True)),
             ],
         ),
-    ))
+    ]
+
 
 if django_version[:2] >= (1, 9):
     from django.contrib.postgres.fields import JSONField
