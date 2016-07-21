@@ -6,13 +6,18 @@ import os
 from django import VERSION as django_version
 
 
+if django_version[:2] >= (1, 9):
+    POSTGRES_ENGINE = 'django.db.backends.postgresql'
+else:
+    POSTGRES_ENGINE = 'django.db.backends.postgresql_psycopg2'
+
 DATABASES = {
     'sqlite3': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': 'cachalot.sqlite3',
     },
     'postgresql': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': POSTGRES_ENGINE,
         'NAME': 'cachalot',
         'USER': 'cachalot',
     },
