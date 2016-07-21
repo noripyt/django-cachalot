@@ -629,7 +629,7 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t1, self.t2])
 
-    def test_cursor_execute(self):
+    def test_cursor_execute_unicode(self):
         """
         Tests if queries executed from a DB cursor are not cached.
         """
@@ -650,6 +650,28 @@ class ReadTestCase(TransactionTestCase):
                 data2 = list(cursor.fetchall())
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, list(Test.objects.values_list(*attnames)))
+
+    def test_cursor_execute_bytes(self):
+        attname_column_list = [f.get_attname_column()
+                               for f in Test._meta.fields]
+        attnames = [t[0] for t in attname_column_list]
+        columns = [t[1] for t in attname_column_list]
+        sql = "SELECT 'é', %s FROM %s;" % (', '.join(columns),
+                                             Test._meta.db_table)
+        sql = sql.encode('utf-8')
+
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                data1 = list(cursor.fetchall())
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                data2 = list(cursor.fetchall())
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(
+            data2,
+            [['é'] + l for l in Test.objects.values_list(*attnames)])
 
     def test_missing_table_cache_key(self):
         with self.assertNumQueries(1):
