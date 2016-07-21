@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 
 from __future__ import unicode_literals
 from collections import Iterable
@@ -11,6 +11,7 @@ from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 from django.db.transaction import Atomic, get_connection
+from django.utils.six import binary_type
 
 from .api import invalidate
 from .cache import cachalot_caches
@@ -18,6 +19,7 @@ from .settings import cachalot_settings
 from .utils import (
     _get_query_cache_key, _get_table_cache_keys, _get_tables_from_sql,
     _invalidate_table, UncachableQuery, TUPLE_OR_LIST)
+
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
@@ -105,10 +107,10 @@ def _patch_cursor():
             out = original(cursor, sql, *args, **kwargs)
             if getattr(cursor.db, 'raw', True) \
                     and cachalot_settings.CACHALOT_INVALIDATE_RAW:
+                if isinstance(sql, binary_type):
+                    sql = sql.decode('utf-8')
                 sql = sql.lower()
-                if not isinstance(sql, unicode):
-                    sql = unicode(sql, 'utf-8')
-                if unicode('update') in sql or unicode('insert') in sql or unicode('delete') in sql:
+                if 'update' in sql or 'insert' in sql or 'delete' in sql:
                     tables = _get_tables_from_sql(cursor.db, sql)
                     invalidate(*tables, db_alias=cursor.db.alias)
             return out

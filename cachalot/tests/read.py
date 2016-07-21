@@ -671,7 +671,7 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(
             data2,
-            [['é'] + l for l in Test.objects.values_list(*attnames)])
+            [('é',) + l for l in Test.objects.values_list(*attnames)])
 
     def test_missing_table_cache_key(self):
         with self.assertNumQueries(1):
