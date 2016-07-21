@@ -102,6 +102,15 @@ MIGRATION_MODULES = {
 }
 
 
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+    },
+]
+
+
 MIDDLEWARE_CLASSES = ()
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
 SECRET_KEY = 'it’s not important but we have to set it'
