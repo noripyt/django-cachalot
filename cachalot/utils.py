@@ -131,6 +131,28 @@ def _find_subqueries(children):
                 yield grand_child
 
 
+def is_cachable(table):
+    whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
+    if whitelist and table not in whitelist:
+        return False
+    return table not in cachalot_settings.CACHALOT_UNCACHABLE_TABLES
+
+
+def are_all_cachable(tables):
+    whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
+    if whitelist and not tables.issubset(whitelist):
+        return False
+    return tables.isdisjoint(cachalot_settings.CACHALOT_UNCACHABLE_TABLES)
+
+
+def filter_cachable(tables):
+    whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
+    tables = tables.difference(cachalot_settings.CACHALOT_UNCACHABLE_TABLES)
+    if whitelist:
+        return tables.intersection(whitelist)
+    return tables
+
+
 def _get_tables(query, db_alias):
     if '?' in query.order_by and not cachalot_settings.CACHALOT_CACHE_RANDOM:
         raise UncachableQuery
@@ -146,10 +168,7 @@ def _get_tables(query, db_alias):
         additional_tables = _get_tables_from_sql(connections[db_alias], sql)
         tables.update(additional_tables)
 
-    whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
-    blacklist = cachalot_settings.CACHALOT_UNCACHABLE_TABLES
-    if (whitelist and not tables.issubset(whitelist)) \
-            or not tables.isdisjoint(blacklist):
+    if not are_all_cachable(tables):
         raise UncachableQuery
     return tables
 
@@ -161,6 +180,9 @@ def _get_table_cache_keys(compiler):
 
 
 def _invalidate_tables(cache, db_alias, tables):
+    tables = filter_cachable(set(tables))
+    if not tables:
+        return
     now = time()
     cache.set_many(
         {_get_table_cache_key(db_alias, t): now for t in tables},
@@ -171,6 +193,9 @@ def _invalidate_tables(cache, db_alias, tables):
 
 
 def _invalidate_table(cache, db_alias, table):
+    if not is_cachable(table):
+        return
+
     cache.set(_get_table_cache_key(db_alias, table), time(),
               cachalot_settings.CACHALOT_TIMEOUT)
 
