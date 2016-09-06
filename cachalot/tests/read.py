@@ -638,7 +638,8 @@ class ReadTestCase(TransactionTestCase):
                                for f in Test._meta.fields]
         attnames = [t[0] for t in attname_column_list]
         columns = [t[1] for t in attname_column_list]
-        sql = 'SELECT %s FROM %s;' % (', '.join(columns), Test._meta.db_table)
+        sql = "SELECT CAST('é' AS CHAR), %s FROM %s;" % (', '.join(columns),
+                                                         Test._meta.db_table)
 
         with self.assertNumQueries(1):
             with connection.cursor() as cursor:
@@ -649,15 +650,19 @@ class ReadTestCase(TransactionTestCase):
                 cursor.execute(sql)
                 data2 = list(cursor.fetchall())
         self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, list(Test.objects.values_list(*attnames)))
+        self.assertListEqual(
+            data2,
+            [('é',) + l for l in Test.objects.values_list(*attnames)])
 
+    @skipIf(connection.vendor == 'sqlite',
+            'SQLite doesn’t accept bytes as raw query.')
     def test_cursor_execute_bytes(self):
         attname_column_list = [f.get_attname_column()
                                for f in Test._meta.fields]
         attnames = [t[0] for t in attname_column_list]
         columns = [t[1] for t in attname_column_list]
-        sql = "SELECT 'é', %s FROM %s;" % (', '.join(columns),
-                                             Test._meta.db_table)
+        sql = "SELECT CAST('é' AS CHAR), %s FROM %s;" % (', '.join(columns),
+                                                         Test._meta.db_table)
         sql = sql.encode('utf-8')
 
         with self.assertNumQueries(1):
@@ -714,7 +719,8 @@ class ReadTestCase(TransactionTestCase):
 class ParameterTypeTestCase(TransactionTestCase):
     def setUp(self):
         self.is_sqlite = connection.vendor == 'sqlite'
-        if connection.vendor == 'mysql':
+        self.is_mysql = connection.vendor == 'mysql'
+        if self.is_mysql:
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()
@@ -734,8 +740,6 @@ class ParameterTypeTestCase(TransactionTestCase):
         of a bulk_create of n objects from 1 to n.
         """
 
-        is_mysql = connection.vendor == 'mysql'
-
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=None))
         with self.assertNumQueries(0):
@@ -743,12 +747,12 @@ class ParameterTypeTestCase(TransactionTestCase):
 
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=b'abc'))
-        with self.assertNumQueries(0 if is_mysql else 1):
+        with self.assertNumQueries(0 if self.is_mysql else 1):
             list(Test.objects.filter(bin=b'abc'))
 
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=b'def'))
-        with self.assertNumQueries(0 if is_mysql else 1):
+        with self.assertNumQueries(0 if self.is_mysql else 1):
             list(Test.objects.filter(bin=b'def'))
 
     def test_float(self):

@@ -30,7 +30,7 @@ class APITestCase(TransactionTestCase):
             with connection.cursor() as cursor:
                 cursor.execute(
                     "INSERT INTO cachalot_test (name, public) "
-                    "VALUES ('test2', %s);", [1 if self.is_sqlite else 'true'])
+                    "VALUES ('test2', %s);", [1 if self.is_sqlite else True])
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))
@@ -51,7 +51,7 @@ class APITestCase(TransactionTestCase):
             with connection.cursor() as cursor:
                 cursor.execute(
                     "INSERT INTO cachalot_test (name, public) "
-                    "VALUES ('test2', %s);", [1 if self.is_sqlite else 'true'])
+                    "VALUES ('test2', %s);", [1 if self.is_sqlite else True])
 
         with self.assertNumQueries(0):
             data2 = list(Test.objects.values_list('name', flat=True))
