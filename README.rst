@@ -24,3 +24,9 @@ Documentation
 -------------
 
 Available `on Read The Docs <http://django-cachalot.readthedocs.org>`_.
+
+
+Discussion
+----------
+
+Via `our Slack team <https://django-cachalot.slack.com>`_.
