@@ -71,7 +71,7 @@ Settings
 
   .. warning::
      Cache timeouts don’t work in a strict way on most cache backends.
-     A cache might not keep a cache key during the requested timeout:
+     A cache might not keep data during the requested timeout:
      it can keep it in memory during a shorter time than the specified timeout.
      It can even keep it longer, even if data is not returned when you request it.
      So **don’t rely on timeouts to limit the size of your database**,
@@ -107,6 +107,7 @@ Settings
   :ref:`CACHALOT_UNCACHABLE_TABLES` has more weight than this:
   if you add a table to both settings, it will never be cached.
   Use a frozenset over other sequence types for a tiny performance boost.
+  Run ``./manage.py invalidate_cachalot`` after changing this setting.
 
 
 .. _CACHALOT_UNCACHABLE_TABLES:
@@ -121,20 +122,25 @@ Settings
   Always keep ``'django_migrations'`` in it, otherwise you may face
   some issues, especially during tests.
   Use a frozenset over other sequence types for a tiny performance boost.
+  Run ``./manage.py invalidate_cachalot`` after changing this setting.
 
 ``CACHALOT_QUERY_KEYGEN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :Default: ``'cachalot.utils.get_query_cache_key'``
 :Description: Python module path to the function that will be used to generate
-              the cache key of a SQL query
+              the cache key of a SQL query.
+              Run ``./manage.py invalidate_cachalot``
+              after changing this setting.
 
 ``CACHALOT_TABLE_KEYGEN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :Default: ``'cachalot.utils.get_table_cache_key'``
 :Description: Python module path to the function that will be used to generate
-              the cache key of a SQL table
+              the cache key of a SQL table.
+              Clear your cache after changing this setting (it’s not enough
+              to use ``./manage.py invalidate_cachalot``).
 
 .. _Dynamic overriding:
 
