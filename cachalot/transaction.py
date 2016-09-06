@@ -2,6 +2,8 @@
 
 from __future__ import unicode_literals
 
+from .settings import cachalot_settings
+
 
 class AtomicCache(dict):
     def __init__(self, parent_cache, db_alias):
@@ -24,7 +26,9 @@ class AtomicCache(dict):
         self.update(data)
 
     def commit(self):
-        self.parent_cache.set_many(self, None)
+        if self:
+            self.parent_cache.set_many(
+                self, cachalot_settings.CACHALOT_TIMEOUT)
         # The previous `set_many` is not enough.  The parent cache needs to be
         # invalidated in case another transaction occurred in the meantime.
         _invalidate_tables(self.parent_cache, self.db_alias,
