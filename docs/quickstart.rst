@@ -61,6 +61,23 @@ Settings
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
 
+``CACHALOT_TIMEOUT``
+~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``None``
+:Description:
+  Number of seconds during which the cache should consider data as valid.
+  ``None`` means an infinite timeout.
+
+  .. warning::
+     Cache timeouts don’t work in a strict way on most cache backends.
+     A cache might not keep a cache key during the requested timeout:
+     it can keep it in memory during a shorter time than the specified timeout.
+     It can even keep it longer, even if data is not returned when you request it.
+     So **don’t rely on timeouts to limit the size of your database**,
+     you might face some unexpected behaviour.
+     Always set the maximum cache size instead.
+
 ``CACHALOT_CACHE_RANDOM``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -86,7 +103,7 @@ Settings
   Sequence of SQL table names that will be the only ones django-cachalot
   will cache. Only queries with a subset of these tables will be cached.
   The sequence being empty (as it is by default) doesn’t mean that no table
-  can be cached: it disables this setting, so any table can be cache.
+  can be cached: it disables this setting, so any table can be cached.
   :ref:`CACHALOT_UNCACHABLE_TABLES` has more weight than this:
   if you add a table to both settings, it will never be cached.
   Use a frozenset over other sequence types for a tiny performance boost.

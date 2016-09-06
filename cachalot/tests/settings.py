@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+from time import sleep
 from unittest import skipIf
 
 from django.conf import settings
@@ -10,6 +11,7 @@ from django.db import connection
 from django.test import TransactionTestCase
 from django.test.utils import override_settings
 
+from ..api import invalidate
 from .models import Test, TestParent, TestChild
 
 
@@ -80,6 +82,33 @@ class SettingsTestCase(TransactionTestCase):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
+                list(Test.objects.all())
+
+    def test_cache_timeout(self):
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
+        sleep(1)
+        with self.assertNumQueries(0):
+            list(Test.objects.all())
+
+        invalidate(Test)
+
+        with self.settings(CACHALOT_TIMEOUT=0):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            sleep(0.05)
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+
+        # We have to test with a full second and not a shorter time because
+        # memcached only takes the integer part of the timeout into account.
+        with self.settings(CACHALOT_TIMEOUT=1):
+            with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(0):
+                list(Test.objects.all())
+            sleep(1)
+            with self.assertNumQueries(1):
                 list(Test.objects.all())
 
     def test_cache_random(self):

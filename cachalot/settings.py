@@ -4,6 +4,7 @@ from django.conf import settings
 class Settings(object):
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
+    CACHALOT_TIMEOUT = None
     CACHALOT_CACHE_RANDOM = False
     CACHALOT_INVALIDATE_RAW = True
     CACHALOT_ONLY_CACHABLE_TABLES = frozenset()

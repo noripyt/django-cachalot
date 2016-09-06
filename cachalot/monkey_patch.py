@@ -42,7 +42,8 @@ def _get_result_or_execute_query(execute_query_func, cache,
 
     if new_table_cache_keys:
         now = time()
-        cache.set_many({k: now for k in new_table_cache_keys}, None)
+        cache.set_many({k: now for k in new_table_cache_keys},
+                       cachalot_settings.CACHALOT_TIMEOUT)
     elif cache_key in data:
         timestamp, result = data.pop(cache_key)
         table_times = data.values()
@@ -53,7 +54,7 @@ def _get_result_or_execute_query(execute_query_func, cache,
     if isinstance(result, Iterable) and result.__class__ not in TUPLE_OR_LIST:
         result = list(result)
 
-    cache.set(cache_key, (time(), result), None)
+    cache.set(cache_key, (time(), result), cachalot_settings.CACHALOT_TIMEOUT)
 
     return result
 
