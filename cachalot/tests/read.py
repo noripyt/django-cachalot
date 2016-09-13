@@ -13,7 +13,6 @@ from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
 from django.db.transaction import TransactionManagementError
-from django.utils.six import PY3
 from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
 from pytz import UTC
@@ -655,8 +654,8 @@ class ReadTestCase(TransactionTestCase):
             data2,
             [('é',) + l for l in Test.objects.values_list(*attnames)])
 
-    @skipIf(PY3 and connection.vendor == 'sqlite',
-            'SQLite doesn’t accept bytes as raw query in Python 3.')
+    @skipIf(connection.vendor == 'sqlite',
+            'SQLite doesn’t accept bytes as raw query.')
     def test_cursor_execute_bytes(self):
         attname_column_list = [f.get_attname_column()
                                for f in Test._meta.fields]
