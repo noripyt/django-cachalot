@@ -24,8 +24,9 @@ DATABASES = {
 if django_version[:2] == (1, 8):
     DATABASES['postgresql']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
 for alias in DATABASES:
-    test_db_name = 'test_' + DATABASES[alias]['NAME']
-    DATABASES[alias]['TEST'] = {'NAME': test_db_name}
+    if 'TEST' not in DATABASES[alias]:
+        test_db_name = 'test_' + DATABASES[alias]['NAME']
+        DATABASES[alias]['TEST'] = {'NAME': test_db_name}
 
 DATABASES['default'] = DATABASES.pop(os.environ.get('DB_ENGINE', 'sqlite3'))
 
@@ -105,12 +106,21 @@ TEMPLATES = [
         'DIRS': [],
         'APP_DIRS': True,
     },
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'extensions': [
+                'cachalot.jinja2.ext',
+            ],
+        },
+    }
 ]
 
 
 MIDDLEWARE_CLASSES = ()
 PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
-SECRET_KEY = 'it’s not important but we have to set it'
+SECRET_KEY = 'it’s not important in tests but we have to set it'
 
 
 USE_TZ = False  # Time zones are not supported by MySQL,

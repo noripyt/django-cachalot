@@ -53,7 +53,7 @@ Features
 - A few bonus features like
   :ref:`a signal triggered at each database change <Signal>`
   (including bulk changes) and
-  :ref:`a template tag for a better template fragment caching <Template tag>`.
+  :ref:`a template tag for a better template fragment caching <Template utils>`.
 
 Comparison with similar tools
 .............................

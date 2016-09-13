@@ -6,3 +6,4 @@ django-redis
 python-memcached
 pylibmc
 pytz
+Jinja2

@@ -166,10 +166,10 @@ For example:
     settings.CACHALOT_ENABLED = False
 
 
-.. _Template tag:
+.. _Template utils:
 
-Template tag
-............
+Template utils
+..............
 
 `Caching template fragments <https://docs.djangoproject.com/en/1.8/topics/cache/#template-fragment-caching>`_
 can be extremely powerful to speedup a Django application.  However, it often
@@ -189,6 +189,9 @@ or tables.  The API function
 :meth:`get_last_invalidation <cachalot.api.get_last_invalidation>` does that,
 and we provided a ``get_last_invalidation`` template tag to directly
 use it in templates.  It works exactly the same as the API function.
+
+Django template tag
+~~~~~~~~~~~~~~~~~~~
 
 Example of a quite heavy nested loop with a lot of SQL queries
 (considering no prefetch has been done)::
@@ -213,6 +216,45 @@ Example of a quite heavy nested loop with a lot of SQL queries
 ``cache_alias`` and ``db_alias`` keywords arguments of this template tag
 are also available (see
 :meth:`cachalot.api.get_last_invalidation`).
+
+
+Jinja2 statement and function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A Jinja2 extension for django-cachalot can be used, simply add
+``''cachalot.jinja2.ext','`` to the ``'extensions'`` list of the ``OPTIONS``
+dict in the Django ``TEMPLATES`` settings.
+
+It provides:
+
+- The API function
+  :meth:`get_last_invalidation <cachalot.api.get_last_invalidation>` directly
+  available as a function anywhere in Jinja2.
+- An Jinja2 statement equivalent to the ``cache`` template tag of Django.
+
+The ``cache`` does the same thing as its Django template equivalent,
+except that ``cache_key`` and ``timeout`` are optional keyword arguments, and
+you need to add commas between arguments. When unspecified, ``cache_key`` is
+generated from the template filename plus the statement line number, and
+``timeout`` defaults to infinite.  To specify which cache should store the
+saved content, use the ``cache_alias`` keyword argument.
+
+Same example than above, but for Jinja2::
+
+    {% cache get_last_invalidation('auth.User', 'library.Book', 'library.Author'),
+             cache_key='short_user_profile', timeout=3600 %}
+      {{ user }} has borrowed these books:
+      {% for book in user.borrowed_books.all() %}
+        <div class="book">
+          {{ book }} ({{ book.pages.count() }} pages)
+          <span class="authors">
+            {% for author in book.authors.all() %}
+              {{ author }}{% if not loop.last %},{% endif %}
+            {% endfor %}
+          </span>
+        </div>
+      {% endfor %}
+    {% endcache %}
 
 
 .. _Signal:

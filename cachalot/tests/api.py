@@ -6,11 +6,12 @@ from unittest import skipIf
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.cache import DEFAULT_CACHE_ALIAS
+from django.core.cache import DEFAULT_CACHE_ALIAS, caches
 from django.core.management import call_command
 from django.db import connection, transaction, DEFAULT_DB_ALIAS
-from django.template import Template, Context
+from django.template import engines, Context
 from django.test import TransactionTestCase
+from jinja2.exceptions import TemplateSyntaxError
 
 from ..api import *
 from .models import Test
@@ -20,6 +21,8 @@ class APITestCase(TransactionTestCase):
     def setUp(self):
         self.t1 = Test.objects.create(name='test1')
         self.is_sqlite = connection.vendor == 'sqlite'
+        self.cache_alias2 = next(alias for alias in settings.CACHES
+                                 if alias != DEFAULT_CACHE_ALIAS)
 
     def test_invalidate_tables(self):
         with self.assertNumQueries(1):
@@ -109,11 +112,33 @@ class APITestCase(TransactionTestCase):
         self.assertAlmostEqual(timestamp, time(), delta=0.1)
 
     def test_get_last_invalidation_template_tag(self):
-        original_timestamp = Template("{{ timestamp }}").render(Context({
-            'timestamp': get_last_invalidation('auth.Group', 'cachalot_test')
+        # Without arguments
+        original_timestamp = engines['django'].from_string(
+            "{{ timestamp }}"
+        ).render(Context({
+            'timestamp': get_last_invalidation(),
         }))
 
-        template = Template("""
+        template = engines['django'].from_string("""
+        {% load cachalot %}
+        {% get_last_invalidation as timestamp %}
+        {{ timestamp }}
+        """)
+        timestamp = template.render(Context()).strip()
+
+        self.assertNotEqual(timestamp, '')
+        self.assertNotEqual(timestamp, '0.0')
+        self.assertAlmostEqual(float(timestamp), float(original_timestamp),
+                               delta=0.1)
+
+        # With arguments
+        original_timestamp = engines['django'].from_string(
+            "{{ timestamp }}"
+        ).render(Context({
+            'timestamp': get_last_invalidation('auth.Group', 'cachalot_test'),
+        }))
+
+        template = engines['django'].from_string("""
         {% load cachalot %}
         {% get_last_invalidation 'auth.Group' 'cachalot_test' as timestamp %}
         {{ timestamp }}
@@ -125,7 +150,8 @@ class APITestCase(TransactionTestCase):
         self.assertAlmostEqual(float(timestamp), float(original_timestamp),
                                delta=0.1)
 
-        template = Template("""
+        # While using the `cache` template tag, with invalidation
+        template = engines['django'].from_string("""
         {% load cachalot cache %}
         {% get_last_invalidation 'auth.Group' 'cachalot_test' as timestamp %}
         {% cache 10 cache_key_name timestamp %}
@@ -139,6 +165,76 @@ class APITestCase(TransactionTestCase):
         invalidate('cachalot_test')
         content = template.render(Context({'content': 'yet another'})).strip()
         self.assertEqual(content, 'yet another')
+
+    def test_get_last_invalidation_jinja2(self):
+        original_timestamp = engines['jinja2'].from_string(
+            "{{ timestamp }}"
+        ).render({
+            'timestamp': get_last_invalidation('auth.Group', 'cachalot_test'),
+        })
+        template = engines['jinja2'].from_string(
+            "{{ get_last_invalidation('auth.Group', 'cachalot_test') }}")
+        timestamp = template.render({})
+
+        self.assertNotEqual(timestamp, '')
+        self.assertNotEqual(timestamp, '0.0')
+        self.assertAlmostEqual(float(timestamp), float(original_timestamp),
+                               delta=0.1)
+
+    def test_cache_jinja2(self):
+        # Invalid arguments
+        with self.assertRaises(TemplateSyntaxError,
+                               msg="'invalid' is not a valid keyword argument "
+                                   "for {% cache %}"):
+            engines['jinja2'].from_string("""
+            {% cache cache_key='anything', invalid='what?' %}{% endcache %}
+            """)
+        with self.assertRaises(ValueError, msg='You must set `cache_key` when '
+                                               'the template is not a file.'):
+            engines['jinja2'].from_string(
+                '{% cache %} broken {% endcache %}').render()
+
+        # With the minimum number of arguments
+        template = engines['jinja2'].from_string("""
+        {%- cache cache_key='first' -%}
+            {{ content1 }}
+        {%- endcache -%}
+        {%- cache cache_key='second' -%}
+            {{ content2 }}
+        {%- endcache -%}
+        """)
+        content = template.render({'content1': 'abc', 'content2': 'def'})
+        self.assertEqual(content, 'abcdef')
+        invalidate()
+        content = template.render({'content1': 'ghi', 'content2': 'jkl'})
+        self.assertEqual(content, 'abcdef')
+
+        # With the maximum number of arguments
+        template = engines['jinja2'].from_string("""
+        {%- cache get_last_invalidation('auth.Group', 'cachalot_test',
+                                        cache_alias=cache),
+                 timeout=10, cache_key='cache_key_name', cache_alias=cache -%}
+            {{ content }}
+        {%- endcache -%}
+        """)
+        content = template.render({'content': 'something',
+                                   'cache': self.cache_alias2})
+        self.assertEqual(content, 'something')
+        content = template.render({'content': 'anything',
+                                   'cache': self.cache_alias2})
+        self.assertEqual(content, 'something')
+        invalidate('cachalot_test', cache_alias=DEFAULT_CACHE_ALIAS)
+        content = template.render({'content': 'yet another',
+                                   'cache': self.cache_alias2})
+        self.assertEqual(content, 'something')
+        invalidate('cachalot_test')
+        content = template.render({'content': 'will you change?',
+                                   'cache': self.cache_alias2})
+        self.assertEqual(content, 'will you change?')
+        caches[self.cache_alias2].clear()
+        content = template.render({'content': 'better!',
+                                   'cache': self.cache_alias2})
+        self.assertEqual(content, 'better!')
 
 
 class CommandTestCase(TransactionTestCase):
