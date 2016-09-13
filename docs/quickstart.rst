@@ -32,7 +32,7 @@ Usage
 #. If you modify data outside Django
    – typically after restoring a SQL database –, run
    ``./manage.py invalidate_cachalot``
-#. Be aware of :ref:`the few other limits <limits>`
+#. Be aware of :ref:`the few other limits <Limits>`
 #. If you use
    `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``

@@ -1,7 +1,24 @@
-.. _limits:
+.. _Limits:
 
 Limits
 ------
+
+Do not use if:
+..............
+
+- Your project runs on several servers **and** each server is connected to
+  the same database **and** each server uses a different cache **and**
+  each server cannot have access to all other caches. **However if each server
+  can have access to all other caches**, simply specify all other caches as
+  non-default in the ``CACHES`` setting. This way, django-cachalot will
+  automatically invalidate all other caches when something changed in the
+  database. Otherwise, django-cachalot has no way to know on a given server
+  that another server triggered a database change, and it will therefore serve
+  stale data because the cache of the given server was not invalidated.
+- Your project has more than 50 database modifications per second on most of
+  its tables. There will be no problem, but django-cachalot will become
+  inefficient and will end up slowing your project instead of speeding it.
+  Read :ref:`the introduction <Introduction>` for more details.
 
 Redis
 .....
@@ -91,7 +108,7 @@ and then invalidates the tables contained in that query by comparing
 with models registered by Django.
 
 This is quite robust, so if a query is not invalidated automatically
-by this system, please :ref:`send a bug report <reporting>`.
+by this system, please :ref:`send a bug report <Reporting>`.
 In the meantime, you can use :ref:`the API <API>` to manually invalidate
 the tables where data has changed.
 
