@@ -72,4 +72,4 @@ class CachalotExtension(Extension):
         return out
 
 
-ext = CachalotExtension
+cachalot = CachalotExtension

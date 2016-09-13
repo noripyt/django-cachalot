@@ -111,7 +111,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'extensions': [
-                'cachalot.jinja2.ext',
+                'cachalot.jinja2ext.cachalot',
             ],
         },
     }
