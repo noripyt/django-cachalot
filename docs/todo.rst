@@ -1,9 +1,8 @@
-What still needs to be done
----------------------------
+What could still be done
+------------------------
 
 - Cache raw queries (may not be possible due to database cursors
   being written in C)
-- Test multi-location caches if possible
 - Allow setting ``CACHALOT_CACHE`` to ``None`` in order to disable django-cachalot
   persistence. SQL queries would only be cached during transactions, so setting
   ``ATOMIC_REQUESTS`` to ``True`` would cache SQL queries only during

@@ -25,7 +25,7 @@ Redis
 
 By default, Redis will not evict persistent cache keys (those with a ``None``
 timeout) when the maximum memory has been reached. The cache keys created
-by django-cachalot are persistent, so if Redis runs out of memory,
+by django-cachalot are persistent by default, so if Redis runs out of memory,
 django-cachalot and all other ``cache.set`` will raise
 ``ResponseError: OOM command not allowed when used memory > 'maxmemory'.``
 because Redis is not allowed to delete persistent keys.
@@ -88,9 +88,13 @@ MySQL
 This database software already provides by default something like
 django-cachalot:
 `MySQL query cache <http://dev.mysql.com/doc/refman/5.7/en/query-cache.html>`_.
-Django-cachalot will slow down your queries if that query cache is enabled.
-If it’s not enabled, django-cachalot will make queries much faster.
-But you should probably better enable the query cache instead.
+Unfortunately, this built-in query cache has no significant effect
+since at least MySQL 5.7. However, in MySQL 5.5 it was working so well that
+django-cachalot was not improving performance.
+So depending on the MySQL version, django-cachalot may be useless.
+See the current `django-cachalot benchmark <benchmark>`_ and compare it with
+`an older run of the same benchmark <http://django-cachalot.readthedocs.io/en/1.2.0/benchmark.html>`_
+to see the clear difference: MySQL became 4 × slower since then!
 
 .. _Raw SQL queries:
 

@@ -19,7 +19,7 @@ Requirements
 
   - PostgreSQL
   - SQLite
-  - MySQL (but you probably don’t need django-cachalot in this case,
+  - MySQL (but on older versions like 5.5, django-cachalot has no effect,
     see :ref:`MySQL limits <MySQL>`)
 
 Usage

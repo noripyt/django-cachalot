@@ -1,6 +1,22 @@
 What’s new in django-cachalot?
 ==============================
 
+1.3.0
+-----
+
+- Adds Django 1.10 support
+- Drops Django 1.7 support
+- Drops Python 3.2 support
+- Adds a Jinja2 extension with a ``cache`` statement
+  and the ``get_last_invalidation`` function.
+- Adds a ``CACHALOT_TIMEOUT`` setting after dozens
+  of private & public requests, but it’s not really useful
+- Fixes a ``RuntimeError`` occurring if a ``DatabaseCache`` was used in
+  a project, even if not used by django-cachalot
+- Allows bytes raw queries (except on SQLite where it’s not supposed to work)
+- Creates `a Slack team <https://django-cachalot.slack.com>`_ to discuss,
+  easier than using Google Groups
+
 1.2.1
 -----
 
