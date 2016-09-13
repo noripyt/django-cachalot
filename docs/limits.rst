@@ -11,7 +11,7 @@ Do not use if:
   each server cannot have access to all other caches. **However if each server
   can have access to all other caches**, simply specify all other caches as
   non-default in the ``CACHES`` setting. This way, django-cachalot will
-  automatically invalidate all other caches when something changed in the
+  automatically invalidate all other caches when something changes in the
   database. Otherwise, django-cachalot has no way to know on a given server
   that another server triggered a database change, and it will therefore serve
   stale data because the cache of the given server was not invalidated.
@@ -92,7 +92,7 @@ Unfortunately, this built-in query cache has no significant effect
 since at least MySQL 5.7. However, in MySQL 5.5 it was working so well that
 django-cachalot was not improving performance.
 So depending on the MySQL version, django-cachalot may be useless.
-See the current `django-cachalot benchmark <benchmark>`_ and compare it with
+See the current :ref:`django-cachalot benchmark <Benchmark>` and compare it with
 `an older run of the same benchmark <http://django-cachalot.readthedocs.io/en/1.2.0/benchmark.html>`_
 to see the clear difference: MySQL became 4 × slower since then!
 
