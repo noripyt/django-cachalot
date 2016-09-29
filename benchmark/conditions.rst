@@ -2,17 +2,17 @@ In this benchmark, a small database is generated, and each test is executed 20 t
 
 ==================== ==================================================
 CPU                  Intel(R) Core(TM) i7-2670QM CPU @ 2.20GHz
-RAM                  20536880 kB
+RAM                  20537972 kB
 Disk                 INTEL SSDSC2CW06
 Linux distribution   Ubuntu 16.04 xenial
 Python               3.5.2
 Django               1.10.1
-cachalot             1.3.0
+cachalot             1.4.0
 sqlite               3.11.0
-PostgreSQL           9.5.4
-MySQL                5.7.13
+PostgreSQL           9.6.0
+MySQL                5.7.15
 Redis                3.0.6
 memcached            1.4.25
 psycopg2             2.6.2
-mysqlclient          1.3.7
+mysqlclient          1.3.8
 ==================== ==================================================

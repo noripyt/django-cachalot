@@ -1,6 +1,20 @@
 What’s new in django-cachalot?
 ==============================
 
+1.4.0
+-----
+
+- Fixes a bad design: ``QuerySet.select_for_update`` was cached, but it’s not
+  correct since it does not lock data in the database once data was cached,
+  leading to the database lock being useless in some cases
+- Stops automatically invalidating other caches than ``CACHALOT_CACHE`` for
+  consistency, performance, and usefulness reasons
+- Fixes a minor issue: the ``post_invalidation`` signal was sent during
+  transactions when calling the ``invalidate`` command
+- Creates `a gitter chat room <https://gitter.im/django-cachalot/Lobby>`_
+- Removes the Slack team. Slack does not allow public chat, this was therefore
+  a bad idea
+
 1.3.0
 -----
 
@@ -8,7 +22,7 @@ What’s new in django-cachalot?
 - Drops Django 1.7 support
 - Drops Python 3.2 support
 - Adds a Jinja2 extension with a ``cache`` statement
-  and the ``get_last_invalidation`` function.
+  and the ``get_last_invalidation`` function
 - Adds a ``CACHALOT_TIMEOUT`` setting after dozens
   of private & public requests, but it’s not really useful
 - Fixes a ``RuntimeError`` occurring if a ``DatabaseCache`` was used in
