@@ -8,17 +8,20 @@ Caches your Django ORM queries and automatically invalidates them.
 
 ----
 
-.. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square
+.. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square&maxAge=86400
    :target: https://pypi.python.org/pypi/django-cachalot
 
-.. image:: http://img.shields.io/travis/BertrandBordage/django-cachalot/master.svg?style=flat-square
+.. image:: http://img.shields.io/travis/BertrandBordage/django-cachalot/master.svg?style=flat-square&maxAge=86400
    :target: https://travis-ci.org/BertrandBordage/django-cachalot
 
-.. image:: http://img.shields.io/coveralls/BertrandBordage/django-cachalot/master.svg?style=flat-square
+.. image:: http://img.shields.io/coveralls/BertrandBordage/django-cachalot/master.svg?style=flat-square&maxAge=86400
    :target: https://coveralls.io/r/BertrandBordage/django-cachalot?branch=master
 
-.. image:: http://img.shields.io/scrutinizer/g/BertrandBordage/django-cachalot/master.svg?style=flat-square
+.. image:: http://img.shields.io/scrutinizer/g/BertrandBordage/django-cachalot/master.svg?style=flat-square&maxAge=86400
    :target: https://scrutinizer-ci.com/g/BertrandBordage/django-cachalot/
+
+.. image:: https://img.shields.io/gitter/room/django-cachalot/Lobby.svg?style=flat-square&maxAge=86400
+   :target: https://gitter.im/django-cachalot/Lobby
 
 
 .. toctree::
