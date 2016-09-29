@@ -15,6 +15,7 @@ from django.db.models import Count
 from django.db.transaction import TransactionManagementError
 from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
+from django.utils.six import PY3
 from pytz import UTC
 
 from ..utils import _get_table_cache_key
@@ -761,12 +762,12 @@ class ParameterTypeTestCase(TransactionTestCase):
 
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=b'abc'))
-        with self.assertNumQueries(0 if self.is_mysql else 1):
+        with self.assertNumQueries(0 if self.is_mysql and PY3 else 1):
             list(Test.objects.filter(bin=b'abc'))
 
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=b'def'))
-        with self.assertNumQueries(0 if self.is_mysql else 1):
+        with self.assertNumQueries(0 if self.is_mysql and PY3 else 1):
             list(Test.objects.filter(bin=b'def'))
 
     def test_float(self):
