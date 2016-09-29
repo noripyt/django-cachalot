@@ -154,7 +154,8 @@ def filter_cachable(tables):
 
 
 def _get_tables(query, db_alias):
-    if '?' in query.order_by and not cachalot_settings.CACHALOT_CACHE_RANDOM:
+    if ('?' in query.order_by and not cachalot_settings.CACHALOT_CACHE_RANDOM) \
+            or query.select_for_update:
         raise UncachableQuery
 
     tables = set(query.table_map)

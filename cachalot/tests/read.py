@@ -526,6 +526,9 @@ class ReadTestCase(TransactionTestCase):
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_select_for_update(self):
+        """
+        Tests if ``select_for_update`` queries are not cached.
+        """
         with self.assertRaises(TransactionManagementError):
             list(Test.objects.select_for_update())
 
@@ -536,11 +539,22 @@ class ReadTestCase(TransactionTestCase):
                 self.assertListEqual([t.name for t in data1],
                                      ['test1', 'test2'])
 
-        with self.assertNumQueries(0):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data2 = list(Test.objects.select_for_update())
                 self.assertListEqual(data2, [self.t1, self.t2])
                 self.assertListEqual([t.name for t in data2],
+                                     ['test1', 'test2'])
+
+        with self.assertNumQueries(2):
+            with transaction.atomic():
+                data3 = list(Test.objects.select_for_update())
+                data4 = list(Test.objects.select_for_update())
+                self.assertListEqual(data3, [self.t1, self.t2])
+                self.assertListEqual(data4, [self.t1, self.t2])
+                self.assertListEqual([t.name for t in data3],
+                                     ['test1', 'test2'])
+                self.assertListEqual([t.name for t in data4],
                                      ['test1', 'test2'])
 
     def test_having(self):
