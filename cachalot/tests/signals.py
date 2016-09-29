@@ -50,6 +50,7 @@ class SignalsTestCase(TransactionTestCase):
             l.append((sender, db_alias))
 
         post_invalidation.connect(receiver)
+
         self.assertListEqual(l, [])
         with transaction.atomic():
             Test.objects.create(name='test1')
@@ -65,6 +66,7 @@ class SignalsTestCase(TransactionTestCase):
                 self.assertListEqual(l, [])
             self.assertListEqual(l, [])
         self.assertListEqual(l, [('cachalot_test', DEFAULT_DB_ALIAS)])
+
         post_invalidation.disconnect(receiver)
 
     def test_table_invalidated_once_per_transaction_or_invalidate(self):
@@ -79,6 +81,7 @@ class SignalsTestCase(TransactionTestCase):
             l.append((sender, db_alias))
 
         post_invalidation.connect(receiver)
+
         self.assertListEqual(l, [])
         with transaction.atomic():
             Test.objects.create(name='test1')
@@ -91,6 +94,14 @@ class SignalsTestCase(TransactionTestCase):
         self.assertListEqual(l, [])
         invalidate(Test, db_alias=DEFAULT_DB_ALIAS)
         self.assertListEqual(l, [('cachalot_test', DEFAULT_DB_ALIAS)])
+
+        del l[:]  # Empties the list
+        self.assertListEqual(l, [])
+        with transaction.atomic():
+            invalidate(Test, db_alias=DEFAULT_DB_ALIAS)
+            self.assertListEqual(l, [])
+        self.assertListEqual(l, [('cachalot_test', DEFAULT_DB_ALIAS)])
+
         post_invalidation.disconnect(receiver)
 
     @skipIf(len(settings.DATABASES) == 1,
