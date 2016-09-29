@@ -8,6 +8,7 @@ from django.utils.six import string_types
 
 from .cache import cachalot_caches
 from .signals import post_invalidation
+from .transaction import AtomicCache
 from .utils import _get_table_cache_key, _invalidate_tables
 
 
@@ -60,15 +61,19 @@ def invalidate(*tables_or_models, **kwargs):
         raise TypeError(
             "invalidate() got an unexpected keyword argument '%s'" % k)
 
+    send_signal = False
     invalidated = set()
     for cache_alias, db_alias, tables in _cache_db_tables_iterator(
             _get_tables(tables_or_models), cache_alias, db_alias):
-        _invalidate_tables(
-            cachalot_caches.get_cache(cache_alias, db_alias), db_alias, tables)
+        cache = cachalot_caches.get_cache(cache_alias, db_alias)
+        if not isinstance(cache, AtomicCache):
+            send_signal = True
+        _invalidate_tables(cache, db_alias, tables)
         invalidated.update(tables)
 
-    for table in invalidated:
-        post_invalidation.send(table, db_alias=db_alias)
+    if send_signal:
+        for table in invalidated:
+            post_invalidation.send(table, db_alias=db_alias)
 
 
 def get_last_invalidation(*tables_or_models, **kwargs):
