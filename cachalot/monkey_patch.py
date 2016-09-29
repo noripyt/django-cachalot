@@ -9,7 +9,8 @@ from django.db.backends.utils import CursorWrapper
 from django.db.models.query import EmptyResultSet
 from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
-    SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
+    SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
+)
 from django.db.transaction import Atomic, get_connection
 from django.utils.six import binary_type
 
@@ -18,8 +19,8 @@ from .cache import cachalot_caches
 from .settings import cachalot_settings
 from .utils import (
     _get_query_cache_key, _get_table_cache_keys, _get_tables_from_sql,
-    _invalidate_table, UncachableQuery, TUPLE_OR_LIST, is_cachable,
-    filter_cachable)
+    UncachableQuery, TUPLE_OR_LIST, is_cachable, filter_cachable,
+)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -90,8 +91,8 @@ def _patch_write_compiler(original):
         db_alias = write_compiler.using
         table = write_compiler.query.get_meta().db_table
         if is_cachable(table):
-            _invalidate_table(cachalot_caches.get_cache(db_alias=db_alias),
-                              db_alias, table)
+            invalidate(table, db_alias=db_alias,
+                       cache_alias=cachalot_settings.CACHALOT_CACHE)
         return original(write_compiler, *args, **kwargs)
 
     return inner
@@ -117,7 +118,8 @@ def _patch_cursor():
                     tables = filter_cachable(
                         set(_get_tables_from_sql(cursor.db, sql)))
                     if tables:
-                        invalidate(*tables, db_alias=cursor.db.alias)
+                        invalidate(*tables, db_alias=cursor.db.alias,
+                                   cache_alias=cachalot_settings.CACHALOT_CACHE)
             return out
 
         return inner
@@ -150,7 +152,8 @@ def _patch_atomic():
 
 
 def _invalidate_on_migration(sender, **kwargs):
-    invalidate(*sender.get_models(), db_alias=kwargs['using'])
+    invalidate(*sender.get_models(), db_alias=kwargs['using'],
+               cache_alias=cachalot_settings.CACHALOT_CACHE)
 
 
 def patch():

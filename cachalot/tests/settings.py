@@ -69,17 +69,28 @@ class SettingsTestCase(TransactionTestCase):
     @skipIf(len(settings.CACHES) == 1,
             'We can’t change the cache used since there’s only one configured')
     def test_cache(self):
+        other_cache_alias = next(alias for alias in settings.CACHES
+                                 if alias != DEFAULT_CACHE_ALIAS)
+        invalidate(Test, cache_alias=other_cache_alias)
+
         with self.settings(CACHALOT_CACHE=DEFAULT_CACHE_ALIAS):
             with self.assertNumQueries(1):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
                 list(Test.objects.all())
 
-        other_cache_alias = next(alias for alias in settings.CACHES
-                                 if alias != DEFAULT_CACHE_ALIAS)
-
         with self.settings(CACHALOT_CACHE=other_cache_alias):
             with self.assertNumQueries(1):
+                list(Test.objects.all())
+            with self.assertNumQueries(0):
+                list(Test.objects.all())
+
+        Test.objects.create(name='test')
+
+        # Only `CACHALOT_CACHE` is invalidated, so changing the database should
+        # not invalidate all caches.
+        with self.settings(CACHALOT_CACHE=other_cache_alias):
+            with self.assertNumQueries(0):
                 list(Test.objects.all())
             with self.assertNumQueries(0):
                 list(Test.objects.all())

@@ -15,7 +15,6 @@ from django.utils.module_loading import import_string
 from django.utils.six import text_type, binary_type
 
 from .settings import cachalot_settings
-from .signals import post_invalidation
 from .transaction import AtomicCache
 
 
@@ -191,16 +190,3 @@ def _invalidate_tables(cache, db_alias, tables):
 
     if isinstance(cache, AtomicCache):
         cache.to_be_invalidated.update(tables)
-
-
-def _invalidate_table(cache, db_alias, table):
-    if not is_cachable(table):
-        return
-
-    cache.set(_get_table_cache_key(db_alias, table), time(),
-              cachalot_settings.CACHALOT_TIMEOUT)
-
-    if isinstance(cache, AtomicCache):
-        cache.to_be_invalidated.add(table)
-    else:
-        post_invalidation.send(table, db_alias=db_alias)
