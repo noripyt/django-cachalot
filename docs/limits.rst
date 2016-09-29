@@ -3,22 +3,14 @@
 Limits
 ------
 
-Do not use if:
-..............
+High rate of database modifications
+...................................
 
-- Your project runs on several servers **and** each server is connected to
-  the same database **and** each server uses a different cache **and**
-  each server cannot have access to all other caches. **However if each server
-  can have access to all other caches**, simply specify all other caches as
-  non-default in the ``CACHES`` setting. This way, django-cachalot will
-  automatically invalidate all other caches when something changes in the
-  database. Otherwise, django-cachalot has no way to know on a given server
-  that another server triggered a database change, and it will therefore serve
-  stale data because the cache of the given server was not invalidated.
-- Your project has more than 50 database modifications per second on most of
-  its tables. There will be no problem, but django-cachalot will become
-  inefficient and will end up slowing your project instead of speeding it.
-  Read :ref:`the introduction <Introduction>` for more details.
+Do not use django-cachalot if your project has more than 50 database
+modifications per second on most of its tables. There will be no problem,
+but django-cachalot will become inefficient and will end up slowing
+your project instead of speeding it.
+Read :ref:`the introduction <Introduction>` for more details.
 
 Redis
 .....
@@ -136,6 +128,12 @@ to have their clocks as synchronised as possible.
 Otherwise, invalidations will happen with a latency from one server to another.
 A difference of even a few seconds can be harmful, so double check this!
 
+To get a rough idea of the clock synchronisation of two servers, simply run
+``python -c 'import time; print(time.time())'`` on both servers at the same
+time. This will give you a number of seconds, and it should be almost the same,
+with a difference inferior to 1 second. This number is independent
+of the time zone.
+
 To keep your clocks synchronised, use the
 `Network Time Protocol <http://en.wikipedia.org/wiki/Network_Time_Protocol>`_.
 
@@ -164,3 +162,45 @@ Use :ref:`the signal <Signal>` and :meth:`cachalot.api.invalidate` this way:
     def invalidate_replica(sender, **kwargs):
         if kwargs['db_alias'] == 'default':
             invalidate(sender, db_alias='replica')
+
+Multiple cache servers for the same database
+............................................
+
+On large projects, we often end up having multiple Django servers on several
+physical machines. For performance reasons, we generally decide to have a cache
+per server, while the database stays on a single server. But the problem with
+django-cachalot is that it only invalidates the cache configured using
+``CACHALOT_CACHE``. So all caches end up serving stale data.
+
+To avoid this, you need inside each Django server to be able to communicate
+with the rest of the servers in order to invalidate other caches when
+an invalidation occurs. If this is not possible in your situation, you must not
+use django-cachalot. But if you can, each Django server must also have all
+other caches in the ``CACHES`` setting. Then, you need to manually invalidate
+all other caches when an invalidation occurs. Add this to a `models.py` file
+of an installed application:
+
+.. code:: python
+
+    import threading
+
+    from cachalot.api import invalidate
+    from cachalot.signals import post_invalidation
+    from django.dispatch import receiver
+    from django.conf import settings
+
+    SIGNAL_INFO = threading.local()
+
+    @receiver(post_invalidation)
+    def invalidate_other_caches(sender, **kwargs):
+        if getattr(SIGNAL_INFO, 'was_called', False):
+            return
+        db_alias = kwargs['db_alias']
+        for cache_alias in settings.CACHES:
+            if cache_alias == settings.CACHALOT_CACHE:
+                continue
+            SIGNAL_INFO.was_called = True
+            try:
+                invalidate(sender, db_alias=db_alias, cache_alias=cache_alias)
+            finally:
+                SIGNAL_INFO.was_called = False

@@ -19,7 +19,7 @@ Requirements
 
   - PostgreSQL
   - SQLite
-  - MySQL (but on older versions like 5.5, django-cachalot has no effect,
+  - MySQL (but on older versions like MySQL 5.5, django-cachalot has no effect,
     see :ref:`MySQL limits <MySQL>`)
 
 Usage
@@ -30,11 +30,11 @@ Usage
 #. If you use multiple servers with a common cache server,
    :ref:`double check their clock synchronisation <multiple servers>`
 #. If you modify data outside Django
-   – typically after restoring a SQL database –, run
-   ``./manage.py invalidate_cachalot``
+   – typically after restoring a SQL database –,
+   use the :ref:`manage.py command <Command>`
 #. Be aware of :ref:`the few other limits <Limits>`
 #. If you use
-   `django-debug-toolbar <https://github.com/django-debug-toolbar/django-debug-toolbar>`_,
+   `django-debug-toolbar <https://github.com/jazzband/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
    to your ``DEBUG_TOOLBAR_PANELS``
 #. Enjoy!
@@ -50,13 +50,21 @@ Settings
 
 :Default: ``True``
 :Description: If set to ``False``, disables SQL caching but keeps invalidating
-              to avoid stale cache
+              to avoid stale cache.
 
 ``CACHALOT_CACHE``
 ~~~~~~~~~~~~~~~~~~
 
 :Default: ``'default'``
-:Description: Alias of the cache from |CACHES|_ used by django-cachalot
+:Description:
+  Alias of the cache from |CACHES|_ used by django-cachalot.
+
+  .. warning::
+     After modifying this setting, you should invalidate the cache
+     :ref:`using the manage.py command <Command>` or :ref:`the API <API>`.
+     Indeed, only the cache configured using this setting is automatically
+     invalidated by django-cachalot – for optimisation reasons. So when you
+     change this setting, you end up on a cache that may contain stale data.
 
 .. |CACHES| replace:: ``CACHES``
 .. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
@@ -83,7 +91,7 @@ Settings
 
 :Default: ``False``
 :Description: If set to ``True``, caches random queries
-              (those with ``order_by('?')``)
+              (those with ``order_by('?')``).
 
 .. _CACHALOT_INVALIDATE_RAW:
 
@@ -91,8 +99,9 @@ Settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :Default: ``True``
-:Description: If set to ``False``, disables automatic invalidation on raw
-              SQL queries – read :ref:`raw queries limits <Raw SQL queries>` for more info
+:Description:
+  If set to ``False``, disables automatic invalidation on raw
+  SQL queries – read :ref:`raw queries limits <Raw SQL queries>` for more info.
 
 
 ``CACHALOT_ONLY_CACHABLE_TABLES``
@@ -142,6 +151,7 @@ Settings
               Clear your cache after changing this setting (it’s not enough
               to use ``./manage.py invalidate_cachalot``).
 
+
 .. _Dynamic overriding:
 
 Dynamic overriding
@@ -164,6 +174,29 @@ For example:
 
     # Globally disables SQL caching until you set it back to True
     settings.CACHALOT_ENABLED = False
+
+
+.. _Command:
+
+``manage.py`` command
+.....................
+
+``manage.py invalidate_cachalot`` is available to invalidate all the cache keys
+set by django-cachalot. If you run it without any argument, it invalidates all
+models on all caches and all databases. But you can specify what applications
+or models are invalidated, and on which cache or database.
+
+Examples:
+
+``./manage.py invalidate_cachalot auth``
+    Invalidates all models from the 'auth' application.
+``./manage.py invalidate_cachalot your_app auth.User``
+    Invalidates all models from the 'your_app' application, but also
+    the ``User`` model from the 'auth' application.
+``./manage.py invalidate_cachalot -c redis -p postgresql``
+    Invalidates all models,
+    but only for the database configured with the 'postgresql' alias,
+    and only for the cache configured with the 'redis' alias.
 
 
 .. _Template utils:
@@ -216,7 +249,6 @@ Example of a quite heavy nested loop with a lot of SQL queries
 ``cache_alias`` and ``db_alias`` keywords arguments of this template tag
 are also available (see
 :meth:`cachalot.api.get_last_invalidation`).
-
 
 Jinja2 statement and function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
