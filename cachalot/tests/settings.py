@@ -7,6 +7,7 @@ from unittest import skipIf
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import DEFAULT_CACHE_ALIAS
+from django.core.checks import run_checks, Error, Tags
 from django.db import connection
 from django.test import TransactionTestCase
 from django.test.utils import override_settings
@@ -226,3 +227,53 @@ class SettingsTestCase(TransactionTestCase):
                 list(User.objects.all())
             with self.assertNumQueries(1):
                 list(User.objects.all())
+
+    def test_compatibility(self):
+        """
+        Checks that an error is raised:
+        - if an incompatible database is configured
+        - if an incompatible cache is configured as ``CACHALOT_CACHE``
+        """
+        def get_error(object_path):
+            return Error('`%s` is not compatible with django-cachalot.'
+                         % object_path, id='cachalot.E001')
+
+        incompatible_database = {
+            'ENGINE': 'django.db.backends.oracle',
+            'NAME': 'non_existent_db',
+        }
+        incompatible_cache = {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'cache_table'
+        }
+        with self.settings(DATABASES={'default': incompatible_database}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors,
+                                 [get_error(incompatible_database['ENGINE'])])
+        with self.settings(CACHES={'default': incompatible_cache}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors,
+                                 [get_error(incompatible_cache['BACKEND'])])
+        with self.settings(DATABASES={'default': incompatible_database},
+                           CACHES={'default': incompatible_cache}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors,
+                                 [get_error(incompatible_database['ENGINE']),
+                                  get_error(incompatible_cache['BACKEND'])])
+
+        compatible_database = {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'non_existent_db.sqlite3',
+        }
+        compatible_cache = {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+        with self.settings(DATABASES={'default': compatible_database,
+                                      'secondary': incompatible_database}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors,
+                                 [get_error(incompatible_database['ENGINE'])])
+        with self.settings(CACHES={'default': compatible_cache,
+                                   'secondary': incompatible_cache}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [])
