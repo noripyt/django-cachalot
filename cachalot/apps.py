@@ -1,8 +1,9 @@
 from django.apps import AppConfig
 from django.conf import settings
-from django.core.checks import register, Tags, Error, Warning
+from django.core.checks import register, Tags, Error
 
 from .monkey_patch import patch
+from .settings import cachalot_settings
 
 
 VALID_DATABASE_ENGINES = {
@@ -37,16 +38,18 @@ VALID_CACHE_BACKENDS = {
 
 @register(Tags.compatibility)
 def check_compatibility(app_configs, **kwargs):
+    cache_alias = cachalot_settings.CACHALOT_CACHE
+    caches = {cache_alias: settings.CACHES[cache_alias]}
+
     errors = []
     for setting, k, valid_values in (
             (settings.DATABASES, 'ENGINE', VALID_DATABASE_ENGINES),
-            (settings.CACHES, 'BACKEND', VALID_CACHE_BACKENDS)):
-        for alias, d in setting.items():
-            value = d[k]
+            (caches, 'BACKEND', VALID_CACHE_BACKENDS)):
+        for config in setting.values():
+            value = config[k]
             if value not in valid_values:
-                error_class = Error if alias == 'default' else Warning
                 errors.append(
-                    error_class(
+                    Error(
                         '`%s` is not compatible with django-cachalot.' % value,
                         id='cachalot.E001',
                     )
