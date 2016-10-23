@@ -134,10 +134,11 @@ CACHALOT_ENABLED = True
 # Settings for django-debug-toolbar
 #
 
-INSTALLED_APPS += [
-    'django.contrib.staticfiles',
+# We put django-debug-toolbar before to reproduce the conditions of this issue:
+# https://github.com/BertrandBordage/django-cachalot/issues/62
+INSTALLED_APPS = [
     'debug_toolbar',
-]
+] + INSTALLED_APPS + ['django.contrib.staticfiles']
 
 DEBUG_TOOLBAR_PANELS = [
     'debug_toolbar.panels.versions.VersionsPanel',
