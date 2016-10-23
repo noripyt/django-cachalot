@@ -26,6 +26,9 @@ class AtomicCache(dict):
         self.update(data)
 
     def commit(self):
+        # We import this here to avoid a circular import issue.
+        from .utils import _invalidate_tables
+
         if self:
             self.parent_cache.set_many(
                 self, cachalot_settings.CACHALOT_TIMEOUT)
@@ -33,8 +36,3 @@ class AtomicCache(dict):
         # invalidated in case another transaction occurred in the meantime.
         _invalidate_tables(self.parent_cache, self.db_alias,
                            self.to_be_invalidated)
-
-
-# We import this after AtomicCache to avoid a circular import issue and
-# avoid importing this locally, which degrades performance.
-from .utils import _invalidate_tables
