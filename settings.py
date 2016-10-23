@@ -118,8 +118,8 @@ TEMPLATES = [
 ]
 
 
-MIDDLEWARE_CLASSES = ()
-PASSWORD_HASHERS = ('django.contrib.auth.hashers.MD5PasswordHasher',)
+MIDDLEWARE_CLASSES = []
+PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 SECRET_KEY = 'it’s not important in tests but we have to set it'
 
 
@@ -129,3 +129,41 @@ TIME_ZONE = 'UTC'
 
 
 CACHALOT_ENABLED = True
+
+#
+# Settings for django-debug-toolbar
+#
+
+INSTALLED_APPS += [
+    'django.contrib.staticfiles',
+    'debug_toolbar',
+]
+
+DEBUG_TOOLBAR_PANELS = [
+    'debug_toolbar.panels.versions.VersionsPanel',
+    'debug_toolbar.panels.timer.TimerPanel',
+    'debug_toolbar.panels.settings.SettingsPanel',
+    'debug_toolbar.panels.headers.HeadersPanel',
+    'debug_toolbar.panels.request.RequestPanel',
+    'debug_toolbar.panels.sql.SQLPanel',
+    'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+    'debug_toolbar.panels.templates.TemplatesPanel',
+    'debug_toolbar.panels.cache.CachePanel',
+    'debug_toolbar.panels.signals.SignalsPanel',
+    'debug_toolbar.panels.logging.LoggingPanel',
+    'debug_toolbar.panels.redirects.RedirectsPanel',
+    'cachalot.panels.CachalotPanel',
+]
+
+DEBUG_TOOLBAR_CONFIG = {
+    # Django’s test client sets wsgi.multiprocess to True inappropriately.
+    'RENDER_PANELS': False,
+}
+
+MIDDLEWARE_CLASSES += [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+
+INTERNAL_IPS = ['127.0.0.1']
+ROOT_URLCONF = 'runtests_urls'
+STATIC_URL = '/static/'

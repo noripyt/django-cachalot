@@ -7,3 +7,6 @@ python-memcached
 pylibmc
 pytz
 Jinja2
+
+django-debug-toolbar
+beautifulsoup4

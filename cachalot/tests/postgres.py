@@ -31,7 +31,7 @@ if DJANGO_GTE_1_9:
         'Caching psycopg2 objects is not working with file-based cache '
         'and Python 2.7 (see https://code.djangoproject.com/ticket/25501).')
 @override_settings(USE_TZ=True)
-class PostgresReadTest(TransactionTestCase):
+class PostgresReadTestCase(TransactionTestCase):
     def setUp(self):
         self.obj1 = PostgresModel(
             int_array=[1, 2, 3],
