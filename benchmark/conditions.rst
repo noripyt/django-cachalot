@@ -7,7 +7,7 @@ Disk                 INTEL SSDSC2CW06
 Linux distribution   Ubuntu 16.04 xenial
 Python               3.5.2
 Django               1.10.2
-cachalot             1.4.1
+cachalot             1.4.2
 sqlite               3.11.0
 PostgreSQL           9.6.0
 MySQL                5.7.15

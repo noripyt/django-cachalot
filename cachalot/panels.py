@@ -7,10 +7,10 @@ from datetime import datetime
 from debug_toolbar.panels import Panel
 from django.apps import apps
 from django.conf import settings
-from django.core.cache import cache
 from django.utils.translation import ugettext_lazy as _
 from django.utils.timesince import timesince
 
+from .cache import cachalot_caches
 from .utils import _get_table_cache_key
 
 
@@ -43,6 +43,7 @@ class CachalotPanel(Panel):
     def collect_invalidations(self):
         models = apps.get_models()
         data = defaultdict(list)
+        cache = cachalot_caches.get_cache()
         for db_alias in settings.DATABASES:
             model_cache_keys = dict(
                 [(_get_table_cache_key(db_alias, model._meta.db_table), model)
