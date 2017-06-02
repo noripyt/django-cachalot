@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+1.4.2
+-----
+
+- Fixes cache in CachalotPanel
+
 1.4.1
 -----
 
