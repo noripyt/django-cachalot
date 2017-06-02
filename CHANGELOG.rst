@@ -6,7 +6,7 @@ What’s new in django-cachalot?
 
 - Fixes a circular import occurring when CachalotPanel is used
   and django-debug-toolbar is before django-cachalot in ``INSTALLED_APPS``
-- Stops checking compatibility for caches other than CACHALOT_CACHE
+- Stops checking compatibility for caches other than ``CACHALOT_CACHE``
 
 1.4.0
 -----

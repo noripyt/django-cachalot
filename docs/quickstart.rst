@@ -254,7 +254,7 @@ Jinja2 statement and function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A Jinja2 extension for django-cachalot can be used, simply add
-``''cachalot.jinja2ext.cachalot','`` to the ``'extensions'`` list of the ``OPTIONS``
+``'cachalot.jinja2ext.cachalot',`` to the ``'extensions'`` list of the ``OPTIONS``
 dict in the Django ``TEMPLATES`` settings.
 
 It provides:
