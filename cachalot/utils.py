@@ -162,7 +162,7 @@ def _get_tables(query, db_alias):
     subquery_constraints = _find_subqueries(query.where.children)
     for subquery in subquery_constraints:
         tables.update(_get_tables(subquery, db_alias))
-    if query.extra_select or hasattr(query, 'subquery') \
+    if query.extra_select or (hasattr(query, 'subquery') and query.subquery) \
             or any(c.__class__ is ExtraWhere for c in query.where.children):
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         additional_tables = _get_tables_from_sql(connections[db_alias], sql)
