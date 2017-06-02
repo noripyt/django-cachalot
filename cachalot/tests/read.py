@@ -206,11 +206,17 @@ class ReadTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             list(Test.objects.order_by('?'))
 
+    @skipIf(connection.vendor == 'mysql',
+            'MySQL does not support limit/offset on a subquery. '
+            'Since Django only applies ordering in subqueries when they are '
+            'offset/limited, we can’t test it on MySQL.')
     def test_random_order_by_subquery(self):
         with self.assertNumQueries(1):
-            list(Test.objects.filter(pk__in=Test.objects.order_by('?')))
+            list(Test.objects.filter(
+                pk__in=Test.objects.order_by('?')[:10]))
         with self.assertNumQueries(1):
-            list(Test.objects.filter(pk__in=Test.objects.order_by('?')))
+            list(Test.objects.filter(
+                pk__in=Test.objects.order_by('?')[:10]))
 
     def test_reverse(self):
         with self.assertNumQueries(1):
@@ -734,26 +740,19 @@ class ParameterTypeTestCase(TransactionTestCase):
     def setUp(self):
         self.is_sqlite = connection.vendor == 'sqlite'
         self.is_mysql = connection.vendor == 'mysql'
-        if self.is_mysql:
+        if connection.vendor in ('mysql', 'postgresql'):
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()
 
-    def test_unknown_parameter_type(self):
+    def test_binary(self):
         """
-        Tests if queries with an unknown parameter type are not cached.
+        Binary data should be cached on PostgreSQL & MySQL, but not on SQLite,
+        because SQLite uses a type making it hard to access data itself.
 
-        We don’t cache parameters with an unknown type because we don’t know
-        how to hash them.
-
-        Here we use a binary field, as it uses special parameters
-        on PostgreSQL and SQLite (but not on MySQL).
-        A similar result would be obtained using a geographic field, but it’s
-        more complex to test, since geographic database backends have a few
-        side effects, such as changing the number of queries
-        of a bulk_create of n objects from 1 to n.
+        So this also tests how django-cachalot handles unknown params, in this
+        case the `memory` object passed to SQLite.
         """
-
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=None))
         with self.assertNumQueries(0):
@@ -761,12 +760,12 @@ class ParameterTypeTestCase(TransactionTestCase):
 
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=b'abc'))
-        with self.assertNumQueries(0 if self.is_mysql else 1):
+        with self.assertNumQueries(1 if self.is_sqlite else 0):
             list(Test.objects.filter(bin=b'abc'))
 
         with self.assertNumQueries(1):
             list(Test.objects.filter(bin=b'def'))
-        with self.assertNumQueries(0 if self.is_mysql else 1):
+        with self.assertNumQueries(1 if self.is_sqlite else 0):
             list(Test.objects.filter(bin=b'def'))
 
     def test_float(self):

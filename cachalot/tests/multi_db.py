@@ -23,7 +23,7 @@ class MultiDatabaseTestCase(TransactionTestCase):
         connection2 = connections[self.db_alias2]
         self.is_sqlite2 = connection2.vendor == 'sqlite'
         self.is_mysql2 = connection2.vendor == 'mysql'
-        if self.is_mysql2:
+        if connection2.vendor in ('mysql', 'postgresql'):
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection2.cursor()

@@ -23,7 +23,7 @@ class TestThread(Thread):
 @skipUnlessDBFeature('test_db_allows_multiple_connections')
 class ThreadSafetyTestCase(TransactionTestCase):
     def setUp(self):
-        if connection.vendor == 'mysql':
+        if connection.vendor in ('mysql', 'postgresql'):
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()

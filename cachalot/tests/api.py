@@ -115,16 +115,16 @@ class APITestCase(TransactionTestCase):
         # Without arguments
         original_timestamp = engines['django'].from_string(
             "{{ timestamp }}"
-        ).render(Context({
+        ).render({
             'timestamp': get_last_invalidation(),
-        }))
+        })
 
         template = engines['django'].from_string("""
         {% load cachalot %}
         {% get_last_invalidation as timestamp %}
         {{ timestamp }}
         """)
-        timestamp = template.render(Context()).strip()
+        timestamp = template.render().strip()
 
         self.assertNotEqual(timestamp, '')
         self.assertNotEqual(timestamp, '0.0')
@@ -134,16 +134,16 @@ class APITestCase(TransactionTestCase):
         # With arguments
         original_timestamp = engines['django'].from_string(
             "{{ timestamp }}"
-        ).render(Context({
+        ).render({
             'timestamp': get_last_invalidation('auth.Group', 'cachalot_test'),
-        }))
+        })
 
         template = engines['django'].from_string("""
         {% load cachalot %}
         {% get_last_invalidation 'auth.Group' 'cachalot_test' as timestamp %}
         {{ timestamp }}
         """)
-        timestamp = template.render(Context()).strip()
+        timestamp = template.render().strip()
 
         self.assertNotEqual(timestamp, '')
         self.assertNotEqual(timestamp, '0.0')
@@ -158,12 +158,12 @@ class APITestCase(TransactionTestCase):
             {{ content }}
         {% endcache %}
         """)
-        content = template.render(Context({'content': 'something'})).strip()
+        content = template.render({'content': 'something'}).strip()
         self.assertEqual(content, 'something')
-        content = template.render(Context({'content': 'anything'})).strip()
+        content = template.render({'content': 'anything'}).strip()
         self.assertEqual(content, 'something')
         invalidate('cachalot_test')
-        content = template.render(Context({'content': 'yet another'})).strip()
+        content = template.render({'content': 'yet another'}).strip()
         self.assertEqual(content, 'yet another')
 
     def test_get_last_invalidation_jinja2(self):

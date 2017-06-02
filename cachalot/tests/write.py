@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
@@ -13,6 +14,9 @@ from django.test import TransactionTestCase, skipUnlessDBFeature
 from .models import Test, TestParent, TestChild
 
 
+DJANGO_GTE_1_11 = django_version[:2] >= (1, 11)
+
+
 class WriteTestCase(TransactionTestCase):
     """
     Tests if every SQL request writing data is not cached and invalidates the
@@ -21,7 +25,7 @@ class WriteTestCase(TransactionTestCase):
 
     def setUp(self):
         self.is_sqlite = connection.vendor == 'sqlite'
-        if connection.vendor == 'mysql':
+        if connection.vendor in ('mysql', 'postgresql'):
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()
@@ -83,7 +87,9 @@ class WriteTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             self.assertListEqual(list(Test.objects.all()), [])
 
-        with self.assertNumQueries(3 if self.is_sqlite else 2):
+        with self.assertNumQueries(
+                (5 if self.is_sqlite else 4) if DJANGO_GTE_1_11
+                else (3 if self.is_sqlite else 2)):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': True})
             self.assertTrue(created)
@@ -927,7 +933,7 @@ class DatabaseCommandTestCase(TransactionTestCase):
         call_command('loaddata', 'cachalot/tests/loaddata_fixture.json',
                      verbosity=0, interactive=False)
 
-        if connection.vendor == 'mysql':
+        if connection.vendor in ('mysql', 'postgresql'):
             # We need to reopen the connection or Django
             # will execute an extra SQL request below.
             connection.cursor()
