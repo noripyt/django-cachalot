@@ -65,6 +65,7 @@ def check_parameter_types(params):
             elif cl is dict:
                 check_parameter_types(p.items())
             else:
+                print(params, [text_type(p) for p in params])
                 raise UncachableQuery
 
 
