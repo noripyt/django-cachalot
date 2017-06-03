@@ -9,6 +9,7 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.core.management import call_command
 from django.db import connection, transaction
 from django.db.models import Count
+from django.db.models.expressions import RawSQL
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test, TestParent, TestChild
@@ -466,6 +467,50 @@ class WriteTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             data12 = list(User.objects.exclude(user_permissions=None))
         self.assertListEqual(data12, [])
+
+    def test_invalidate_raw_subquery(self):
+        permission = Permission.objects.first()
+        raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                         (permission.pk,))
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.filter(permission=raw_sql))
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.filter(permission=raw_sql))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [])
+
+        test = Test.objects.create(name='test', permission=permission)
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        with self.assertNumQueries(0):
+            data4 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        self.assertListEqual(data4, data3)
+        self.assertListEqual(data4, [test])
+
+        Permission.objects.first().save()
+
+        with self.assertNumQueries(1):
+            data5 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        with self.assertNumQueries(0):
+            data6 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        self.assertListEqual(data6, data5)
+        self.assertListEqual(data6, [test])
+
+        test.delete()
+
+        with self.assertNumQueries(1):
+            data7 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        with self.assertNumQueries(0):
+            data8 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        self.assertListEqual(data8, data7)
+        self.assertListEqual(data8, [])
 
     def test_invalidate_nested_subqueries(self):
         with self.assertNumQueries(1):

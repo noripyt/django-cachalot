@@ -12,6 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
+from django.db.models.expressions import RawSQL
 from django.db.transaction import TransactionManagementError
 from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
@@ -392,6 +393,25 @@ class ReadTestCase(TransactionTestCase):
                 TestChild.objects.exclude(permissions__isnull=True))
         self.assertListEqual(data7, data8)
         self.assertListEqual(data7, [])
+
+    def test_raw_subquery(self):
+        raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                         (self.t1__permission.pk,))
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.filter(permission=raw_sql))
+        with self.assertNumQueries(0):
+            data4 = list(Test.objects.filter(permission=raw_sql))
+        self.assertListEqual(data4, data3)
+        self.assertListEqual(data4, [self.t1])
+
+        with self.assertNumQueries(1):
+            data5 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        with self.assertNumQueries(0):
+            data6 = list(Test.objects.filter(
+                pk__in=Test.objects.filter(permission=raw_sql)))
+        self.assertListEqual(data6, data5)
+        self.assertListEqual(data6, [self.t1])
 
     def test_aggregate(self):
         Test.objects.create(name='test3', owner=self.user)
