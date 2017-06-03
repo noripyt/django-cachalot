@@ -9,7 +9,6 @@ from uuid import UUID
 
 from django import VERSION as django_version
 from django.db import connections
-from django.db.models.expressions import RawSQL
 from django.db.models.sql import Query
 from django.db.models.sql.where import (
     ExtraWhere, SubqueryConstraint, WhereNode)
@@ -137,8 +136,6 @@ def _find_subqueries(children):
             if hasattr(child, 'rhs'):
                 rhs = child.rhs
             rhs_class = rhs.__class__
-            if rhs_class is RawSQL:
-                raise IsRawQuery
             if rhs_class is Query:
                 yield rhs
             elif hasattr(rhs, 'query'):
