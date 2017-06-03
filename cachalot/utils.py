@@ -25,7 +25,7 @@ class UncachableQuery(Exception):
 TUPLE_OR_LIST = {tuple, list}
 
 CACHABLE_PARAM_TYPES = {
-    bool, int, float, Decimal, binary_type, text_type, type(None),
+    bool, int, float, Decimal, bytearray, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
 
@@ -59,7 +59,6 @@ def check_parameter_types(params):
             elif cl is dict:
                 check_parameter_types(p.items())
             else:
-                print(params, [text_type(p) for p in params])
                 raise UncachableQuery
 
 
