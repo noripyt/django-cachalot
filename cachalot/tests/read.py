@@ -326,8 +326,9 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs, [])
 
     def test_raw_subquery(self):
-        raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
-                         (self.t1__permission.pk,))
+        with self.assertNumQueries(0):
+            raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                             (self.t1__permission.pk,))
         qs = Test.objects.filter(permission=raw_sql)
         self.assert_tables(qs, 'cachalot_test', 'auth_permission')
         self.assert_query_cached(qs, [self.t1])

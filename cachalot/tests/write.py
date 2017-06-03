@@ -526,8 +526,9 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
 
     def test_invalidate_raw_subquery(self):
         permission = Permission.objects.first()
-        raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
-                         (permission.pk,))
+        with self.assertNumQueries(0):
+            raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                             (permission.pk,))
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(permission=raw_sql))
         self.assertListEqual(data1, [])
@@ -552,8 +553,9 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
 
     def test_invalidate_nested_raw_subquery(self):
         permission = Permission.objects.first()
-        raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
-                         (permission.pk,))
+        with self.assertNumQueries(0):
+            raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                             (permission.pk,))
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(
                 pk__in=Test.objects.filter(permission=raw_sql)))

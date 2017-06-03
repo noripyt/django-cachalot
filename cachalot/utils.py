@@ -14,7 +14,7 @@ from django.db.models.sql import Query
 from django.db.models.sql.where import (
     ExtraWhere, SubqueryConstraint, WhereNode)
 from django.utils.module_loading import import_string
-from django.utils.six import text_type, binary_type
+from django.utils.six import text_type, binary_type, PY2
 
 from .settings import cachalot_settings
 from .transaction import AtomicCache
@@ -34,6 +34,9 @@ CACHABLE_PARAM_TYPES = {
     bool, int, float, Decimal, bytearray, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
+
+if PY2:
+    CACHABLE_PARAM_TYPES.update(long)
 
 UNCACHABLE_FUNCS = set()
 if django_version[:2] >= (1, 9):
@@ -65,7 +68,6 @@ def check_parameter_types(params):
             elif cl is dict:
                 check_parameter_types(p.items())
             else:
-                print(params, [text_type(p) for p in params])
                 raise UncachableQuery
 
 
