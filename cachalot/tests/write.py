@@ -1,13 +1,15 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
+from unittest import skipIf, skipUnless
 
 from django import VERSION as django_version
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
 from django.core.management import call_command
-from django.db import connection, transaction
+from django.db import (
+    connection, transaction, ProgrammingError, OperationalError)
 from django.db.models import Count
 from django.db.models.expressions import RawSQL
 from django.test import TransactionTestCase, skipUnlessDBFeature
@@ -953,12 +955,67 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
 
         with self.assertNumQueries(1):
             with connection.cursor() as cursor:
-                cursor.execute("DELETE FROM cachalot_test;")
+                cursor.execute('DELETE FROM cachalot_test;')
 
         with self.assertNumQueries(1):
             self.assertListEqual(
                 list(Test.objects.values_list('name', flat=True)),
                 [])
+
+    def test_raw_create(self):
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [])
+
+        try:
+            with self.assertNumQueries(1):
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        'CREATE INDEX tmp_index ON cachalot_test(name);')
+
+            with self.assertNumQueries(1):
+                self.assertListEqual(list(Test.objects.all()), [])
+        finally:
+            with connection.cursor() as cursor:
+                cursor.execute('DROP INDEX tmp_index ON cachalot_test;'
+                               if self.is_mysql else 'DROP INDEX tmp_index;')
+
+    @skipIf(connection.vendor == 'sqlite',
+            'SQLite does not support column drop, '
+            'making it hard to test this.')
+    def test_raw_alter(self):
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [])
+
+        try:
+            with self.assertNumQueries(1):
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        'ALTER TABLE cachalot_test ADD COLUMN tmp INTEGER;')
+
+            with self.assertNumQueries(1):
+                self.assertListEqual(list(Test.objects.all()), [])
+        finally:
+            with connection.cursor() as cursor:
+                cursor.execute('ALTER TABLE cachalot_test DROP COLUMN tmp;')
+
+    @skipUnless(
+        connection.vendor == 'postgresql',
+        'SQLite & MySQL do not revert schema changes in a transaction, '
+        'making it hard to test this.')
+    @transaction.atomic
+    def test_raw_drop(self):
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [])
+
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute('DROP TABLE cachalot_test;')
+
+        # The table no longer exists, so an error should be raised
+        # after querying it.
+        with self.assertRaises((ProgrammingError, OperationalError)):
+            with self.assertNumQueries(1):
+                self.assertListEqual(list(Test.objects.all()), [])
 
 
 class DatabaseCommandTestCase(TestUtilsMixin, TransactionTestCase):
