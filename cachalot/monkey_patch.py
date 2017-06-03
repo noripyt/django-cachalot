@@ -5,8 +5,8 @@ from collections import Iterable
 from functools import wraps
 from time import time
 
+from django.core.exceptions import EmptyResultSet
 from django.db.backends.utils import CursorWrapper
-from django.db.models.query import EmptyResultSet
 from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
@@ -114,7 +114,8 @@ def _patch_cursor():
                 if isinstance(sql, binary_type):
                     sql = sql.decode('utf-8')
                 sql = sql.lower()
-                if 'update' in sql or 'insert' in sql or 'delete' in sql:
+                if 'update' in sql or 'insert' in sql or 'delete' in sql \
+                        or 'alter' in sql or 'create' in sql or 'drop' in sql:
                     tables = filter_cachable(
                         set(_get_tables_from_sql(cursor.db, sql)))
                     if tables:
