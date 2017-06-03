@@ -8,14 +8,17 @@ from django.db import DEFAULT_DB_ALIAS, connections, transaction
 from django.test import TransactionTestCase
 
 from .models import Test
+from .test_utils import TestUtilsMixin
 
 
 @skipIf(len(settings.DATABASES) == 1,
         'We can’t change the DB used since there’s only one configured')
-class MultiDatabaseTestCase(TransactionTestCase):
+class MultiDatabaseTestCase(TestUtilsMixin, TransactionTestCase):
     multi_db = True
 
     def setUp(self):
+        super(MultiDatabaseTestCase, self).setUp()
+
         self.t1 = Test.objects.create(name='test1')
         self.t2 = Test.objects.create(name='test2')
         self.db_alias2 = next(alias for alias in settings.DATABASES
@@ -23,10 +26,6 @@ class MultiDatabaseTestCase(TransactionTestCase):
         connection2 = connections[self.db_alias2]
         self.is_sqlite2 = connection2.vendor == 'sqlite'
         self.is_mysql2 = connection2.vendor == 'mysql'
-        if connection2.vendor in ('mysql', 'postgresql'):
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection2.cursor()
 
     def test_read(self):
         with self.assertNumQueries(1):

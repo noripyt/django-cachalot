@@ -13,23 +13,17 @@ from django.db.models.expressions import RawSQL
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test, TestParent, TestChild
+from .test_utils import TestUtilsMixin
 
 
 DJANGO_GTE_1_11 = django_version[:2] >= (1, 11)
 
 
-class WriteTestCase(TransactionTestCase):
+class WriteTestCase(TestUtilsMixin, TransactionTestCase):
     """
     Tests if every SQL request writing data is not cached and invalidates the
     implied data.
     """
-
-    def setUp(self):
-        self.is_sqlite = connection.vendor == 'sqlite'
-        if connection.vendor in ('mysql', 'postgresql'):
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection.cursor()
 
     def test_create(self):
         with self.assertNumQueries(1):
@@ -536,37 +530,25 @@ class WriteTestCase(TransactionTestCase):
                          (permission.pk,))
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(permission=raw_sql))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(permission=raw_sql))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [])
+        self.assertListEqual(data1, [])
 
         test = Test.objects.create(name='test', permission=permission)
 
         with self.assertNumQueries(1):
-            data3 = list(Test.objects.filter(permission=raw_sql))
-        with self.assertNumQueries(0):
-            data4 = list(Test.objects.filter(permission=raw_sql))
-        self.assertListEqual(data4, data3)
-        self.assertListEqual(data4, [test])
+            data2 = list(Test.objects.filter(permission=raw_sql))
+        self.assertListEqual(data2, [test])
 
-        Permission.objects.first().save()
+        permission.save()
 
         with self.assertNumQueries(1):
-            data5 = list(Test.objects.filter(permission=raw_sql))
-        with self.assertNumQueries(0):
-            data6 = list(Test.objects.filter(permission=raw_sql))
-        self.assertListEqual(data6, data5)
-        self.assertListEqual(data6, [test])
+            data3 = list(Test.objects.filter(permission=raw_sql))
+        self.assertListEqual(data3, [test])
 
         test.delete()
 
         with self.assertNumQueries(1):
-            data7 = list(Test.objects.filter(permission=raw_sql))
-        with self.assertNumQueries(0):
-            data8 = list(Test.objects.filter(permission=raw_sql))
-        self.assertListEqual(data8, data7)
-        self.assertListEqual(data8, [])
+            data4 = list(Test.objects.filter(permission=raw_sql))
+        self.assertListEqual(data4, [])
 
     def test_invalidate_nested_raw_subquery(self):
         permission = Permission.objects.first()
@@ -575,44 +557,28 @@ class WriteTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.filter(
                 pk__in=Test.objects.filter(permission=raw_sql)))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(
-                pk__in=Test.objects.filter(permission=raw_sql)))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [])
+        self.assertListEqual(data1, [])
 
         test = Test.objects.create(name='test', permission=permission)
 
         with self.assertNumQueries(1):
-            data3 = list(Test.objects.filter(
+            data2 = list(Test.objects.filter(
                 pk__in=Test.objects.filter(permission=raw_sql)))
-        with self.assertNumQueries(0):
-            data4 = list(Test.objects.filter(
-                pk__in=Test.objects.filter(permission=raw_sql)))
-        self.assertListEqual(data4, data3)
-        self.assertListEqual(data4, [test])
+        self.assertListEqual(data2, [test])
 
-        Permission.objects.first().save()
+        permission.save()
 
         with self.assertNumQueries(1):
-            data5 = list(Test.objects.filter(
+            data3 = list(Test.objects.filter(
                 pk__in=Test.objects.filter(permission=raw_sql)))
-        with self.assertNumQueries(0):
-            data6 = list(Test.objects.filter(
-                pk__in=Test.objects.filter(permission=raw_sql)))
-        self.assertListEqual(data6, data5)
-        self.assertListEqual(data6, [test])
+        self.assertListEqual(data3, [test])
 
         test.delete()
 
         with self.assertNumQueries(1):
-            data7 = list(Test.objects.filter(
+            data4 = list(Test.objects.filter(
                 pk__in=Test.objects.filter(permission=raw_sql)))
-        with self.assertNumQueries(0):
-            data8 = list(Test.objects.filter(
-                pk__in=Test.objects.filter(permission=raw_sql)))
-        self.assertListEqual(data8, data7)
-        self.assertListEqual(data8, [])
+        self.assertListEqual(data4, [])
 
     def test_invalidate_select_related(self):
         with self.assertNumQueries(1):
@@ -993,7 +959,7 @@ class WriteTestCase(TransactionTestCase):
                 [])
 
 
-class DatabaseCommandTestCase(TransactionTestCase):
+class DatabaseCommandTestCase(TestUtilsMixin, TransactionTestCase):
     def setUp(self):
         self.t = Test.objects.create(name='test1')
 
@@ -1003,10 +969,7 @@ class DatabaseCommandTestCase(TransactionTestCase):
 
         call_command('flush', verbosity=0, interactive=False)
 
-        if connection.vendor == 'mysql':
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection.cursor()
+        self.force_repoen_connection()
 
         with self.assertNumQueries(1):
             self.assertListEqual(list(Test.objects.all()), [])
@@ -1018,10 +981,7 @@ class DatabaseCommandTestCase(TransactionTestCase):
         call_command('loaddata', 'cachalot/tests/loaddata_fixture.json',
                      verbosity=0, interactive=False)
 
-        if connection.vendor in ('mysql', 'postgresql'):
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection.cursor()
+        self.force_repoen_connection()
 
         with self.assertNumQueries(1):
             self.assertListEqual([t.name for t in Test.objects.all()],

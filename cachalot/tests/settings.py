@@ -14,54 +14,35 @@ from django.test.utils import override_settings
 
 from ..api import invalidate
 from .models import Test, TestParent, TestChild
+from .test_utils import TestUtilsMixin
 
 
-class SettingsTestCase(TransactionTestCase):
-    def setUp(self):
-        if connection.vendor in ('mysql', 'postgresql'):
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection.cursor()
-
+class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
     @override_settings(CACHALOT_ENABLED=False)
     def test_decorator(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
+        self.assert_query_cached(Test.objects.all(), after=1)
 
     def test_django_override(self):
         with self.settings(CACHALOT_ENABLED=False):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
+            qs = Test.objects.all()
+            self.assert_query_cached(qs, after=1)
             with self.settings(CACHALOT_ENABLED=True):
-                with self.assertNumQueries(1):
-                    list(Test.objects.all())
-                with self.assertNumQueries(0):
-                    list(Test.objects.all())
+                self.assert_query_cached(qs)
 
     def test_enabled(self):
+        qs = Test.objects.all()
+
         with self.settings(CACHALOT_ENABLED=True):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
+            self.assert_query_cached(qs)
 
         with self.settings(CACHALOT_ENABLED=False):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
+            self.assert_query_cached(qs, after=1)
 
         with self.assertNumQueries(0):
             list(Test.objects.all())
 
-        is_sqlite = connection.vendor == 'sqlite'
-
         with self.settings(CACHALOT_ENABLED=False):
-            with self.assertNumQueries(2 if is_sqlite else 1):
+            with self.assertNumQueries(2 if self.is_sqlite else 1):
                 t = Test.objects.create(name='test')
         with self.assertNumQueries(1):
             data = list(Test.objects.all())
@@ -74,66 +55,53 @@ class SettingsTestCase(TransactionTestCase):
                                  if alias != DEFAULT_CACHE_ALIAS)
         invalidate(Test, cache_alias=other_cache_alias)
 
+        qs = Test.objects.all()
+
         with self.settings(CACHALOT_CACHE=DEFAULT_CACHE_ALIAS):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
+            self.assert_query_cached(qs)
 
         with self.settings(CACHALOT_CACHE=other_cache_alias):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
+            self.assert_query_cached(qs)
 
         Test.objects.create(name='test')
 
         # Only `CACHALOT_CACHE` is invalidated, so changing the database should
         # not invalidate all caches.
         with self.settings(CACHALOT_CACHE=other_cache_alias):
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
+            self.assert_query_cached(qs, before=0)
 
     def test_cache_timeout(self):
+        qs = Test.objects.all()
+
         with self.assertNumQueries(1):
-            list(Test.objects.all())
+            list(qs.all())
         sleep(1)
         with self.assertNumQueries(0):
-            list(Test.objects.all())
+            list(qs.all())
 
         invalidate(Test)
 
         with self.settings(CACHALOT_TIMEOUT=0):
             with self.assertNumQueries(1):
-                list(Test.objects.all())
+                list(qs.all())
             sleep(0.05)
             with self.assertNumQueries(1):
-                list(Test.objects.all())
+                list(qs.all())
 
         # We have to test with a full second and not a shorter time because
         # memcached only takes the integer part of the timeout into account.
         with self.settings(CACHALOT_TIMEOUT=1):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
+            self.assert_query_cached(qs)
             sleep(1)
             with self.assertNumQueries(1):
                 list(Test.objects.all())
 
     def test_cache_random(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.order_by('?'))
-        with self.assertNumQueries(1):
-            list(Test.objects.order_by('?'))
+        qs = Test.objects.order_by('?')
+        self.assert_query_cached(qs, after=1, compare_results=False)
 
         with self.settings(CACHALOT_CACHE_RANDOM=True):
-            with self.assertNumQueries(1):
-                list(Test.objects.order_by('?'))
-            with self.assertNumQueries(0):
-                list(Test.objects.order_by('?'))
+            self.assert_query_cached(qs)
 
     def test_invalidate_raw(self):
         with self.assertNumQueries(1):
@@ -148,85 +116,45 @@ class SettingsTestCase(TransactionTestCase):
 
     def test_only_cachable_tables(self):
         with self.settings(CACHALOT_ONLY_CACHABLE_TABLES=('cachalot_test',)):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(0):
-                list(Test.objects.all())
+            self.assert_query_cached(Test.objects.all())
+            self.assert_query_cached(TestParent.objects.all(), after=1)
+            self.assert_query_cached(Test.objects.select_related('owner'),
+                                     after=1)
 
-            with self.assertNumQueries(1):
-                list(TestParent.objects.all())
-            with self.assertNumQueries(1):
-                list(TestParent.objects.all())
-
-            with self.assertNumQueries(1):
-                list(Test.objects.select_related('owner'))
-            with self.assertNumQueries(1):
-                list(Test.objects.select_related('owner'))
-
-        with self.assertNumQueries(1):
-            list(TestParent.objects.all())
-        with self.assertNumQueries(0):
-            list(TestParent.objects.all())
+        self.assert_query_cached(TestParent.objects.all())
 
         with self.settings(CACHALOT_ONLY_CACHABLE_TABLES=(
                 'cachalot_test', 'cachalot_testchild', 'auth_user')):
-            with self.assertNumQueries(1):
-                list(Test.objects.select_related('owner'))
-            with self.assertNumQueries(0):
-                list(Test.objects.select_related('owner'))
+            self.assert_query_cached(Test.objects.select_related('owner'))
 
             # TestChild uses multi-table inheritance, and since its parent,
             # 'cachalot_testparent', is not cachable, a basic
             # TestChild query can’t be cached
-            with self.assertNumQueries(1):
-                list(TestChild.objects.all())
-            with self.assertNumQueries(1):
-                list(TestChild.objects.all())
+            self.assert_query_cached(TestChild.objects.all(), after=1)
 
             # However, if we only fetch data from the 'cachalot_testchild'
             # table, it’s cachable.
-            with self.assertNumQueries(1):
-                list(TestChild.objects.values('public'))
-            with self.assertNumQueries(0):
-                list(TestChild.objects.values('public'))
+            self.assert_query_cached(TestChild.objects.values('public'))
 
     def test_uncachable_tables(self):
-        with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
-        with self.assertNumQueries(0):
-            list(Test.objects.all())
+        qs = Test.objects.all()
 
         with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
+            self.assert_query_cached(qs, after=1)
+
+        self.assert_query_cached(qs)
+
+        with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
+            self.assert_query_cached(qs, after=1)
 
     def test_only_cachable_and_uncachable_table(self):
         with self.settings(
                 CACHALOT_ONLY_CACHABLE_TABLES=('cachalot_test',
                                                'cachalot_testparent'),
                 CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-            with self.assertNumQueries(1):
-                list(Test.objects.all())
-
-            with self.assertNumQueries(1):
-                list(TestParent.objects.all())
-            with self.assertNumQueries(0):
-                list(TestParent.objects.all())
-
-            with self.assertNumQueries(1):
-                list(User.objects.all())
-            with self.assertNumQueries(1):
-                list(User.objects.all())
+            self.assert_query_cached(Test.objects.all(), after=1)
+            self.assert_query_cached(TestParent.objects.all())
+            self.assert_query_cached(User.objects.all(), after=1)
 
     def test_compatibility(self):
         """

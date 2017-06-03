@@ -7,6 +7,7 @@ from django.db import connection, transaction
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test
+from .test_utils import TestUtilsMixin
 
 
 class TestThread(Thread):
@@ -21,13 +22,7 @@ class TestThread(Thread):
 
 
 @skipUnlessDBFeature('test_db_allows_multiple_connections')
-class ThreadSafetyTestCase(TransactionTestCase):
-    def setUp(self):
-        if connection.vendor in ('mysql', 'postgresql'):
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection.cursor()
-
+class ThreadSafetyTestCase(TestUtilsMixin, TransactionTestCase):
     def test_concurrent_caching(self):
         t1 = TestThread().start_and_join()
         t = Test.objects.create(name='test')

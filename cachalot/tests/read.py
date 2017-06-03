@@ -18,8 +18,9 @@ from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
 from pytz import UTC
 
-from ..utils import _get_table_cache_key
+from ..utils import _get_table_cache_key, UncachableQuery
 from .models import Test, TestChild
+from .test_utils import TestUtilsMixin
 
 
 DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
@@ -28,7 +29,7 @@ if DJANGO_GTE_1_9:
     from django.db.models.functions import Now
 
 
-class ReadTestCase(TransactionTestCase):
+class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     """
     Tests if every SQL request that only reads data is cached.
 
@@ -38,6 +39,8 @@ class ReadTestCase(TransactionTestCase):
     """
 
     def setUp(self):
+        super(ReadTestCase, self).setUp()
+
         self.group = Group.objects.create(name='test_group')
         self.group__permissions = list(Permission.objects.all()[:3])
         self.group.permissions.add(*self.group__permissions)
@@ -56,8 +59,6 @@ class ReadTestCase(TransactionTestCase):
         self.t2 = Test.objects.create(
             name='test2', owner=self.admin, public=True,
             date='1944-06-06', datetime='1944-06-06T06:35:00')
-
-        self.is_sqlite = connection.vendor == 'sqlite'
 
     def test_empty(self):
         with self.assertNumQueries(0):
@@ -121,131 +122,87 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, [self.t1, self.t2])
 
     def test_filter(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(public=True))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(public=True))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2])
+        qs = Test.objects.filter(public=True)
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t2])
 
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(name__in=['test2', 'test72']))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(name__in=['test2', 'test72']))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2])
+        qs = Test.objects.filter(name__in=['test2', 'test72'])
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t2])
 
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(
-                date__gt=datetime.date(1900, 1, 1)))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(
-                date__gt=datetime.date(1900, 1, 1)))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2])
+        qs = Test.objects.filter(date__gt=datetime.date(1900, 1, 1))
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t2])
 
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(
-                datetime__lt=datetime.datetime(1900, 1, 1)))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(
-                datetime__lt=datetime.datetime(1900, 1, 1)))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1])
+        qs = Test.objects.filter(datetime__lt=datetime.datetime(1900, 1, 1))
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t1])
 
     def test_filter_empty(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(public=True,
-                                             name='user'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(public=True,
-                                             name='user'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [])
+        qs = Test.objects.filter(public=True, name='user')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [])
 
     def test_exclude(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.exclude(public=True))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.exclude(public=True))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1])
+        qs = Test.objects.exclude(public=True)
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t1])
 
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.exclude(name__in=['test2', 'test72']))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.exclude(name__in=['test2', 'test72']))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1])
+        qs = Test.objects.exclude(name__in=['test2', 'test72'])
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t1])
 
     def test_slicing(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.all()[:1])
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.all()[:1])
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1])
+        qs = Test.objects.all()[:1]
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t1])
 
     def test_order_by(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.order_by('pk'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.order_by('pk'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1, self.t2])
+        qs = Test.objects.order_by('pk')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t1, self.t2])
 
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.order_by('-name'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.order_by('-name'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2, self.t1])
+        qs = Test.objects.order_by('-name')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_random_order_by(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.order_by('?'))
-        with self.assertNumQueries(1):
-            list(Test.objects.order_by('?'))
+        qs = Test.objects.order_by('?')
+        with self.assertRaises(UncachableQuery):
+            self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, after=1, compare_results=False)
 
     @skipIf(connection.vendor == 'mysql',
             'MySQL does not support limit/offset on a subquery. '
             'Since Django only applies ordering in subqueries when they are '
             'offset/limited, we can’t test it on MySQL.')
     def test_random_order_by_subquery(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.filter(
-                pk__in=Test.objects.order_by('?')[:10]))
-        with self.assertNumQueries(1):
-            list(Test.objects.filter(
-                pk__in=Test.objects.order_by('?')[:10]))
+        qs = Test.objects.filter(
+            pk__in=Test.objects.order_by('?')[:10])
+        with self.assertRaises(UncachableQuery):
+            self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, after=1, compare_results=False)
 
     def test_reverse(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.reverse())
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.reverse())
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t2, self.t1])
+        qs = Test.objects.reverse()
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_distinct(self):
         # We ensure that the query without distinct should return duplicate
         # objects, in order to have a real-world example.
-        data1 = list(Test.objects.filter(
-            owner__user_permissions__content_type__app_label='auth'))
-        self.assertEqual(len(data1), 3)
-        self.assertListEqual(data1, [self.t1] * 3)
+        qs = Test.objects.filter(
+            owner__user_permissions__content_type__app_label='auth')
+        self.assert_tables(qs, 'cachalot_test', 'auth_user',
+                           'auth_user_user_permissions', 'auth_permission',
+                           'django_content_type')
+        self.assert_query_cached(qs, [self.t1, self.t1, self.t1])
 
-        with self.assertNumQueries(1):
-            data2 = list(Test.objects.filter(
-                owner__user_permissions__content_type__app_label='auth'
-            ).distinct())
-        with self.assertNumQueries(0):
-            data3 = list(Test.objects.filter(
-                owner__user_permissions__content_type__app_label='auth'
-            ).distinct())
-        self.assertListEqual(data3, data2)
-        self.assertEqual(len(data3), 1)
-        self.assertListEqual(data3, [self.t1])
+        qs = qs.distinct()
+        self.assert_tables(qs, 'cachalot_test', 'auth_user',
+                           'auth_user_user_permissions', 'auth_permission',
+                           'django_content_type')
+        self.assert_query_cached(qs, [self.t1])
 
     def test_iterator(self):
         with self.assertNumQueries(1):
@@ -276,12 +233,9 @@ class ReadTestCase(TransactionTestCase):
         self.assertDictEqual(data2[1], {'name': 'test2', 'public': True})
 
     def test_values_list(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values_list('name', flat=True))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values_list('name', flat=True))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, ['test1', 'test2'])
+        qs = Test.objects.values_list('name', flat=True)
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, ['test1', 'test2'])
 
     def test_earliest(self):
         with self.assertNumQueries(1):
@@ -300,33 +254,24 @@ class ReadTestCase(TransactionTestCase):
         self.assertEqual(data2, self.t2)
 
     def test_dates(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.dates('date', 'year'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.dates('date', 'year'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [datetime.date(1789, 1, 1),
-                                     datetime.date(1944, 1, 1)])
+        qs = Test.objects.dates('date', 'year')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [datetime.date(1789, 1, 1),
+                                      datetime.date(1944, 1, 1)])
 
     def test_datetimes(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.datetimes('datetime', 'hour'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.datetimes('datetime', 'hour'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [datetime.datetime(1789, 7, 14, 16),
-                                     datetime.datetime(1944, 6, 6, 6)])
+        qs = Test.objects.datetimes('datetime', 'hour')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [datetime.datetime(1789, 7, 14, 16),
+                                      datetime.datetime(1944, 6, 6, 6)])
 
     @skipIf(connection.vendor == 'mysql',
             'Time zones are not supported by MySQL.')
     @override_settings(USE_TZ=True)
     def test_datetimes_with_time_zones(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.datetimes('datetime', 'hour'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.datetimes('datetime', 'hour'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [
+        qs = Test.objects.datetimes('datetime', 'hour')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [
             datetime.datetime(1789, 7, 14, 16, tzinfo=UTC),
             datetime.datetime(1944, 6, 6, 6, tzinfo=UTC)])
 
@@ -356,62 +301,41 @@ class ReadTestCase(TransactionTestCase):
         self.assertListEqual(data2, ['cuddle', 'discuss', 'touch'])
 
     def test_subquery(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(owner__in=User.objects.all()))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(owner__in=User.objects.all()))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1, self.t2])
+        qs = Test.objects.filter(owner__in=User.objects.all())
+        self.assert_tables(qs, 'cachalot_test', 'auth_user')
+        self.assert_query_cached(qs, [self.t1, self.t2])
 
-        with self.assertNumQueries(1):
-            data3 = list(Test.objects.filter(
-                owner__groups__permissions__in=Permission.objects.all()))
-        with self.assertNumQueries(0):
-            data4 = list(Test.objects.filter(
-                owner__groups__permissions__in=Permission.objects.all()))
-        self.assertListEqual(data4, data3)
-        self.assertListEqual(data4, [self.t1, self.t1, self.t1])
+        qs = Test.objects.filter(
+            owner__groups__permissions__in=Permission.objects.all())
+        self.assert_tables(qs, 'cachalot_test', 'auth_user',
+                           'auth_user_groups', 'auth_group',
+                           'auth_group_permissions', 'auth_permission')
+        self.assert_query_cached(qs, [self.t1, self.t1, self.t1])
 
-        with self.assertNumQueries(1):
-            data5 = list(
-                Test.objects.filter(
-                    owner__groups__permissions__in=Permission.objects.all()
-                ).distinct())
-        with self.assertNumQueries(0):
-            data6 = list(
-                Test.objects.filter(
-                    owner__groups__permissions__in=Permission.objects.all()
-                ).distinct())
-        self.assertListEqual(data6, data5)
-        self.assertListEqual(data6, [self.t1])
+        qs = Test.objects.filter(
+            owner__groups__permissions__in=Permission.objects.all()
+        ).distinct()
+        self.assert_tables(qs, 'cachalot_test', 'auth_user',
+                           'auth_user_groups', 'auth_group',
+                           'auth_group_permissions', 'auth_permission')
+        self.assert_query_cached(qs, [self.t1])
 
-        with self.assertNumQueries(1):
-            data7 = list(
-                TestChild.objects.exclude(permissions__isnull=True))
-        with self.assertNumQueries(0):
-            data8 = list(
-                TestChild.objects.exclude(permissions__isnull=True))
-        self.assertListEqual(data7, data8)
-        self.assertListEqual(data7, [])
+        qs = TestChild.objects.exclude(permissions__isnull=True)
+        self.assert_tables(qs, 'cachalot_testparent', 'cachalot_testchild',
+                           'cachalot_testchild_permissions', 'auth_permission')
+        self.assert_query_cached(qs, [])
 
     def test_raw_subquery(self):
         raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
                          (self.t1__permission.pk,))
-        with self.assertNumQueries(1):
-            data3 = list(Test.objects.filter(permission=raw_sql))
-        with self.assertNumQueries(0):
-            data4 = list(Test.objects.filter(permission=raw_sql))
-        self.assertListEqual(data4, data3)
-        self.assertListEqual(data4, [self.t1])
+        qs = Test.objects.filter(permission=raw_sql)
+        self.assert_tables(qs, 'cachalot_test', 'auth_permission')
+        self.assert_query_cached(qs, [self.t1])
 
-        with self.assertNumQueries(1):
-            data5 = list(Test.objects.filter(
-                pk__in=Test.objects.filter(permission=raw_sql)))
-        with self.assertNumQueries(0):
-            data6 = list(Test.objects.filter(
-                pk__in=Test.objects.filter(permission=raw_sql)))
-        self.assertListEqual(data6, data5)
-        self.assertListEqual(data6, [self.t1])
+        qs = Test.objects.filter(
+            pk__in=Test.objects.filter(permission=raw_sql))
+        self.assert_tables(qs, 'cachalot_test', 'auth_permission')
+        self.assert_query_cached(qs, [self.t1])
 
     def test_aggregate(self):
         Test.objects.create(name='test3', owner=self.user)
@@ -424,14 +348,10 @@ class ReadTestCase(TransactionTestCase):
 
     def test_annotate(self):
         Test.objects.create(name='test3', owner=self.user)
-        with self.assertNumQueries(1):
-            data1 = list(User.objects.annotate(n=Count('test')).order_by('pk')
-                         .values_list('n', flat=True))
-        with self.assertNumQueries(0):
-            data2 = list(User.objects.annotate(n=Count('test')).order_by('pk')
-                         .values_list('n', flat=True))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [2, 1])
+        qs = (User.objects.annotate(n=Count('test')).order_by('pk')
+              .values_list('n', flat=True))
+        self.assert_tables(qs, 'auth_user', 'cachalot_test')
+        self.assert_query_cached(qs, [2, 1])
 
     def test_only(self):
         with self.assertNumQueries(1):
@@ -584,15 +504,11 @@ class ReadTestCase(TransactionTestCase):
                                      ['test1', 'test2'])
 
     def test_having(self):
-        with self.assertNumQueries(1):
-            data1 = list(User.objects.annotate(n=Count('user_permissions'))
-                         .filter(n__gte=1))
-            self.assertListEqual(data1, [self.user])
-
-        with self.assertNumQueries(0):
-            data2 = list(User.objects.annotate(n=Count('user_permissions'))
-                         .filter(n__gte=1))
-            self.assertListEqual(data2, [self.user])
+        qs = (User.objects.annotate(n=Count('user_permissions'))
+              .filter(n__gte=1))
+        self.assert_tables(qs, 'auth_user', 'auth_user_user_permissions',
+                           'auth_permission')
+        self.assert_query_cached(qs, [self.user])
 
         with self.assertNumQueries(1):
             self.assertEqual(User.objects.annotate(n=Count('user_permissions'))
@@ -624,26 +540,20 @@ class ReadTestCase(TransactionTestCase):
     def test_extra_where(self):
         sql_condition = ("owner_id IN "
                          "(SELECT id FROM auth_user WHERE username = 'admin')")
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.extra(where=[sql_condition]))
-            self.assertListEqual(data1, [self.t2])
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.extra(where=[sql_condition]))
-            self.assertListEqual(data2, [self.t2])
+        qs = Test.objects.extra(where=[sql_condition])
+        self.assert_tables(qs, 'cachalot_test', 'auth_user')
+        self.assert_query_cached(qs, [self.t2])
 
     def test_extra_tables(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.extra(tables=['auth_user']))
-        with self.assertNumQueries(0):
-            list(Test.objects.extra(tables=['auth_user']))
+        qs = Test.objects.extra(tables=['auth_user'],
+                                select={'extra_id': 'auth_user.id'})
+        self.assert_tables(qs, 'cachalot_test', 'auth_user')
+        self.assert_query_cached(qs)
 
     def test_extra_order_by(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
-            self.assertListEqual(data1, [self.t2, self.t1])
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.extra(order_by=['-cachalot_test.name']))
-            self.assertListEqual(data2, [self.t2, self.t1])
+        qs = Test.objects.extra(order_by=['-cachalot_test.name'])
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_table_inheritance(self):
         with self.assertNumQueries(3 if self.is_sqlite else 2):
@@ -719,17 +629,15 @@ class ReadTestCase(TransactionTestCase):
             [('é',) + l for l in Test.objects.values_list(*attnames)])
 
     def test_missing_table_cache_key(self):
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
-        with self.assertNumQueries(0):
-            list(Test.objects.all())
+        qs = Test.objects.all()
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs)
 
         table_cache_key = _get_table_cache_key(connection.alias,
                                                Test._meta.db_table)
         cache.delete(table_cache_key)
 
-        with self.assertNumQueries(1):
-            list(Test.objects.all())
+        self.assert_query_cached(qs)
 
     def test_unicode_get(self):
         with self.assertNumQueries(1):
@@ -748,23 +656,18 @@ class ReadTestCase(TransactionTestCase):
             table_name = '"%s"' % table_name
         with connection.cursor() as cursor:
             cursor.execute('CREATE TABLE %s (taste VARCHAR(20));' % table_name)
-        with self.assertNumQueries(1):
-            list(Test.objects.extra(tables=['Clémentine']))
-        with self.assertNumQueries(0):
-            list(Test.objects.extra(tables=['Clémentine']))
+        qs = Test.objects.extra(tables=['Clémentine'],
+                                select={'taste': '%s.taste' % table_name})
+        # Here the table `Clémentine` is not detected because it is not
+        # registered by Django, and we only check for registered tables
+        # to avoid creating an extra SQL query fetching table names.
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs)
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE %s;' % table_name)
 
 
-class ParameterTypeTestCase(TransactionTestCase):
-    def setUp(self):
-        self.is_sqlite = connection.vendor == 'sqlite'
-        self.is_mysql = connection.vendor == 'mysql'
-        if connection.vendor in ('mysql', 'postgresql'):
-            # We need to reopen the connection or Django
-            # will execute an extra SQL request below.
-            connection.cursor()
-
+class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
     def test_binary(self):
         """
         Binary data should be cached on PostgreSQL & MySQL, but not on SQLite,
@@ -773,20 +676,17 @@ class ParameterTypeTestCase(TransactionTestCase):
         So this also tests how django-cachalot handles unknown params, in this
         case the `memory` object passed to SQLite.
         """
-        with self.assertNumQueries(1):
-            list(Test.objects.filter(bin=None))
-        with self.assertNumQueries(0):
-            list(Test.objects.filter(bin=None))
+        qs = Test.objects.filter(bin=None)
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs)
 
-        with self.assertNumQueries(1):
-            list(Test.objects.filter(bin=b'abc'))
-        with self.assertNumQueries(1 if self.is_sqlite else 0):
-            list(Test.objects.filter(bin=b'abc'))
+        qs = Test.objects.filter(bin=b'abc')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, after=1 if self.is_sqlite else 0)
 
-        with self.assertNumQueries(1):
-            list(Test.objects.filter(bin=b'def'))
-        with self.assertNumQueries(1 if self.is_sqlite else 0):
-            list(Test.objects.filter(bin=b'def'))
+        qs = Test.objects.filter(bin=b'def')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, after=1 if self.is_sqlite else 0)
 
     def test_float(self):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
@@ -814,14 +714,11 @@ class ParameterTypeTestCase(TransactionTestCase):
             Test.objects.create(name='test1', a_decimal=Decimal('123.45'))
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test1', a_decimal=Decimal('12.3'))
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values_list('a_decimal', flat=True).filter(
-                a_decimal__isnull=False).order_by('a_decimal'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values_list('a_decimal', flat=True).filter(
-                a_decimal__isnull=False).order_by('a_decimal'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [Decimal('12.3'), Decimal('123.45')])
+
+        qs = Test.objects.values_list('a_decimal', flat=True).filter(
+            a_decimal__isnull=False).order_by('a_decimal')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [Decimal('12.3'), Decimal('123.45')])
 
         with self.assertNumQueries(1):
             Test.objects.get(a_decimal=Decimal('123.45'))
@@ -833,14 +730,11 @@ class ParameterTypeTestCase(TransactionTestCase):
             Test.objects.create(name='test1', ip='127.0.0.1')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test2', ip='192.168.0.1')
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values_list('ip', flat=True).filter(
-                ip__isnull=False).order_by('ip'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values_list('ip', flat=True).filter(
-                ip__isnull=False).order_by('ip'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, ['127.0.0.1', '192.168.0.1'])
+
+        qs = Test.objects.values_list('ip', flat=True).filter(
+            ip__isnull=False).order_by('ip')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, ['127.0.0.1', '192.168.0.1'])
 
         with self.assertNumQueries(1):
             Test.objects.get(ip='127.0.0.1')
@@ -852,15 +746,12 @@ class ParameterTypeTestCase(TransactionTestCase):
             Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values_list('ip', flat=True).filter(
-                ip__isnull=False).order_by('ip'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values_list('ip', flat=True).filter(
-                ip__isnull=False).order_by('ip'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [
-            '2001:db8:0:85a3::ac1f:8001', '2001:db8:a0b:12f0::1/64'])
+
+        qs = Test.objects.values_list('ip', flat=True).filter(
+            ip__isnull=False).order_by('ip')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, ['2001:db8:0:85a3::ac1f:8001',
+                                      '2001:db8:a0b:12f0::1/64'])
 
         with self.assertNumQueries(1):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
@@ -872,17 +763,12 @@ class ParameterTypeTestCase(TransactionTestCase):
             Test.objects.create(name='test1', duration=datetime.timedelta(30))
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test2', duration=datetime.timedelta(60))
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values_list(
-                'duration', flat=True).filter(
-                duration__isnull=False).order_by('duration'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values_list(
-                'duration', flat=True).filter(
-                duration__isnull=False).order_by('duration'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [
-            datetime.timedelta(30), datetime.timedelta(60)])
+
+        qs = Test.objects.values_list('duration', flat=True).filter(
+            duration__isnull=False).order_by('duration')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [datetime.timedelta(30),
+                                      datetime.timedelta(60)])
 
         with self.assertNumQueries(1):
             Test.objects.get(duration=datetime.timedelta(30))
@@ -896,16 +782,11 @@ class ParameterTypeTestCase(TransactionTestCase):
         with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.create(name='test2',
                                 uuid='ebb3b6e1-1737-4321-93e3-4c35d61ff491')
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values_list(
-                'uuid', flat=True).filter(
-                uuid__isnull=False).order_by('uuid'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values_list(
-                'uuid', flat=True).filter(
-                uuid__isnull=False).order_by('uuid'))
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [
+
+        qs = Test.objects.values_list('uuid', flat=True).filter(
+            uuid__isnull=False).order_by('uuid')
+        self.assert_tables(qs, 'cachalot_test')
+        self.assert_query_cached(qs, [
             UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'),
             UUID('ebb3b6e1-1737-4321-93e3-4c35d61ff491')])
 

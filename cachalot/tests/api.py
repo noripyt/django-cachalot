@@ -9,18 +9,19 @@ from django.contrib.auth.models import User
 from django.core.cache import DEFAULT_CACHE_ALIAS, caches
 from django.core.management import call_command
 from django.db import connection, transaction, DEFAULT_DB_ALIAS
-from django.template import engines, Context
+from django.template import engines
 from django.test import TransactionTestCase
 from jinja2.exceptions import TemplateSyntaxError
 
 from ..api import *
 from .models import Test
+from .test_utils import TestUtilsMixin
 
 
-class APITestCase(TransactionTestCase):
+class APITestCase(TestUtilsMixin, TransactionTestCase):
     def setUp(self):
+        super(APITestCase, self).setUp()
         self.t1 = Test.objects.create(name='test1')
-        self.is_sqlite = connection.vendor == 'sqlite'
         self.cache_alias2 = next(alias for alias in settings.CACHES
                                  if alias != DEFAULT_CACHE_ALIAS)
 
