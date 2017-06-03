@@ -9,6 +9,7 @@ from uuid import UUID
 
 from django import VERSION as django_version
 from django.db import connections
+from django.db.models import QuerySet
 from django.db.models.sql import Query
 from django.db.models.sql.where import (
     ExtraWhere, SubqueryConstraint, WhereNode)
@@ -125,20 +126,17 @@ def _find_subqueries(children):
             for grand_child in _find_subqueries(child.children):
                 yield grand_child
         elif child_class is SubqueryConstraint:
-            if child.query_object.__class__ is Query:
-                yield child.query_object
-            else:
-                yield child.query_object.query
+            query_object = child.query_object
+            yield (query_object if query_object.__class__ is Query
+                   else query_object.query)
         elif child_class is ExtraWhere:
             raise IsRawQuery
         else:
-            rhs = None
-            if hasattr(child, 'rhs'):
-                rhs = child.rhs
+            rhs = getattr(child, 'rhs', None)
             rhs_class = rhs.__class__
             if rhs_class is Query:
                 yield rhs
-            elif hasattr(rhs, 'query'):
+            elif rhs_class is QuerySet:
                 yield rhs.query
             elif rhs_class in UNCACHABLE_FUNCS:
                 raise UncachableQuery
