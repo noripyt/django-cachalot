@@ -36,7 +36,7 @@ CACHABLE_PARAM_TYPES = {
 }
 
 if PY2:
-    CACHABLE_PARAM_TYPES.update(long)
+    CACHABLE_PARAM_TYPES.add(long)
 
 UNCACHABLE_FUNCS = set()
 if django_version[:2] >= (1, 9):
