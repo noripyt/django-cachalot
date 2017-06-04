@@ -23,6 +23,10 @@ Conditions
 
 .. include:: ../benchmark/conditions.rst
 
+Note that
+`MySQL’s query cache <http://dev.mysql.com/doc/refman/5.7/en/query-cache.html>`_
+is active during the benchmark.
+
 Database results
 ................
 

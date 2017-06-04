@@ -161,6 +161,10 @@ class Benchmark(object):
                  'cache': self.cache_name})
 
     def benchmark(self, query_str, to_list=True, num_queries=1):
+        # Clears the cache before a single benchmark to ensure the same
+        # conditions across single benchmarks.
+        caches[settings.CACHALOT_CACHE].clear()
+
         self.query_name = query_str
         query_str = 'Test.objects.using(using)' + query_str
         if to_list:
