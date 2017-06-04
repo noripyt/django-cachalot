@@ -1,9 +1,45 @@
 from django.conf import settings
+from django.utils.module_loading import import_string
+
+
+SUPPORTED_DATABASE_ENGINES = {
+    'django.db.backends.sqlite3',
+    'django.db.backends.postgresql',
+    'django.db.backends.mysql',
+    # TODO: Remove when we drop Django 1.8 support.
+    'django.db.backends.postgresql_psycopg2',
+
+    # GeoDjango
+    'django.contrib.gis.db.backends.spatialite',
+    'django.contrib.gis.db.backends.postgis',
+    'django.contrib.gis.db.backends.mysql',
+
+    # django-transaction-hooks
+    'transaction_hooks.backends.sqlite3',
+    'transaction_hooks.backends.postgis',
+    'transaction_hooks.backends.postgresql_psycopg2',
+    'transaction_hooks.backends.mysql',
+}
+
+SUPPORTED_CACHE_BACKENDS = {
+    'django.core.cache.backends.dummy.DummyCache',
+    'django.core.cache.backends.locmem.LocMemCache',
+    'django.core.cache.backends.filebased.FileBasedCache',
+    'django_redis.cache.RedisCache',
+    'django.core.cache.backends.memcached.MemcachedCache',
+    'django.core.cache.backends.memcached.PyLibMCCache',
+}
+
+SUPPORTED_ONLY = 'supported_only'
+ITERABLES = {tuple, list, frozenset, set}
 
 
 class Settings(object):
+    converters = {}
+
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
+    CACHALOT_DATABASES = 'supported_only'
     CACHALOT_TIMEOUT = None
     CACHALOT_CACHE_RANDOM = False
     CACHALOT_INVALIDATE_RAW = True
@@ -12,16 +48,55 @@ class Settings(object):
     CACHALOT_QUERY_KEYGEN = 'cachalot.utils.get_query_cache_key'
     CACHALOT_TABLE_KEYGEN = 'cachalot.utils.get_table_cache_key'
 
-    def __getattribute__(self, item):
-        if hasattr(settings, item):
-            return getattr(settings, item)
-        return super(Settings, self).__getattribute__(item)
+    @classmethod
+    def add_converter(cls, setting):
+        def inner(func):
+            cls.converters[setting] = func
 
-    def __setattr__(self, key, value):
-        raise AttributeError(
-            "Don't modify `cachalot_settings`, use "
-            "`django.test.utils.override_settings` or "
-            "`django.conf.settings` instead.")
+        return inner
+
+    @classmethod
+    def get_names(cls):
+        return {name for name in cls.__dict__
+                if name[:2] != '__' and name.isupper()}
+
+    def load(self):
+        for name in self.get_names():
+            value = getattr(settings, name, getattr(self.__class__, name))
+            converter = self.converters.get(name)
+            if converter is not None:
+                value = converter(value)
+            setattr(self, name, value)
+
+
+@Settings.add_converter('CACHALOT_DATABASES')
+def convert(value):
+    if value == SUPPORTED_ONLY:
+        value = {alias for alias, setting in settings.DATABASES.items()
+                 if setting['ENGINE'] in SUPPORTED_DATABASE_ENGINES}
+    if value.__class__ in ITERABLES:
+        return frozenset(value)
+    return value
+
+
+@Settings.add_converter('CACHALOT_ONLY_CACHABLE_TABLES')
+def convert(value):
+    return frozenset(value)
+
+
+@Settings.add_converter('CACHALOT_ONLY_UNCACHABLE_TABLES')
+def convert(value):
+    return frozenset(value)
+
+
+@Settings.add_converter('CACHALOT_QUERY_KEYGEN')
+def convert(value):
+    return import_string(value)
+
+
+@Settings.add_converter('CACHALOT_TABLE_KEYGEN')
+def convert(value):
+    return import_string(value)
 
 
 cachalot_settings = Settings()

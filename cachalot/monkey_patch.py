@@ -16,10 +16,10 @@ from django.utils.six import binary_type
 
 from .api import invalidate
 from .cache import cachalot_caches
-from .settings import cachalot_settings
+from .settings import cachalot_settings, ITERABLES
 from .utils import (
-    _get_query_cache_key, _get_table_cache_keys, _get_tables_from_sql,
-    UncachableQuery, TUPLE_OR_LIST, is_cachable, filter_cachable,
+    _get_table_cache_keys, _get_tables_from_sql,
+    UncachableQuery, is_cachable, filter_cachable,
 )
 
 
@@ -53,7 +53,7 @@ def _get_result_or_execute_query(execute_query_func, cache,
             return result
 
     result = execute_query_func()
-    if isinstance(result, Iterable) and result.__class__ not in TUPLE_OR_LIST:
+    if result.__class__ not in ITERABLES and isinstance(result, Iterable):
         result = list(result)
 
     cache.set(cache_key, (time(), result), cachalot_settings.CACHALOT_TIMEOUT)
@@ -66,19 +66,21 @@ def _patch_compiler(original):
     @_unset_raw_connection
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
+        db_alias = compiler.using
         if not cachalot_settings.CACHALOT_ENABLED \
+                or db_alias not in cachalot_settings.CACHALOT_DATABASES \
                 or isinstance(compiler, WRITE_COMPILERS):
             return execute_query_func()
 
         try:
-            cache_key = _get_query_cache_key(compiler)
+            cache_key = cachalot_settings.CACHALOT_QUERY_KEYGEN(compiler)
             table_cache_keys = _get_table_cache_keys(compiler)
         except (EmptyResultSet, UncachableQuery):
             return execute_query_func()
 
         return _get_result_or_execute_query(
             execute_query_func,
-            cachalot_caches.get_cache(db_alias=compiler.using),
+            cachalot_caches.get_cache(db_alias=db_alias),
             cache_key, table_cache_keys)
 
     return inner
@@ -109,7 +111,8 @@ def _patch_cursor():
         @wraps(original)
         def inner(cursor, sql, *args, **kwargs):
             out = original(cursor, sql, *args, **kwargs)
-            if getattr(cursor.db, 'raw', True) \
+            connection = cursor.db
+            if getattr(connection, 'raw', True) \
                     and cachalot_settings.CACHALOT_INVALIDATE_RAW:
                 if isinstance(sql, binary_type):
                     sql = sql.decode('utf-8')
@@ -117,9 +120,9 @@ def _patch_cursor():
                 if 'update' in sql or 'insert' in sql or 'delete' in sql \
                         or 'alter' in sql or 'create' in sql or 'drop' in sql:
                     tables = filter_cachable(
-                        set(_get_tables_from_sql(cursor.db, sql)))
+                        _get_tables_from_sql(connection, sql))
                     if tables:
-                        invalidate(*tables, db_alias=cursor.db.alias,
+                        invalidate(*tables, db_alias=connection.alias,
                                    cache_alias=cachalot_settings.CACHALOT_CACHE)
             return out
 

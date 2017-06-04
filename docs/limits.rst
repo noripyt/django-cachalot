@@ -99,22 +99,17 @@ Raw SQL queries
    those potential issues.
 
 By default, django-cachalot tries to invalidate its cache after a raw query.
-It detects if the raw query contains ``UPDATE``, ``INSERT`` or ``DELETE``,
-and then invalidates the tables contained in that query by comparing
-with models registered by Django.
+It detects if the raw query contains ``UPDATE``, ``INSERT``, ``DELETE``,
+``ALTER``, ``CREATE`` or ``DROP`` and then invalidates the tables contained
+in that query by comparing with models registered by Django.
 
 This is quite robust, so if a query is not invalidated automatically
 by this system, please :ref:`send a bug report <Reporting>`.
 In the meantime, you can use :ref:`the API <API>` to manually invalidate
 the tables where data has changed.
 
-However, this simple system can be too efficient in some cases and lead to
-unwanted extra invalidations.
-In such cases, you may want to partially disable this behaviour by
-:ref:`dynamically overriding settings <Dynamic overriding>` to set
-:ref:`CACHALOT_INVALIDATE_RAW` to ``False``.
-After that, use :ref:`the API <API>` to manually invalidate the tables
-you modified.
+However, this simple system can be too efficient in some very rare cases
+and lead to unwanted extra invalidations.
 
 .. _Multiple servers:
 

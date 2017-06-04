@@ -8,11 +8,11 @@ Requirements
 - Python 2.7, 3.4, 3.5 or 3.6
 - a cache configured as ``'default'`` with one of these backends:
 
-  - `django-redis <https://github.com/niwibe/django-redis>`_
-  - `memcached <https://docs.djangoproject.com/en/1.7/topics/cache/#memcached>`_
+  - `django-redis <https://github.com/niwinz/django-redis>`_
+  - `memcached <https://docs.djangoproject.com/en/1.11/topics/cache/#memcached>`_
     (using either python-memcached or pylibmc)
-  - `filebased <https://docs.djangoproject.com/en/1.7/topics/cache/#filesystem-caching>`_
-  - `locmem <https://docs.djangoproject.com/en/1.7/topics/cache/#local-memory-caching>`_
+  - `filebased <https://docs.djangoproject.com/en/1.11/topics/cache/#filesystem-caching>`_
+  - `locmem <https://docs.djangoproject.com/en/1.11/topics/cache/#local-memory-caching>`_
     (but it’s not shared between processes, see :ref:`locmem limits <Locmem>`)
 
 - one of these databases:
@@ -67,7 +67,20 @@ Settings
      change this setting, you end up on a cache that may contain stale data.
 
 .. |CACHES| replace:: ``CACHES``
-.. _CACHES: https://docs.djangoproject.com/en/1.7/ref/settings/#std:setting-CACHES
+.. _CACHES: https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-CACHES
+
+``CACHALOT_DATABASES``
+~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``'supported_only'``
+:Description:
+  List, tuple, set or frozenset of database aliases from |DATABASES|_ against
+  which django-cachalot will do caching. By default, the special value
+  ``'supported_only'`` enables django-cachalot only on supported database
+  engines.
+
+.. |DATABASES| replace:: ``DATABASES``
+.. _DATABASES: https://docs.djangoproject.com/en/1.11/ref/settings/#std:setting-DATABASES
 
 ``CACHALOT_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~
@@ -115,7 +128,6 @@ Settings
   can be cached: it disables this setting, so any table can be cached.
   :ref:`CACHALOT_UNCACHABLE_TABLES` has more weight than this:
   if you add a table to both settings, it will never be cached.
-  Use a frozenset over other sequence types for a tiny performance boost.
   Run ``./manage.py invalidate_cachalot`` after changing this setting.
 
 
@@ -130,7 +142,6 @@ Settings
   Queries using a table mentioned in this setting will not be cached.
   Always keep ``'django_migrations'`` in it, otherwise you may face
   some issues, especially during tests.
-  Use a frozenset over other sequence types for a tiny performance boost.
   Run ``./manage.py invalidate_cachalot`` after changing this setting.
 
 ``CACHALOT_QUERY_KEYGEN``
@@ -150,30 +161,6 @@ Settings
               the cache key of a SQL table.
               Clear your cache after changing this setting (it’s not enough
               to use ``./manage.py invalidate_cachalot``).
-
-
-.. _Dynamic overriding:
-
-Dynamic overriding
-~~~~~~~~~~~~~~~~~~
-
-Django-cachalot is built so that its settings can be dynamically changed.
-For example:
-
-.. code:: python
-
-    from django.conf import settings
-    from django.test.utils import override_settings
-
-    with override_settings(CACHALOT_ENABLED=False):
-        # SQL queries are not cached in this block
-
-    @override_settings(CACHALOT_CACHE='another_alias')
-    def your_function():
-        # What’s in this function uses another cache
-
-    # Globally disables SQL caching until you set it back to True
-    settings.CACHALOT_ENABLED = False
 
 
 .. _Command:

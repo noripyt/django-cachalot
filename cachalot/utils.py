@@ -13,10 +13,9 @@ from django.db.models import QuerySet
 from django.db.models.sql import Query
 from django.db.models.sql.where import (
     ExtraWhere, SubqueryConstraint, WhereNode)
-from django.utils.module_loading import import_string
 from django.utils.six import text_type, binary_type, PY2
 
-from .settings import cachalot_settings
+from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
 
 
@@ -27,8 +26,6 @@ class UncachableQuery(Exception):
 class IsRawQuery(Exception):
     pass
 
-
-TUPLE_OR_LIST = {tuple, list}
 
 CACHABLE_PARAM_TYPES = {
     bool, int, float, Decimal, bytearray, binary_type, text_type, type(None),
@@ -63,7 +60,7 @@ def check_parameter_types(params):
     for p in params:
         cl = p.__class__
         if cl not in CACHABLE_PARAM_TYPES:
-            if cl in TUPLE_OR_LIST:
+            if cl in ITERABLES:
                 check_parameter_types(p)
             elif cl is dict:
                 check_parameter_types(p.items())
@@ -104,14 +101,6 @@ def get_table_cache_key(db_alias, table):
     """
     cache_key = '%s:%s' % (db_alias, table)
     return sha1(cache_key.encode('utf-8')).hexdigest()
-
-
-def _get_query_cache_key(compiler):
-    return import_string(cachalot_settings.CACHALOT_QUERY_KEYGEN)(compiler)
-
-
-def _get_table_cache_key(db_alias, table):
-    return import_string(cachalot_settings.CACHALOT_TABLE_KEYGEN)(db_alias, table)
 
 
 def _get_tables_from_sql(connection, lowercased_sql):
@@ -188,7 +177,8 @@ def _get_tables(db_alias, query):
 
 def _get_table_cache_keys(compiler):
     db_alias = compiler.using
-    return [_get_table_cache_key(db_alias, t)
+    get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
+    return [get_table_cache_key(db_alias, t)
             for t in _get_tables(db_alias, compiler.query)]
 
 
@@ -197,8 +187,9 @@ def _invalidate_tables(cache, db_alias, tables):
     if not tables:
         return
     now = time()
+    get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
     cache.set_many(
-        {_get_table_cache_key(db_alias, t): now for t in tables},
+        {get_table_cache_key(db_alias, t): now for t in tables},
         cachalot_settings.CACHALOT_TIMEOUT)
 
     if isinstance(cache, AtomicCache):

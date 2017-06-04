@@ -18,7 +18,8 @@ from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
 from pytz import UTC
 
-from ..utils import _get_table_cache_key, UncachableQuery
+from ..settings import cachalot_settings
+from ..utils import UncachableQuery
 from .models import Test, TestChild
 from .test_utils import TestUtilsMixin
 
@@ -634,8 +635,8 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, 'cachalot_test')
         self.assert_query_cached(qs)
 
-        table_cache_key = _get_table_cache_key(connection.alias,
-                                               Test._meta.db_table)
+        table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN(
+            connection.alias, Test._meta.db_table)
         cache.delete(table_cache_key)
 
         self.assert_query_cached(qs)

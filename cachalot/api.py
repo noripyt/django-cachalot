@@ -7,9 +7,10 @@ from django.db import connections
 from django.utils.six import string_types
 
 from .cache import cachalot_caches
+from .settings import cachalot_settings
 from .signals import post_invalidation
 from .transaction import AtomicCache
-from .utils import _get_table_cache_key, _invalidate_tables
+from .utils import _invalidate_tables
 
 
 __all__ = ('invalidate', 'get_last_invalidation')
@@ -107,7 +108,8 @@ def get_last_invalidation(*tables_or_models, **kwargs):
     last_invalidation = 0.0
     for cache_alias, db_alias, tables in _cache_db_tables_iterator(
             _get_tables(tables_or_models), cache_alias, db_alias):
-        table_cache_keys = [_get_table_cache_key(db_alias, t) for t in tables]
+        get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
+        table_cache_keys = [get_table_cache_key(db_alias, t) for t in tables]
         invalidations = cachalot_caches.get_cache(
             cache_alias, db_alias).get_many(table_cache_keys).values()
         if invalidations:

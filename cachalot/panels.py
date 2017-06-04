@@ -11,7 +11,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.timesince import timesince
 
 from .cache import cachalot_caches
-from .utils import _get_table_cache_key
+from .settings import cachalot_settings
 
 
 class CachalotPanel(Panel):
@@ -45,9 +45,10 @@ class CachalotPanel(Panel):
         data = defaultdict(list)
         cache = cachalot_caches.get_cache()
         for db_alias in settings.DATABASES:
-            model_cache_keys = dict(
-                [(_get_table_cache_key(db_alias, model._meta.db_table), model)
-                 for model in models])
+            get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
+            model_cache_keys = {
+                get_table_cache_key(db_alias, model._meta.db_table): model
+                for model in models}
             for cache_key, timestamp in cache.get_many(
                     model_cache_keys.keys()).items():
                 invalidation = datetime.fromtimestamp(timestamp)

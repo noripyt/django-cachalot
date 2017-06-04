@@ -7,12 +7,13 @@ from unittest import skipIf
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import DEFAULT_CACHE_ALIAS
-from django.core.checks import run_checks, Error, Tags
+from django.core.checks import run_checks, Tags, Warning, Error
 from django.db import connection
 from django.test import TransactionTestCase
 from django.test.utils import override_settings
 
 from ..api import invalidate
+from ..settings import SUPPORTED_ONLY, SUPPORTED_DATABASE_ENGINES
 from .models import Test, TestParent, TestChild
 from .test_utils import TestUtilsMixin
 
@@ -48,8 +49,8 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             data = list(Test.objects.all())
         self.assertListEqual(data, [t])
 
-    @skipIf(len(settings.CACHES) == 1,
-            'We can’t change the cache used since there’s only one configured')
+    @skipIf(len(settings.CACHES) == 1, 'We can’t change the cache used '
+                                       'since there’s only one configured.')
     def test_cache(self):
         other_cache_alias = next(alias for alias in settings.CACHES
                                  if alias != DEFAULT_CACHE_ALIAS)
@@ -69,6 +70,24 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         # not invalidate all caches.
         with self.settings(CACHALOT_CACHE=other_cache_alias):
             self.assert_query_cached(qs, before=0)
+
+    def test_databases(self):
+        qs = Test.objects.all()
+        with self.settings(CACHALOT_DATABASES=SUPPORTED_ONLY):
+            self.assert_query_cached(qs)
+
+        invalidate(Test)
+
+        engine = connection.settings_dict['ENGINE']
+        SUPPORTED_DATABASE_ENGINES.remove(engine)
+        with self.settings(CACHALOT_DATABASES=SUPPORTED_ONLY):
+            self.assert_query_cached(qs, after=1)
+        SUPPORTED_DATABASE_ENGINES.add(engine)
+        with self.settings(CACHALOT_DATABASES=SUPPORTED_ONLY):
+            self.assert_query_cached(qs)
+
+        with self.settings(CACHALOT_DATABASES=[]):
+            self.assert_query_cached(qs, after=1)
 
     def test_cache_timeout(self):
         qs = Test.objects.all()
@@ -156,52 +175,111 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             self.assert_query_cached(TestParent.objects.all())
             self.assert_query_cached(User.objects.all(), after=1)
 
-    def test_compatibility(self):
-        """
-        Checks that an error is raised:
-        - if an incompatible database is configured
-        - if an incompatible cache is configured as ``CACHALOT_CACHE``
-        """
-        def get_error(object_path):
-            return Error('`%s` is not compatible with django-cachalot.'
-                         % object_path, id='cachalot.E001')
-
-        incompatible_database = {
-            'ENGINE': 'django.db.backends.oracle',
-            'NAME': 'non_existent_db',
+    def test_cache_compatibility(self):
+        compatible_cache = {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         }
         incompatible_cache = {
             'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
             'LOCATION': 'cache_table'
         }
-        with self.settings(DATABASES={'default': incompatible_database}):
-            errors = run_checks(tags=[Tags.compatibility])
-            self.assertListEqual(errors,
-                                 [get_error(incompatible_database['ENGINE'])])
-        with self.settings(CACHES={'default': incompatible_cache}):
-            errors = run_checks(tags=[Tags.compatibility])
-            self.assertListEqual(errors,
-                                 [get_error(incompatible_cache['BACKEND'])])
-        with self.settings(DATABASES={'default': incompatible_database},
-                           CACHES={'default': incompatible_cache}):
-            errors = run_checks(tags=[Tags.compatibility])
-            self.assertListEqual(errors,
-                                 [get_error(incompatible_database['ENGINE']),
-                                  get_error(incompatible_cache['BACKEND'])])
 
-        compatible_database = {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'non_existent_db.sqlite3',
-        }
-        compatible_cache = {
-            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        }
-        with self.settings(DATABASES={'default': compatible_database,
-                                      'secondary': incompatible_database}):
-            errors = run_checks(tags=[Tags.compatibility])
-            self.assertListEqual(errors,
-                                 [get_error(incompatible_database['ENGINE'])])
         with self.settings(CACHES={'default': compatible_cache,
                                    'secondary': incompatible_cache}):
             errors = run_checks(tags=[Tags.compatibility])
             self.assertListEqual(errors, [])
+
+        warning001 = Warning(
+            "Cache backend 'django.core.cache.backends.db.DatabaseCache' "
+            "is not supported by django-cachalot.",
+            hint='Switch to a supported cache backend '
+                 'like Redis or Memcached.',
+            id='cachalot.W001')
+        with self.settings(CACHES={'default': incompatible_cache}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [warning001])
+        with self.settings(CACHES={'default': compatible_cache,
+                                   'secondary': incompatible_cache},
+                           CACHALOT_CACHE='secondary'):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [warning001])
+
+    def test_database_compatibility(self):
+        compatible_database = {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'non_existent_db.sqlite3',
+        }
+        incompatible_database = {
+            'ENGINE': 'django.db.backends.oracle',
+            'NAME': 'non_existent_db',
+        }
+
+        warning002 = Warning(
+            'None of the configured databases are supported '
+            'by django-cachalot.',
+            hint='Use a supported database, or remove django-cachalot, or '
+                 'put at least one database alias in `CACHALOT_DATABASES` '
+                 'to force django-cachalot to use it.',
+            id='cachalot.W002'
+        )
+        warning003 = Warning(
+            "Database engine 'django.db.backends.oracle' is not supported "
+            "by django-cachalot.",
+            hint='Switch to a supported database engine.',
+            id='cachalot.W003'
+        )
+        warning004 = Warning(
+            'Django-cachalot is useless because no database '
+            'is configured in `CACHALOT_DATABASES`.',
+            hint='Reconfigure django-cachalot or remove it.',
+            id='cachalot.W004'
+        )
+        error001 = Error(
+            "Database alias 'secondary' from `CACHALOT_DATABASES` "
+            "is not defined in `DATABASES`.",
+            hint='Change `CACHALOT_DATABASES` to be compliant with'
+                 '`CACHALOT_DATABASES`',
+            id='cachalot.E001',
+        )
+        error002 = Error(
+            "`CACHALOT_DATABASES` must be either %r or a list, tuple, "
+            "frozenset or set of database aliases." % SUPPORTED_ONLY,
+            hint='Remove `CACHALOT_DATABASES` or change it.',
+            id='cachalot.E002',
+        )
+
+        with self.settings(DATABASES={'default': incompatible_database}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [warning002])
+
+        with self.settings(DATABASES={'default': compatible_database,
+                                      'secondary': incompatible_database}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [])
+        with self.settings(DATABASES={'default': incompatible_database,
+                                      'secondary': compatible_database}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [])
+
+        with self.settings(DATABASES={'default': incompatible_database},
+                           CACHALOT_DATABASES=['default']):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [warning003])
+
+        with self.settings(DATABASES={'default': incompatible_database},
+                           CACHALOT_DATABASES=[]):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [warning004])
+
+        with self.settings(DATABASES={'default': incompatible_database},
+                           CACHALOT_DATABASES=['secondary']):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [error001])
+        with self.settings(DATABASES={'default': compatible_database},
+                           CACHALOT_DATABASES=['default', 'secondary']):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [error001])
+
+        with self.settings(CACHALOT_DATABASES='invalid value'):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [error002])
