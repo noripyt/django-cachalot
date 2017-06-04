@@ -1,2 +1,2 @@
-include README.rst LICENSE AUTHORS.rst CHANGELOG.rst requirements.txt
+include README.rst LICENSE CHANGELOG.rst requirements.txt
 recursive-include cachalot *.json *.html

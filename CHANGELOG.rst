@@ -1,6 +1,27 @@
 What’s new in django-cachalot?
 ==============================
 
+1.5.0
+-----
+
+- Adds Django 1.11 support
+- Adds Python 3.6 support
+- Drops Django 1.9 support (but 1.8 is still supported)
+- Drops Python 3.3 support
+- Adds ``CACHALOT_DATABASES`` to specify which databases have django-cachalot
+  enabled (by default, only supported databases are enabled)
+- Stops advising users to dynamically override cachalot settings as it cannot
+  be thread-safe due to Django’s internals
+- Invalidates tables after raw ``CREATE``, ``ALTER`` & ``DROP`` SQL queries
+- Allows specifying model lookups like ``auth.User`` in the API functions
+  (previously, it could only be done in the Django template tag, not in the
+  Jinja2 ``get_last_invalidation`` function nor in API functions)
+- Fixes the cache used by ``CachalotPanel`` if ``CACHALOT_CACHE`` is different
+  from ``'default'``
+- Uploads a wheel distribution of this package to PyPI starting now,
+  in addition of the source release
+- Improves tests
+
 1.4.1
 -----
 
