@@ -190,8 +190,8 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertListEqual(errors, [])
 
         warning001 = Warning(
-            "Cache backend 'django.core.cache.backends.db.DatabaseCache' "
-            "is not supported by django-cachalot.",
+            'Cache backend %r is not supported by django-cachalot.'
+            % 'django.core.cache.backends.db.DatabaseCache',
             hint='Switch to a supported cache backend '
                  'like Redis or Memcached.',
             id='cachalot.W001')
@@ -223,8 +223,8 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             id='cachalot.W002'
         )
         warning003 = Warning(
-            "Database engine 'django.db.backends.oracle' is not supported "
-            "by django-cachalot.",
+            'Database engine %r is not supported by django-cachalot.'
+            % 'django.db.backends.oracle',
             hint='Switch to a supported database engine.',
             id='cachalot.W003'
         )
@@ -235,8 +235,8 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             id='cachalot.W004'
         )
         error001 = Error(
-            "Database alias 'secondary' from `CACHALOT_DATABASES` "
-            "is not defined in `DATABASES`.",
+            'Database alias %r from `CACHALOT_DATABASES` '
+            'is not defined in `DATABASES`.' % 'secondary',
             hint='Change `CACHALOT_DATABASES` to be compliant with'
                  '`CACHALOT_DATABASES`',
             id='cachalot.E001',
