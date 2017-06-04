@@ -46,6 +46,27 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
             data3 = list(Test.objects.values_list('name', flat=True))
             self.assertListEqual(data3, ['test1', 'test2'])
 
+    def test_invalidate_models_lookups(self):
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.values_list('name', flat=True))
+            self.assertListEqual(data1, ['test1'])
+
+        with self.settings(CACHALOT_INVALIDATE_RAW=False):
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO cachalot_test (name, public) "
+                    "VALUES ('test2', %s);", [1 if self.is_sqlite else True])
+
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.values_list('name', flat=True))
+            self.assertListEqual(data2, ['test1'])
+
+        invalidate('cachalot.Test')
+
+        with self.assertNumQueries(1):
+            data3 = list(Test.objects.values_list('name', flat=True))
+            self.assertListEqual(data3, ['test1', 'test2'])
+
     def test_invalidate_models(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list('name', flat=True))
@@ -105,6 +126,10 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
         invalidate('cachalot_test')
         timestamp = get_last_invalidation('cachalot_test')
         self.assertAlmostEqual(timestamp, time(), delta=0.1)
+        same_timestamp = get_last_invalidation('cachalot.Test')
+        self.assertEqual(same_timestamp, timestamp)
+        same_timestamp = get_last_invalidation(Test)
+        self.assertEqual(same_timestamp, timestamp)
 
         timestamp = get_last_invalidation('cachalot_testparent')
         self.assertNotAlmostEqual(timestamp, time(), delta=0.1)

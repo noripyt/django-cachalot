@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+from django.apps import apps
 from django.conf import settings
 from django.db import connections
 from django.utils.six import string_types
@@ -29,7 +30,8 @@ def _cache_db_tables_iterator(tables, cache_alias, db_alias):
 
 
 def _get_tables(tables_or_models):
-    return [o if isinstance(o, string_types) else o._meta.db_table
+    return [(apps.get_model(o)._meta.db_table if '.' in o else o)
+            if isinstance(o, string_types) else o._meta.db_table
             for o in tables_or_models]
 
 
@@ -46,7 +48,8 @@ def invalidate(*tables_or_models, **kwargs):
     If ``db_alias`` is specified, it only clears the SQL queries executed
     on this database, otherwise queries from all databases are cleared.
 
-    :arg tables_or_models: SQL tables names or models (or combination of both)
+    :arg tables_or_models: SQL tables names, models or models lookups
+                           (or a combination)
     :type tables_or_models: tuple of strings or models
     :arg cache_alias: Alias from the Django ``CACHES`` setting
     :type cache_alias: string or NoneType
@@ -89,7 +92,8 @@ def get_last_invalidation(*tables_or_models, **kwargs):
     If ``db_alias`` is specified, it only fetches invalidations
     for this database, otherwise invalidations for all databases are fetched.
 
-    :arg tables_or_models: SQL tables names or models (or combination of both)
+    :arg tables_or_models: SQL tables names, models or models lookups
+                           (or a combination)
     :type tables_or_models: tuple of strings or models
     :arg cache_alias: Alias from the Django ``CACHES`` setting
     :type cache_alias: string or NoneType
