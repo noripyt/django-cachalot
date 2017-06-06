@@ -581,6 +581,16 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t1, self.t2])
 
+    def test_raw_no_table(self):
+        sql = 'SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2) AS t;'
+
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.raw(sql))
+        with self.assertNumQueries(1):
+            data2 = list(Test.objects.raw(sql))
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [Test(pk=1), Test(pk=2)])
+
     def test_cursor_execute_unicode(self):
         """
         Tests if queries executed from a DB cursor are not cached.
@@ -629,6 +639,19 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(
             data2,
             [('é',) + l for l in Test.objects.values_list(*attnames)])
+
+    def test_cursor_execute_no_table(self):
+        sql = 'SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2) AS t;'
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                data1 = list(cursor.fetchall())
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute(sql)
+                data2 = list(cursor.fetchall())
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [(1,), (2,)])
 
     def test_missing_table_cache_key(self):
         qs = Test.objects.all()
