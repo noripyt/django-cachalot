@@ -20,7 +20,7 @@ from pytz import UTC
 
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
-from .models import Test, TestChild
+from .models import Test, TestChild, TestParent
 from .test_utils import TestUtilsMixin
 
 
@@ -124,53 +124,53 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
     def test_filter(self):
         qs = Test.objects.filter(public=True)
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2])
 
         qs = Test.objects.filter(name__in=['test2', 'test72'])
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2])
 
         qs = Test.objects.filter(date__gt=datetime.date(1900, 1, 1))
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2])
 
         qs = Test.objects.filter(datetime__lt=datetime.datetime(1900, 1, 1))
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
     def test_filter_empty(self):
         qs = Test.objects.filter(public=True, name='user')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [])
 
     def test_exclude(self):
         qs = Test.objects.exclude(public=True)
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
         qs = Test.objects.exclude(name__in=['test2', 'test72'])
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
     def test_slicing(self):
         qs = Test.objects.all()[:1]
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
     def test_order_by(self):
         qs = Test.objects.order_by('pk')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1, self.t2])
 
         qs = Test.objects.order_by('-name')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_random_order_by(self):
         qs = Test.objects.order_by('?')
         with self.assertRaises(UncachableQuery):
-            self.assert_tables(qs, 'cachalot_test')
+            self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1, compare_results=False)
 
     @skipIf(connection.vendor == 'mysql',
@@ -181,12 +181,12 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = Test.objects.filter(
             pk__in=Test.objects.order_by('?')[:10])
         with self.assertRaises(UncachableQuery):
-            self.assert_tables(qs, 'cachalot_test')
+            self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1, compare_results=False)
 
     def test_reverse(self):
         qs = Test.objects.reverse()
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_distinct(self):
@@ -194,15 +194,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         # objects, in order to have a real-world example.
         qs = Test.objects.filter(
             owner__user_permissions__content_type__app_label='auth')
-        self.assert_tables(qs, 'cachalot_test', 'auth_user',
-                           'auth_user_user_permissions', 'auth_permission',
-                           'django_content_type')
+        self.assert_tables(qs, Test, User, User.user_permissions.through,
+                           Permission, ContentType)
         self.assert_query_cached(qs, [self.t1, self.t1, self.t1])
 
         qs = qs.distinct()
-        self.assert_tables(qs, 'cachalot_test', 'auth_user',
-                           'auth_user_user_permissions', 'auth_permission',
-                           'django_content_type')
+        self.assert_tables(qs, Test, User, User.user_permissions.through,
+                           Permission, ContentType)
         self.assert_query_cached(qs, [self.t1])
 
     def test_iterator(self):
@@ -222,20 +220,14 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertDictEqual(data2, {self.t2.pk: self.t2})
 
     def test_values(self):
-        with self.assertNumQueries(1):
-            data1 = list(Test.objects.values('name', 'public'))
-        with self.assertNumQueries(0):
-            data2 = list(Test.objects.values('name', 'public'))
-        self.assertEqual(len(data1), 2)
-        self.assertEqual(len(data2), 2)
-        for row1, row2 in zip(data1, data2):
-            self.assertDictEqual(row2, row1)
-        self.assertDictEqual(data2[0], {'name': 'test1', 'public': False})
-        self.assertDictEqual(data2[1], {'name': 'test2', 'public': True})
+        qs = Test.objects.values('name', 'public')
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs, [{'name': 'test1', 'public': False},
+                                      {'name': 'test2', 'public': True}])
 
     def test_values_list(self):
         qs = Test.objects.values_list('name', flat=True)
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, ['test1', 'test2'])
 
     def test_earliest(self):
@@ -256,13 +248,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
     def test_dates(self):
         qs = Test.objects.dates('date', 'year')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [datetime.date(1789, 1, 1),
                                       datetime.date(1944, 1, 1)])
 
     def test_datetimes(self):
         qs = Test.objects.datetimes('datetime', 'hour')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [datetime.datetime(1789, 7, 14, 16),
                                       datetime.datetime(1944, 6, 6, 6)])
 
@@ -271,7 +263,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     @override_settings(USE_TZ=True)
     def test_datetimes_with_time_zones(self):
         qs = Test.objects.datetimes('datetime', 'hour')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [
             datetime.datetime(1789, 7, 14, 16, tzinfo=UTC),
             datetime.datetime(1944, 6, 6, 6, tzinfo=UTC)])
@@ -284,6 +276,10 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.user, self.admin])
 
+        qs = Test.objects.values_list('owner', flat=True)
+        self.assert_tables(qs, Test, User)
+        self.assert_query_cached(qs, [self.user.pk, self.admin.pk])
+
     def test_many_to_many(self):
         u = User.objects.create_user('test_user')
         ct = ContentType.objects.get_for_model(User)
@@ -294,36 +290,31 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 name='Can touch', content_type=ct, codename='touch'),
             Permission.objects.create(
                 name='Can cuddle', content_type=ct, codename='cuddle'))
-        with self.assertNumQueries(1):
-            data1 = [p.codename for p in u.user_permissions.all()]
-        with self.assertNumQueries(0):
-            data2 = [p.codename for p in u.user_permissions.all()]
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, ['cuddle', 'discuss', 'touch'])
+        qs = u.user_permissions.values_list('codename', flat=True)
+        self.assert_tables(qs, User, User.user_permissions.through, Permission)
+        self.assert_query_cached(qs, ['cuddle', 'discuss', 'touch'])
 
     def test_subquery(self):
         qs = Test.objects.filter(owner__in=User.objects.all())
-        self.assert_tables(qs, 'cachalot_test', 'auth_user')
+        self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t1, self.t2])
 
         qs = Test.objects.filter(
             owner__groups__permissions__in=Permission.objects.all())
-        self.assert_tables(qs, 'cachalot_test', 'auth_user',
-                           'auth_user_groups', 'auth_group',
-                           'auth_group_permissions', 'auth_permission')
+        self.assert_tables(qs, Test, User, User.groups.through, Group,
+                           Group.permissions.through, Permission)
         self.assert_query_cached(qs, [self.t1, self.t1, self.t1])
 
         qs = Test.objects.filter(
             owner__groups__permissions__in=Permission.objects.all()
         ).distinct()
-        self.assert_tables(qs, 'cachalot_test', 'auth_user',
-                           'auth_user_groups', 'auth_group',
-                           'auth_group_permissions', 'auth_permission')
+        self.assert_tables(qs, Test, User, User.groups.through, Group,
+                           Group.permissions.through, Permission)
         self.assert_query_cached(qs, [self.t1])
 
         qs = TestChild.objects.exclude(permissions__isnull=True)
-        self.assert_tables(qs, 'cachalot_testparent', 'cachalot_testchild',
-                           'cachalot_testchild_permissions', 'auth_permission')
+        self.assert_tables(qs, TestParent, TestChild,
+                           TestChild.permissions.through, Permission)
         self.assert_query_cached(qs, [])
 
     def test_raw_subquery(self):
@@ -331,12 +322,12 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
                              (self.t1__permission.pk,))
         qs = Test.objects.filter(permission=raw_sql)
-        self.assert_tables(qs, 'cachalot_test', 'auth_permission')
+        self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs, [self.t1])
 
         qs = Test.objects.filter(
             pk__in=Test.objects.filter(permission=raw_sql))
-        self.assert_tables(qs, 'cachalot_test', 'auth_permission')
+        self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs, [self.t1])
 
     def test_aggregate(self):
@@ -352,7 +343,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         Test.objects.create(name='test3', owner=self.user)
         qs = (User.objects.annotate(n=Count('test')).order_by('pk')
               .values_list('n', flat=True))
-        self.assert_tables(qs, 'auth_user', 'cachalot_test')
+        self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [2, 1])
 
     def test_only(self):
@@ -508,8 +499,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     def test_having(self):
         qs = (User.objects.annotate(n=Count('user_permissions'))
               .filter(n__gte=1))
-        self.assert_tables(qs, 'auth_user', 'auth_user_user_permissions',
-                           'auth_permission')
+        self.assert_tables(qs, User, User.user_permissions.through, Permission)
         self.assert_query_cached(qs, [self.user])
 
         with self.assertNumQueries(1):
@@ -543,18 +533,18 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         sql_condition = ("owner_id IN "
                          "(SELECT id FROM auth_user WHERE username = 'admin')")
         qs = Test.objects.extra(where=[sql_condition])
-        self.assert_tables(qs, 'cachalot_test', 'auth_user')
+        self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t2])
 
     def test_extra_tables(self):
         qs = Test.objects.extra(tables=['auth_user'],
                                 select={'extra_id': 'auth_user.id'})
-        self.assert_tables(qs, 'cachalot_test', 'auth_user')
+        self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs)
 
     def test_extra_order_by(self):
         qs = Test.objects.extra(order_by=['-cachalot_test.name'])
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_table_inheritance(self):
@@ -655,7 +645,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
     def test_missing_table_cache_key(self):
         qs = Test.objects.all()
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs)
 
         table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN(
@@ -686,7 +676,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         # Here the table `Clémentine` is not detected because it is not
         # registered by Django, and we only check for registered tables
         # to avoid creating an extra SQL query fetching table names.
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs)
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE %s;' % table_name)
@@ -702,15 +692,15 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         case the `memory` object passed to SQLite.
         """
         qs = Test.objects.filter(bin=None)
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs)
 
         qs = Test.objects.filter(bin=b'abc')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1 if self.is_sqlite else 0)
 
         qs = Test.objects.filter(bin=b'def')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1 if self.is_sqlite else 0)
 
     def test_float(self):
@@ -742,7 +732,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
 
         qs = Test.objects.values_list('a_decimal', flat=True).filter(
             a_decimal__isnull=False).order_by('a_decimal')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [Decimal('12.3'), Decimal('123.45')])
 
         with self.assertNumQueries(1):
@@ -758,7 +748,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
 
         qs = Test.objects.values_list('ip', flat=True).filter(
             ip__isnull=False).order_by('ip')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, ['127.0.0.1', '192.168.0.1'])
 
         with self.assertNumQueries(1):
@@ -774,7 +764,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
 
         qs = Test.objects.values_list('ip', flat=True).filter(
             ip__isnull=False).order_by('ip')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, ['2001:db8:0:85a3::ac1f:8001',
                                       '2001:db8:a0b:12f0::1/64'])
 
@@ -791,7 +781,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
 
         qs = Test.objects.values_list('duration', flat=True).filter(
             duration__isnull=False).order_by('duration')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [datetime.timedelta(30),
                                       datetime.timedelta(60)])
 
@@ -810,7 +800,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
 
         qs = Test.objects.values_list('uuid', flat=True).filter(
             uuid__isnull=False).order_by('uuid')
-        self.assert_tables(qs, 'cachalot_test')
+        self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [
             UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'),
             UUID('ebb3b6e1-1737-4321-93e3-4c35d61ff491')])

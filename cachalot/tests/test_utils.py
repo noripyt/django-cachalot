@@ -1,4 +1,5 @@
 from django.db import connection
+from django.utils.six import string_types
 
 from ..utils import _get_tables
 
@@ -16,19 +17,24 @@ class TestUtilsMixin:
             connection.cursor()
 
     def assert_tables(self, queryset, *tables):
-        self.assertSetEqual(_get_tables(queryset.db, queryset.query),
-                            set(tables))
+        tables = {table if isinstance(table, string_types)
+                  else table._meta.db_table for table in tables}
+        self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables)
 
     def assert_query_cached(self, queryset, result=None, result_type=None,
                             compare_results=True, before=1, after=0):
-        with self.assertNumQueries(before):
-            data1 = list(queryset.all())
-        with self.assertNumQueries(after):
-            data2 = list(queryset.all())
-        if not compare_results:
-            return
         if result_type is None:
             result_type = list if result is None else type(result)
+        with self.assertNumQueries(before):
+            data1 = queryset.all()
+            if result_type is list:
+                data1 = list(data1)
+        with self.assertNumQueries(after):
+            data2 = queryset.all()
+            if result_type is list:
+                data2 = list(data2)
+        if not compare_results:
+            return
         assert_functions = {
             list: self.assertListEqual,
             set: self.assertSetEqual,
