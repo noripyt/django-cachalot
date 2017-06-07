@@ -2,7 +2,6 @@
 
 from __future__ import unicode_literals
 from collections import Iterable
-from functools import wraps
 from time import time
 
 from django.db.backends.utils import CursorWrapper
@@ -12,7 +11,7 @@ from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
 )
 from django.db.transaction import Atomic, get_connection
-from django.utils.six import binary_type
+from django.utils.six import binary_type, wraps
 
 from .api import invalidate
 from .cache import cachalot_caches
