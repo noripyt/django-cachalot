@@ -16,4 +16,4 @@ from .debug_toolbar import DebugToolbarTestCase
 
 @receiver(setting_changed)
 def reload_settings(sender, **kwargs):
-    cachalot_settings.load()
+    cachalot_settings.reload()

@@ -114,6 +114,7 @@ def _find_subqueries(children):
         if child_class is WhereNode:
             for grand_child in _find_subqueries(child.children):
                 yield grand_child
+        # TODO: Remove this condition when we drop Django 1.8 support.
         elif child_class is SubqueryConstraint:
             query_object = child.query_object
             yield (query_object if query_object.__class__ is Query
@@ -155,8 +156,8 @@ def filter_cachable(tables):
 
 def _get_tables(db_alias, query):
     if query.select_for_update or (
-            '?' in query.order_by
-            and not cachalot_settings.CACHALOT_CACHE_RANDOM):
+            not cachalot_settings.CACHALOT_CACHE_RANDOM
+            and '?' in query.order_by):
         raise UncachableQuery
 
     try:

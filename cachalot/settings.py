@@ -35,6 +35,7 @@ ITERABLES = {tuple, list, frozenset, set}
 
 
 class Settings(object):
+    patched = False
     converters = {}
 
     CACHALOT_ENABLED = True
@@ -67,6 +68,21 @@ class Settings(object):
             if converter is not None:
                 value = converter(value)
             setattr(self, name, value)
+
+        if not self.patched:
+            from .monkey_patch import patch
+            patch()
+            self.patched = True
+
+    def unload(self):
+        if self.patched:
+            from .monkey_patch import unpatch
+            unpatch()
+            self.patched = False
+
+    def reload(self):
+        self.unload()
+        self.load()
 
 
 @Settings.add_converter('CACHALOT_DATABASES')

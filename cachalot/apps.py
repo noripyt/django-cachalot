@@ -87,11 +87,6 @@ def check_databases_compatibility(app_configs, **kwargs):
 
 class CachalotConfig(AppConfig):
     name = 'cachalot'
-    patched = False
 
     def ready(self):
         cachalot_settings.load()
-
-        if not self.patched:
-            patch()
-            self.patched = True

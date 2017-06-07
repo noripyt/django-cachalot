@@ -33,9 +33,11 @@ class CachalotPanel(Panel):
 
     def enable_instrumentation(self):
         settings.CACHALOT_ENABLED = True
+        cachalot_settings.reload()
 
     def disable_instrumentation(self):
         settings.CACHALOT_ENABLED = False
+        cachalot_settings.reload()
 
     def process_response(self, request, response):
         self.collect_invalidations()

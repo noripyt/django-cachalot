@@ -42,21 +42,19 @@ def _get_result_or_execute_query(execute_query_func, cache,
     new_table_cache_keys = set(table_cache_keys)
     new_table_cache_keys.difference_update(data)
 
-    if new_table_cache_keys:
-        now = time()
-        cache.set_many({k: now for k in new_table_cache_keys},
-                       cachalot_settings.CACHALOT_TIMEOUT)
-    elif cache_key in data:
+    if not new_table_cache_keys and cache_key in data:
         timestamp, result = data.pop(cache_key)
-        table_times = data.values()
-        if table_times and timestamp > max(table_times):
+        if timestamp >= max(data.values()):
             return result
 
     result = execute_query_func()
     if result.__class__ not in ITERABLES and isinstance(result, Iterable):
         result = list(result)
 
-    cache.set(cache_key, (time(), result), cachalot_settings.CACHALOT_TIMEOUT)
+    now = time()
+    to_be_set = {k: now for k in new_table_cache_keys}
+    to_be_set[cache_key] = (now, result)
+    cache.set_many(to_be_set, cachalot_settings.CACHALOT_TIMEOUT)
 
     return result
 
@@ -67,8 +65,7 @@ def _patch_compiler(original):
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
         db_alias = compiler.using
-        if not cachalot_settings.CACHALOT_ENABLED \
-                or db_alias not in cachalot_settings.CACHALOT_DATABASES \
+        if db_alias not in cachalot_settings.CACHALOT_DATABASES \
                 or isinstance(compiler, WRITE_COMPILERS):
             return execute_query_func()
 
@@ -101,9 +98,17 @@ def _patch_write_compiler(original):
 
 
 def _patch_orm():
-    SQLCompiler.execute_sql = _patch_compiler(SQLCompiler.execute_sql)
+    if cachalot_settings.CACHALOT_ENABLED:
+        SQLCompiler.execute_sql = _patch_compiler(SQLCompiler.execute_sql)
     for compiler in WRITE_COMPILERS:
         compiler.execute_sql = _patch_write_compiler(compiler.execute_sql)
+
+
+def _unpatch_orm():
+    if hasattr(SQLCompiler.execute_sql, '__wrapped__'):
+        SQLCompiler.execute_sql = SQLCompiler.execute_sql.__wrapped__
+    for compiler in WRITE_COMPILERS:
+        compiler.execute_sql = compiler.execute_sql.__wrapped__
 
 
 def _patch_cursor():
@@ -112,8 +117,7 @@ def _patch_cursor():
         def inner(cursor, sql, *args, **kwargs):
             out = original(cursor, sql, *args, **kwargs)
             connection = cursor.db
-            if getattr(connection, 'raw', True) \
-                    and cachalot_settings.CACHALOT_INVALIDATE_RAW:
+            if getattr(connection, 'raw', True):
                 if isinstance(sql, binary_type):
                     sql = sql.decode('utf-8')
                 sql = sql.lower()
@@ -128,8 +132,16 @@ def _patch_cursor():
 
         return inner
 
-    CursorWrapper.execute = _patch_cursor_execute(CursorWrapper.execute)
-    CursorWrapper.executemany = _patch_cursor_execute(CursorWrapper.executemany)
+    if cachalot_settings.CACHALOT_INVALIDATE_RAW:
+        CursorWrapper.execute = _patch_cursor_execute(CursorWrapper.execute)
+        CursorWrapper.executemany = \
+            _patch_cursor_execute(CursorWrapper.executemany)
+
+
+def _unpatch_cursor():
+    if hasattr(CursorWrapper.execute, '__wrapped__'):
+        CursorWrapper.execute = CursorWrapper.execute.__wrapped__
+        CursorWrapper.executemany = CursorWrapper.executemany.__wrapped__
 
 
 def _patch_atomic():
@@ -155,6 +167,11 @@ def _patch_atomic():
     Atomic.__exit__ = patch_exit(Atomic.__exit__)
 
 
+def _unpatch_atomic():
+    Atomic.__enter__ = Atomic.__enter__.__wrapped__
+    Atomic.__exit__ = Atomic.__exit__.__wrapped__
+
+
 def _invalidate_on_migration(sender, **kwargs):
     invalidate(*sender.get_models(), db_alias=kwargs['using'],
                cache_alias=cachalot_settings.CACHALOT_CACHE)
@@ -166,3 +183,11 @@ def patch():
     _patch_cursor()
     _patch_atomic()
     _patch_orm()
+
+
+def unpatch():
+    post_migrate.disconnect(_invalidate_on_migration)
+
+    _unpatch_cursor()
+    _unpatch_atomic()
+    _unpatch_orm()
