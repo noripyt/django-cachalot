@@ -240,6 +240,55 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, PostgresModel)
         self.assert_query_cached(qs, [self.obj1.json])
 
+    def test_mutable_result_change(self):
+        """
+        Checks that changing a mutable returned by a query has no effect
+        on other executions of the query.
+        """
+        qs = PostgresModel.objects.values_list('int_array', flat=True)
+
+        data = list(qs.all())
+        self.assertListEqual(data, [[1, 2, 3], [4, None, 6]])
+        data[0].append(4)
+        data[1].remove(4)
+        data[1][0] = 5
+        self.assertListEqual(data, [[1, 2, 3, 4], [5, 6]])
+
+        self.assertListEqual(list(qs.all()), [[1, 2, 3], [4, None, 6]])
+
+        if DJANGO_GTE_1_9:
+            qs = PostgresModel.objects.values_list('json', flat=True)
+
+            data = list(qs.all())
+            self.assertListEqual(data, [self.obj1.json, self.obj2.json])
+            data[0]['c'] = 3
+            del data[0]['b']
+            data[1].pop(0)
+            data[1][0]['e']['and yet']['some other'] = True
+            data[1][0]['f'] = 6
+            json1 = {'a': 1, 'c': 3}
+            json2 = [
+                {
+                    'a': 1,
+                    'b': None,
+                    'c': 123.456,
+                    'd': True,
+                    'e': {
+                        'another': 'dict',
+                        'and yet': {
+                            'another': 'one',
+                            'with a list': [],
+                            'some other': True
+                        },
+                    },
+                    'f': 6
+                },
+            ]
+            self.assertListEqual(data, [json1, json2])
+
+            self.assertListEqual(list(qs.all()),
+                                 [self.obj1.json, self.obj2.json])
+
     def test_int_range(self):
         with self.assertNumQueries(1):
             data1 = [o.int_range for o in PostgresModel.objects.all()]

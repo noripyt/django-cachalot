@@ -683,6 +683,35 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
+    def test_tuple(self):
+        qs = Test.objects.filter(pk__in=(1, 2, 3))
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
+        qs = Test.objects.filter(pk__in=(4, 5, 6))
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
+    def test_list(self):
+        qs = Test.objects.filter(pk__in=[1, 2, 3])
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
+        l = [4, 5, 6]
+        qs = Test.objects.filter(pk__in=l)
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
+        l.append(7)
+        self.assert_tables(qs, Test)
+        # The queryset is not taking the new element into account because
+        # the list was copied during `.filter()`.
+        self.assert_query_cached(qs, before=0)
+
+        qs = Test.objects.filter(pk__in=l)
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
     def test_binary(self):
         """
         Binary data should be cached on PostgreSQL & MySQL, but not on SQLite,
