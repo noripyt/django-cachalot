@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 from collections import Iterable
+from threading import get_ident
 from time import time
 
 from django.db.backends.utils import CursorWrapper
@@ -21,6 +22,106 @@ from .utils import (
     UncachableQuery, is_cachable, filter_cachable,
 )
 
+
+class Disabled:
+    """
+        The purpose of this class is to provide a way for long running
+        transactions like a data import which mostly inserts and updates data
+        to disable cachalot.
+
+        While the disabled transaction is running other transactions will still
+        use the cache and it will invalidate when being disabled is turned off.
+
+        A clear function exists in case it is ever needed.
+
+        Example 1:
+            from cachalot.monkey_patch import DISABLE_CACHING
+
+            with DISABLE_CACHING:
+                DISABLE_CACHING.do_not_invalidate()  # Optional Line, will not invalidate after the with
+
+                # Code to run while the cache is disabled
+
+
+        Example 3:
+            from cachalot.monkey_patch import DISABLE_CACHING
+
+            try:
+                DISABLE_CACHING.enable()
+                # Code to run while the cache is disabled
+
+            finally:
+                # invalidate_cache by default is True
+                DISABLE_CACHING.disable(invalidate_cache=False)
+    """
+    def __init__(self):
+        self.threads = frozenset()
+        self.invalidate_on_exit = {}
+        self.has_disabled_threads = False
+
+    def __enter__(self, invalidate_on_exit=True):
+        thread_ident = get_ident()
+        thread_data = set(self.threads)
+        thread_data.add(thread_ident)
+        self.threads = frozenset(thread_data)
+        self.invalidate_on_exit[thread_ident] = {
+            'cache_alias': 'default',
+            'db_alias': 'default'
+        }
+        self.has_disabled_threads = True
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        thread_ident = get_ident()
+        if thread_ident in self.threads:
+            thread_data = set(self.threads)
+            thread_data.remove(thread_ident)
+            self.threads = frozenset(thread_data)
+            if not self.threads:
+                self.has_disabled_threads = False
+            if thread_ident in self.invalidate_on_exit:
+                aliases = self.invalidate_on_exit.pop(thread_ident)
+                invalidate(*[], cache_alias=aliases['cache_alias'], db_alias=aliases['db_alias'])
+
+    def set_aliases(self, cache_alias='default', db_alias='default'):
+        thread_ident = get_ident()
+        if thread_ident in self.invalidate_on_exit:
+            self.invalidate_on_exit[thread_ident] = {
+                'cache_alias': cache_alias,
+                'db_alias': db_alias
+            }
+
+    def do_not_invalidate(self):
+        thread_ident = get_ident()
+        if thread_ident in self.invalidate_on_exit:
+            self.invalidate_on_exit.pop(thread_ident)
+
+    def get(self):
+        return self.has_disabled_threads and get_ident() in self.threads
+
+    def enable(self):
+        thread_data = set(self.threads)
+        thread_data.add(get_ident())
+        self.threads = frozenset(thread_data)
+        self.has_disabled_threads = True
+
+    def disable(self, invalidate_cache=True, cache_alias='default', db_alias='default'):
+        thread_ident = get_ident()
+        if thread_ident in self.threads:
+            thread_data = set(self.threads)
+            thread_data.remove(thread_ident)
+            self.threads = frozenset(thread_data)
+            if not self.threads:
+                self.has_disabled_threads = False
+            if invalidate_cache:
+                invalidate(*[], cache_alias=cache_alias, db_alias=db_alias)
+
+    def clear(self):
+        self.threads = frozenset()
+        self.invalidate_on_exit = {}
+        self.has_disabled_threads = False
+
+
+DISABLE_CACHING = Disabled()
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
@@ -62,6 +163,9 @@ def _patch_compiler(original):
     @wraps(original)
     @_unset_raw_connection
     def inner(compiler, *args, **kwargs):
+        if DISABLE_CACHING.get():
+            return original(compiler, *args, **kwargs)
+
         execute_query_func = lambda: original(compiler, *args, **kwargs)
         db_alias = compiler.using
         if db_alias not in cachalot_settings.CACHALOT_DATABASES \
@@ -86,6 +190,9 @@ def _patch_write_compiler(original):
     @wraps(original)
     @_unset_raw_connection
     def inner(write_compiler, *args, **kwargs):
+        if DISABLE_CACHING.get():
+            return original(write_compiler, *args, **kwargs)
+
         db_alias = write_compiler.using
         table = write_compiler.query.get_meta().db_table
         if is_cachable(table):
@@ -114,6 +221,9 @@ def _patch_cursor():
     def _patch_cursor_execute(original):
         @wraps(original)
         def inner(cursor, sql, *args, **kwargs):
+            if DISABLE_CACHING.get():
+                return original(cursor, sql, *args, **kwargs)
+
             out = original(cursor, sql, *args, **kwargs)
             connection = cursor.db
             if getattr(connection, 'raw', True):
