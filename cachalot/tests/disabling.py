@@ -248,3 +248,34 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             data3_name = data3.name  # Force the query to run
         data1.name = 'test1'
         data1.save()
+
+    def test_raw_read_toggle_disabling_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
+        # Disable the cache
+        with DISABLE_CACHING:
+            with self.assertNumQueries(1):
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
+        # Caching enabled, invalidating has run
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
+        with self.assertNumQueries(0):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
+
+    def test_raw_read_toggle_disabling_without_invalidating_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
+        # Disable the cache
+        with DISABLE_CACHING:
+            with self.assertNumQueries(1):
+                with connection.cursor() as cursor:
+                    cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
+        # Caching enabled, invalidating has run
+        with self.assertNumQueries(0):
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT name FROM cachalot_test where name = %s", 'test1')
