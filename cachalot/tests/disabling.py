@@ -80,7 +80,7 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
         with DISABLE_CACHING:
             with self.assertNumQueries(1):
                 n2 = bool(Test.objects.exists())  # Force the query to run
-        # Caching enabled but invalidating has run
+        # Caching enabled, invalidating has run
         with self.assertNumQueries(1):
             n3 = bool(Test.objects.exists())  # Force the query to run
         with self.assertNumQueries(0):
@@ -113,7 +113,6 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
         finally:
             DISABLE_CACHING.disable()
         self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(err))
-
 
     def test_read_toggle_disabling_using_try_finally(self):
         with self.assertNumQueries(1):
@@ -155,8 +154,97 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             n3 = bool(Test.objects.exists())  # Force the query to run
 
+    def test_write_disabling_using_with_stmt(self):
+        data1 = Test.objects.get(name='test1')
+        data1_name = data1.name  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:
+            with self.assertNumQueries(1):
+                data1.name = 'test1a'
+                data1.save()
+        # Caching enabled, invalidating has run
+        with self.assertNumQueries(1):
+            data2 = Test.objects.get(name='test1a')
+            data2_name = data2.name  # Force the query to run
+        with self.assertNumQueries(0):
+            data3 = Test.objects.get(name='test1a')
+            data3_name = data3.name  # Force the query to run
+        # Reset the name to test1
+        data1.name = 'test1'
+        data1.save()
 
+    # HOPEFULLY NO ONE EVER DOES THIS IN PRODUCTION CODE.
+    def test_write_disabling_without_invalidating_using_with_stmt(self):
+        data1 = Test.objects.get(name='test1')
+        data1_name = data1.name  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:
+            DISABLE_CACHING.do_not_invalidate()
+            with self.assertNumQueries(1):
+                data1.name = 'test1a'
+                data1.save()
+        # Caching enabled without invalidating so this query should
+        # be cached even though the object is no longer named test1.
+        with self.assertNumQueries(0):
+            data2 = Test.objects.get(name='test1')
+            data2_name = data2.name  # Force the query to run
+        with self.assertNumQueries(1):
+            data3 = Test.objects.get(name='test1a')
+            data3_name = data3.name  # Force the query to run
+        data1.name = 'test1'
+        data1.save()
 
-# TODO: Create test that reads and then disables and writes and then turns off the disable without
-# invalidating and reads the cached value then invalidate and read the new value
+    def test_write_disabling_using_try_finally(self):
+        data1 = Test.objects.get(name='test1')
+        data1_name = data1.name  # Force the query to run
+        blew_up = False
+        err = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            with self.assertNumQueries(1):
+                data1.name = 'test1a'
+                data1.save()
+        except Exception as err:
+            blew_up = True
+        finally:
+            DISABLE_CACHING.disable()
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(err))
+        # Caching enabled, invalidating has run
+        with self.assertNumQueries(1):
+            data2 = Test.objects.get(name='test1a')
+            data2_name = data2.name  # Force the query to run
+        with self.assertNumQueries(0):
+            data3 = Test.objects.get(name='test1a')
+            data3_name = data3.name  # Force the query to run
+        # Reset the name to test1
+        data1.name = 'test1'
+        data1.save()
 
+    # HOPEFULLY NO ONE EVER DOES THIS IN PRODUCTION CODE.
+    def test_write_disabling_without_invalidating_using_try_finally(self):
+        data1 = Test.objects.get(name='test1')
+        data1_name = data1.name  # Force the query to run
+        blew_up = False
+        err = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            with self.assertNumQueries(1):
+                data1.name = 'test1a'
+                data1.save()
+        except Exception as err:
+            blew_up = True
+        finally:
+            DISABLE_CACHING.disable(invalidate_cache=False)
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(err))
+        # Caching enabled without invalidating so this query should
+        # be cached even though the object is no longer named test1.
+        with self.assertNumQueries(0):
+            data2 = Test.objects.get(name='test1')
+            data2_name = data2.name  # Force the query to run
+        with self.assertNumQueries(1):
+            data3 = Test.objects.get(name='test1a')
+            data3_name = data3.name  # Force the query to run
+        data1.name = 'test1'
+        data1.save()
