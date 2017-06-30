@@ -40,10 +40,13 @@ class Disabled:
             with DISABLE_CACHING:
                 DISABLE_CACHING.do_not_invalidate()  # Optional Line, will not invalidate after the with
 
+                # Optional line that allows you to change the cache and db aliases used when invalidating.
+                DISABLE_CACHING.set_aliases(cache_alias='default', db_alias='default')
+
                 # Code to run while the cache is disabled
 
 
-        Example 3:
+        Example 2:
             from cachalot.monkey_patch import DISABLE_CACHING
 
             try:
@@ -51,8 +54,9 @@ class Disabled:
                 # Code to run while the cache is disabled
 
             finally:
-                # invalidate_cache by default is True
-                DISABLE_CACHING.disable(invalidate_cache=False)
+                # invalidate_cache is only needed if you do not want to invalidate the cache.
+                # Also allow you to change the cache and db aliases used when invalidating.
+                DISABLE_CACHING.disable(invalidate_cache=False, cache_alias='default', db_alias='default')
     """
     def __init__(self):
         self.threads = frozenset()
