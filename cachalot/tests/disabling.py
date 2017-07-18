@@ -7,10 +7,11 @@ from uuid import UUID
 from decimal import Decimal
 
 from django import VERSION as django_version
+from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.db import connection, transaction
+from django.db import connection, transaction, connections, DEFAULT_DB_ALIAS
 from django.db.models import Count
 from django.db.models.expressions import RawSQL
 from django.db.transaction import TransactionManagementError
@@ -352,3 +353,104 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(name='test1')
         with self.assertNumQueries(1):
             Test.objects.get(name='test1a')
+
+
+@skipIf(len(settings.DATABASES) == 1,
+        'We can’t change the DB used since there’s only one configured')
+class DisablingMultiDatabaseTestCase(TransactionTestCase):
+    multi_db = True
+
+    def setUp(self):
+        self.t1 = Test.objects.create(name='test1')
+        self.t2 = Test.objects.create(name='test2')
+        self.db_alias2 = next(alias for alias in settings.DATABASES
+                              if alias != DEFAULT_DB_ALIAS)
+        connection2 = connections[self.db_alias2]
+        self.is_sqlite2 = connection2.vendor == 'sqlite'
+        self.is_mysql2 = connection2.vendor == 'mysql'
+        if connection2.vendor in ('mysql', 'postgresql'):
+            # We need to reopen the connection or Django
+            # will execute an extra SQL request below.
+            connection2.cursor()
+
+    def test_read_disabling_one_db_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:
+            DISABLE_CACHING.set_aliases(db_alias=self.db_alias2)
+            with self.assertNumQueries(1, using=self.db_alias2):
+                bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        # Caching enabled, invalidating has run
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+
+    def test_read_disabling_without_invalidating_one_db_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:
+            DISABLE_CACHING.do_not_invalidate()
+            DISABLE_CACHING.set_aliases(db_alias=self.db_alias2)
+            with self.assertNumQueries(1, using=self.db_alias2):
+                bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        # Caching enabled without invalidating so this query should be cached
+        with self.assertNumQueries(0, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+
+    def test_read_disabling_one_db_using_try_finally(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        blew_up = False
+        error_message = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            with self.assertNumQueries(1, using=self.db_alias2):
+                bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        except Exception as err:  # In python 3 err is deleted after this block
+            blew_up = True
+            error_message = err
+        finally:
+            DISABLE_CACHING.disable(db_alias=self.db_alias2)
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        # Caching enabled but invalidating has run
+        with self.assertNumQueries(1, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+
+    def test_read_disabling_one_db_without_invalidating_using_try_finally(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        blew_up = False
+        error_message = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            with self.assertNumQueries(1, using=self.db_alias2):
+                bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+        except Exception as err:  # In python 3 err is deleted after this block
+            blew_up = True
+            error_message = err
+        finally:
+            DISABLE_CACHING.disable(invalidate_cache=False, db_alias=self.db_alias2)
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
+        # Caching enabled without invalidating so this query should be cached
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        # Caching enabled but invalidating has run
+        with self.assertNumQueries(0, using=self.db_alias2):
+            bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
