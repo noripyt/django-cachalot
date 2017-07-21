@@ -1,32 +1,17 @@
 # coding: utf-8
 
 from __future__ import unicode_literals
-import datetime
-from unittest import skipIf, skipUnless
-from uuid import UUID
-from decimal import Decimal
+from unittest import skipIf
 
-from django import VERSION as django_version
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
-from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
-from django.core.cache import DEFAULT_CACHE_ALIAS, caches
-from django.db import connection, transaction, connections, DEFAULT_DB_ALIAS
-from django.db.models import Count
-from django.db.models.expressions import RawSQL
-from django.db.transaction import TransactionManagementError
-from django.test import (
-    TransactionTestCase, skipUnlessDBFeature, override_settings)
-from pytz import UTC
-
+from django.core.cache import DEFAULT_CACHE_ALIAS
+from django.db import connection, connections, DEFAULT_DB_ALIAS
+from django.test import TransactionTestCase
 from ..api import invalidate
 from ..monkey_patch import DISABLE_CACHING
-from ..settings import cachalot_settings
-from ..utils import UncachableQuery
-from .models import Test, TestChild, TestParent
+from .models import Test
 from .test_utils import TestUtilsMixin
-
 
 
 class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
