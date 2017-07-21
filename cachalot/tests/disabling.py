@@ -11,6 +11,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.core.cache import DEFAULT_CACHE_ALIAS, caches
 from django.db import connection, transaction, connections, DEFAULT_DB_ALIAS
 from django.db.models import Count
 from django.db.models.expressions import RawSQL
@@ -19,11 +20,13 @@ from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
 from pytz import UTC
 
+from ..api import invalidate
 from ..monkey_patch import DISABLE_CACHING
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent
 from .test_utils import TestUtilsMixin
+
 
 
 class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
@@ -454,3 +457,112 @@ class DisablingMultiDatabaseTestCase(TransactionTestCase):
         # Caching enabled but invalidating has run
         with self.assertNumQueries(0, using=self.db_alias2):
             bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
+
+
+@skipIf(len(settings.CACHES) == 1,
+        'We can’t change the cache used since there’s only one configured')
+class DisablingMultiCacheTestCase(TransactionTestCase):
+    multi_db = True
+
+    def setUp(self):
+        self.cache_alias2 = next(alias for alias in settings.CACHES
+                                 if alias != DEFAULT_CACHE_ALIAS)
+
+        self.t1 = Test.objects.create(name='test1')
+        self.t2 = Test.objects.create(name='test2')
+
+        # Start each tests with a fresh cache
+        invalidate('cachalot_test')
+
+    def test_read_disabling_one_cache_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:
+            DISABLE_CACHING.set_aliases(cache_alias=self.cache_alias2)
+            with self.assertNumQueries(1):
+                with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                    bool(Test.objects.exists())  # Force the query to run
+        # Caching enabled, invalidating has run
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+
+    def test_read_disabling_without_invalidating_one_db_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:
+            DISABLE_CACHING.do_not_invalidate()
+            DISABLE_CACHING.set_aliases(cache_alias=self.cache_alias2)
+            with self.assertNumQueries(1):
+                with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                    bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(0):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+
+    def test_read_disabling_one_db_using_try_finally(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+        blew_up = False
+        error_message = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            with self.assertNumQueries(1):
+                with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                    bool(Test.objects.exists())  # Force the query to run
+        except Exception as err:  # In python 3 err is deleted after this block
+            blew_up = True
+            error_message = err
+        finally:
+            DISABLE_CACHING.disable(cache_alias=self.cache_alias2)
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        # Caching enabled but invalidating has run
+        with self.assertNumQueries(1):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+
+    def test_read_disabling_one_db_without_invalidating_using_try_finally(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        with self.assertNumQueries(1):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
+        blew_up = False
+        error_message = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            with self.assertNumQueries(1):
+                with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                    bool(Test.objects.exists())  # Force the query to run
+        except Exception as err:  # In python 3 err is deleted after this block
+            blew_up = True
+            error_message = err
+        finally:
+            DISABLE_CACHING.disable(invalidate_cache=False, cache_alias=self.cache_alias2)
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
+        # Caching enabled without invalidating so this query should be cached
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+        # Caching enabled but invalidating has run
+        with self.assertNumQueries(0):
+            with self.settings(CACHALOT_CACHE=self.cache_alias2):
+                bool(Test.objects.exists())  # Force the query to run
