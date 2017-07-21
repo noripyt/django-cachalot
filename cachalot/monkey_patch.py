@@ -2,7 +2,6 @@
 
 from __future__ import unicode_literals
 from collections import Iterable
-from threading import get_ident
 from time import time
 
 from django.db.backends.utils import CursorWrapper
@@ -12,7 +11,12 @@ from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
 )
 from django.db.transaction import Atomic, get_connection
-from django.utils.six import binary_type, wraps
+from django.utils.six import binary_type, wraps, PY3
+
+if PY3:
+    from threading import get_ident
+else:
+    from thread import get_ident
 
 from .api import invalidate
 from .cache import cachalot_caches
