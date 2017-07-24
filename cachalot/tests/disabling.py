@@ -342,6 +342,44 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             Test.objects.get(name='test1a')
 
+    def test_clear_using_with_stmt(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        # Disable the cache
+        with DISABLE_CACHING:  # Since we are clearing below this shouldn't invalidate on exit.
+            # Clear the disabling class - This really shouldn't be used unless absolutely necessary.
+            # It was designed just as an in case anyone ever needs it function.
+            DISABLE_CACHING.clear()
+            with self.assertNumQueries(0):
+                bool(Test.objects.exists())  # Force the query to run
+
+        # Caching enabled without invalidating so this query should be cached
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+
+    def test_clear_using_try_finally(self):
+        with self.assertNumQueries(1):
+            bool(Test.objects.exists())  # Force the query to run
+        blew_up = False
+        error_message = None
+        # Disable the cache
+        try:
+            DISABLE_CACHING.enable()
+            # Clear the disabling class - This really shouldn't be used unless absolutely necessary.
+            # It was designed just as an in case anyone ever needs it function.
+            DISABLE_CACHING.clear()
+            with self.assertNumQueries(0):
+                bool(Test.objects.exists())  # Force the query to run
+        except Exception as err:  # In python 3 err is deleted after this block
+            blew_up = True
+            error_message = err
+        finally:
+            DISABLE_CACHING.disable()  # Since we cleared this shouldn't invalidate
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
+        # Caching enabled without invalidating so this query should be cached
+        with self.assertNumQueries(0):
+            bool(Test.objects.exists())  # Force the query to run
+
 
 @skipIf(len(settings.DATABASES) == 1,
         'We can’t change the DB used since there’s only one configured')
