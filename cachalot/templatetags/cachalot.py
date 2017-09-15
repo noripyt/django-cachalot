@@ -6,4 +6,4 @@ from ..api import get_last_invalidation
 register = Library()
 
 
-register.assignment_tag(get_last_invalidation)
+register.simple_tag(get_last_invalidation)
