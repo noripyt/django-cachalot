@@ -14,6 +14,7 @@ from django.db.models.sql import Query
 from django.db.models.sql.where import (
     ExtraWhere, SubqueryConstraint, WhereNode)
 from django.utils.six import text_type, binary_type, PY2
+from django.utils.encoding import force_text
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
@@ -84,7 +85,7 @@ def get_query_cache_key(compiler):
     sql, params = compiler.as_sql()
     check_parameter_types(params)
     cache_key = '%s:%s:%s' % (compiler.using, sql,
-                              [text_type(p) for p in params])
+                              [force_text(p) for p in params])
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
