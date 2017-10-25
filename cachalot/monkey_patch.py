@@ -13,9 +13,9 @@ from django.db.models.sql.compiler import (
 from django.db.transaction import Atomic, get_connection
 from django.utils.six import binary_type, wraps, PY3
 
-if PY3:
+if PY3:  # pragma: no coverage
     from threading import get_ident
-else:
+else:  # pragma: no coverage
     from thread import get_ident
 
 from .api import invalidate
