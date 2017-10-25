@@ -316,9 +316,11 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
                     cursor.execute("UPDATE cachalot_test set name = %s where name = %s", ('test1a', 'test1'))
         except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
+            error_message = err
         finally:
             DISABLE_CACHING.disable()
-        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(err))
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
         # Caching enabled, invalidating has run
         with self.assertRaises(Test.DoesNotExist):
             Test.objects.get(name='test1')
@@ -338,9 +340,11 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
                     cursor.execute("UPDATE cachalot_test set name = %s where name = %s", ('test1a', 'test1'))
         except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
+            error_message = err
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False)
-        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(err))
+        self.assertFalse(blew_up, msg='Unexpected Exception Occurred: {0}'.format(error_message))
         # Caching enabled without invalidating so this query should
         # be cached even though the object is no longer named test1.
         with self.assertNumQueries(0):
