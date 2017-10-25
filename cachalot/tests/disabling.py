@@ -89,8 +89,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             DISABLE_CACHING.enable()
             with self.assertNumQueries(1):
                 bool(Test.objects.exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable()
@@ -111,8 +112,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             DISABLE_CACHING.enable()
             with self.assertNumQueries(1):
                 bool(Test.objects.exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False)
@@ -163,8 +165,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertNumQueries(2 if self.is_sqlite else 1):
                 data1.name = 'test1a'
                 data1.save()
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable()
@@ -186,8 +189,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertNumQueries(2 if self.is_sqlite else 1):
                 data1.name = 'test1a'
                 data1.save()
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False)
@@ -236,8 +240,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
                 DISABLE_CACHING.enable()
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT name FROM cachalot_test where name = %s", ('test1', ))
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable()
@@ -257,8 +262,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertNumQueries(1):
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT name FROM cachalot_test where name = %s", ('test1', ))
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False)
@@ -308,7 +314,7 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertNumQueries(1):
                 with connection.cursor() as cursor:
                     cursor.execute("UPDATE cachalot_test set name = %s where name = %s", ('test1a', 'test1'))
-        except Exception as err:
+        except Exception as err:  # pragma: no coverage
             blew_up = True
         finally:
             DISABLE_CACHING.disable()
@@ -330,7 +336,7 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertNumQueries(1):
                 with connection.cursor() as cursor:
                     cursor.execute("UPDATE cachalot_test set name = %s where name = %s", ('test1a', 'test1'))
-        except Exception as err:
+        except Exception as err:  # pragma: no coverage
             blew_up = True
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False)
@@ -370,8 +376,9 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
             DISABLE_CACHING.clear()
             with self.assertNumQueries(0):
                 bool(Test.objects.exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable()  # Since we cleared this shouldn't invalidate
@@ -444,8 +451,9 @@ class DisablingMultiDatabaseTestCase(TransactionTestCase):
             DISABLE_CACHING.enable()
             with self.assertNumQueries(1, using=self.db_alias2):
                 bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(db_alias=self.db_alias2)
@@ -468,8 +476,9 @@ class DisablingMultiDatabaseTestCase(TransactionTestCase):
             DISABLE_CACHING.enable()
             with self.assertNumQueries(1, using=self.db_alias2):
                 bool(Test.objects.using(self.db_alias2).exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False, db_alias=self.db_alias2)
@@ -549,8 +558,9 @@ class DisablingMultiCacheTestCase(TransactionTestCase):
             with self.assertNumQueries(1):
                 with self.settings(CACHALOT_CACHE=self.cache_alias2):
                     bool(Test.objects.exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(cache_alias=self.cache_alias2)
@@ -576,8 +586,9 @@ class DisablingMultiCacheTestCase(TransactionTestCase):
             with self.assertNumQueries(1):
                 with self.settings(CACHALOT_CACHE=self.cache_alias2):
                     bool(Test.objects.exists())  # Force the query to run
-        except Exception as err:  # In python 3 err is deleted after this block
+        except Exception as err:  # pragma: no coverage
             blew_up = True
+            # In python 3 err is deleted after this block
             error_message = err
         finally:
             DISABLE_CACHING.disable(invalidate_cache=False, cache_alias=self.cache_alias2)
