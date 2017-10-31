@@ -307,7 +307,7 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             Test.objects.get(name='test1')
         blew_up = False
-        err = None
+        error_message = None
         # Disable the cache
         try:
             DISABLE_CACHING.enable()
@@ -331,7 +331,7 @@ class DisablingTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             Test.objects.get(name='test1')
         blew_up = False
-        err = None
+        error_message = None
         # Disable the cache
         try:
             DISABLE_CACHING.enable()
