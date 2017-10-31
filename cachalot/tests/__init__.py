@@ -12,6 +12,7 @@ from .api import APITestCase, CommandTestCase
 from .signals import SignalsTestCase
 from .postgres import PostgresReadTestCase
 from .debug_toolbar import DebugToolbarTestCase
+from .monkey_patch import MonkeyPatchTestCase
 
 
 @receiver(setting_changed)
