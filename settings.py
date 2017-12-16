@@ -118,7 +118,7 @@ TEMPLATES = [
 ]
 
 
-MIDDLEWARE_CLASSES = []
+MIDDLEWARE = []
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 SECRET_KEY = 'it’s not important in tests but we have to set it'
 
@@ -161,7 +161,7 @@ DEBUG_TOOLBAR_CONFIG = {
     'RENDER_PANELS': False,
 }
 
-MIDDLEWARE_CLASSES += [
+MIDDLEWARE += [
     'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 

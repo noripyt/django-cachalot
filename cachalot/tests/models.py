@@ -10,7 +10,7 @@ from django.contrib.postgres.fields import (
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
-    FloatField, DecimalField, DurationField, UUIDField)
+    FloatField, DecimalField, DurationField, UUIDField, CASCADE)
 
 DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
 if DJANGO_GTE_1_9:
@@ -19,11 +19,13 @@ if DJANGO_GTE_1_9:
 
 class Test(Model):
     name = CharField(max_length=20)
-    owner = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    owner = ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=CASCADE)
     public = BooleanField(default=False)
     date = DateField(null=True, blank=True)
     datetime = DateTimeField(null=True, blank=True)
-    permission = ForeignKey('auth.Permission', null=True, blank=True)
+    permission = ForeignKey(
+        'auth.Permission', null=True, blank=True, on_delete=CASCADE)
 
     # We can’t use the exact names `float` or `decimal` as database column name
     # since it fails on MySQL.

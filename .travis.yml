@@ -11,306 +11,366 @@ cache: pip
 
 matrix:
   include:
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-sqlite3-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-sqlite3-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-sqlite3-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-sqlite3-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-sqlite3-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-postgresql-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-postgresql-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-postgresql-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-postgresql-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-postgresql-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-mysql-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-mysql-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-mysql-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-mysql-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.8-mysql-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-sqlite3-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-sqlite3-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-sqlite3-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-sqlite3-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-sqlite3-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-postgresql-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-postgresql-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-postgresql-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-postgresql-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-postgresql-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-mysql-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-mysql-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-mysql-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-mysql-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.10-mysql-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-sqlite3-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-sqlite3-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-sqlite3-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-sqlite3-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-sqlite3-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-postgresql-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-postgresql-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-postgresql-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-postgresql-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-postgresql-filebased
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-mysql-redis
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-mysql-memcached
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-mysql-pylibmc
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-mysql-locmem
-    - python: 2.7
-      env: TOXENV=py2.7-django1.11-mysql-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-sqlite3-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-sqlite3-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-sqlite3-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-sqlite3-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-sqlite3-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-postgresql-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-postgresql-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-postgresql-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-postgresql-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-postgresql-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-mysql-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-mysql-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-mysql-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-mysql-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.8-mysql-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-sqlite3-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-sqlite3-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-sqlite3-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-sqlite3-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-sqlite3-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-postgresql-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-postgresql-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-postgresql-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-postgresql-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-postgresql-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-mysql-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-mysql-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-mysql-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-mysql-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.10-mysql-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-sqlite3-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-sqlite3-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-sqlite3-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-sqlite3-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-sqlite3-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-postgresql-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-postgresql-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-postgresql-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-postgresql-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-postgresql-filebased
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-mysql-redis
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-mysql-memcached
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-mysql-pylibmc
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-mysql-locmem
-    - python: 3.4
-      env: TOXENV=py3.4-django1.11-mysql-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-sqlite3-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-sqlite3-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-sqlite3-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-sqlite3-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-sqlite3-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-postgresql-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-postgresql-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-postgresql-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-postgresql-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-postgresql-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-mysql-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-mysql-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-mysql-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-mysql-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.8-mysql-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-sqlite3-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-sqlite3-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-sqlite3-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-sqlite3-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-sqlite3-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-postgresql-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-postgresql-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-postgresql-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-postgresql-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-postgresql-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-mysql-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-mysql-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-mysql-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-mysql-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.10-mysql-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-sqlite3-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-sqlite3-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-sqlite3-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-sqlite3-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-sqlite3-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-postgresql-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-postgresql-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-postgresql-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-postgresql-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-postgresql-filebased
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-mysql-redis
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-mysql-memcached
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-mysql-pylibmc
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-mysql-locmem
+    # - python: 2.7
+    #   env: TOXENV=py2.7-django1.11-mysql-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-sqlite3-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-sqlite3-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-sqlite3-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-sqlite3-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-sqlite3-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-postgresql-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-postgresql-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-postgresql-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-postgresql-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-postgresql-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-mysql-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-mysql-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-mysql-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-mysql-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.8-mysql-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-sqlite3-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-sqlite3-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-sqlite3-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-sqlite3-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-sqlite3-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-postgresql-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-postgresql-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-postgresql-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-postgresql-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-postgresql-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-mysql-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-mysql-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-mysql-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-mysql-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.10-mysql-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-sqlite3-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-sqlite3-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-sqlite3-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-sqlite3-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-sqlite3-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-postgresql-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-postgresql-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-postgresql-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-postgresql-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-postgresql-filebased
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-mysql-redis
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-mysql-memcached
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-mysql-pylibmc
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-mysql-locmem
+    # - python: 3.4
+    #   env: TOXENV=py3.4-django1.11-mysql-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-sqlite3-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-sqlite3-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-sqlite3-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-sqlite3-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-sqlite3-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-postgresql-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-postgresql-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-postgresql-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-postgresql-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-postgresql-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-mysql-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-mysql-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-mysql-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-mysql-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.8-mysql-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-sqlite3-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-sqlite3-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-sqlite3-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-sqlite3-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-sqlite3-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-postgresql-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-postgresql-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-postgresql-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-postgresql-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-postgresql-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-mysql-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-mysql-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-mysql-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-mysql-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.10-mysql-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-sqlite3-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-sqlite3-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-sqlite3-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-sqlite3-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-sqlite3-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-postgresql-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-postgresql-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-postgresql-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-postgresql-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-postgresql-filebased
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-mysql-redis
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-mysql-memcached
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-mysql-pylibmc
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-mysql-locmem
+    # - python: 3.5
+    #   env: TOXENV=py3.5-django1.11-mysql-filebased
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-sqlite3-redis
+      env: TOXENV=py3.5-django2.0-sqlite3-redis
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-sqlite3-memcached
+      env: TOXENV=py3.5-django2.0-sqlite3-memcached
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-sqlite3-pylibmc
+      env: TOXENV=py3.5-django2.0-sqlite3-pylibmc
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-sqlite3-locmem
+      env: TOXENV=py3.5-django2.0-sqlite3-locmem
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-sqlite3-filebased
+      env: TOXENV=py3.5-django2.0-sqlite3-filebased
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-postgresql-redis
+      env: TOXENV=py3.5-django2.0-postgresql-redis
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-postgresql-memcached
+      env: TOXENV=py3.5-django2.0-postgresql-memcached
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-postgresql-pylibmc
+      env: TOXENV=py3.5-django2.0-postgresql-pylibmc
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-postgresql-locmem
+      env: TOXENV=py3.5-django2.0-postgresql-locmem
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-postgresql-filebased
+      env: TOXENV=py3.5-django2.0-postgresql-filebased
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-mysql-redis
+      env: TOXENV=py3.5-django2.0-mysql-redis
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-mysql-memcached
+      env: TOXENV=py3.5-django2.0-mysql-memcached
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-mysql-pylibmc
+      env: TOXENV=py3.5-django2.0-mysql-pylibmc
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-mysql-locmem
+      env: TOXENV=py3.5-django2.0-mysql-locmem
     - python: 3.5
-      env: TOXENV=py3.5-django1.8-mysql-filebased
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-sqlite3-redis
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-sqlite3-memcached
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-sqlite3-pylibmc
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-sqlite3-locmem
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-sqlite3-filebased
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-postgresql-redis
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-postgresql-memcached
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-postgresql-pylibmc
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-postgresql-locmem
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-postgresql-filebased
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-mysql-redis
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-mysql-memcached
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-mysql-pylibmc
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-mysql-locmem
-    - python: 3.5
-      env: TOXENV=py3.5-django1.10-mysql-filebased
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-sqlite3-redis
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-sqlite3-memcached
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-sqlite3-pylibmc
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-sqlite3-locmem
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-sqlite3-filebased
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-postgresql-redis
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-postgresql-memcached
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-postgresql-pylibmc
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-postgresql-locmem
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-postgresql-filebased
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-mysql-redis
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-mysql-memcached
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-mysql-pylibmc
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-mysql-locmem
-    - python: 3.5
-      env: TOXENV=py3.5-django1.11-mysql-filebased
+      env: TOXENV=py3.5-django2.0-mysql-filebased
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-sqlite3-redis
+    #   env: TOXENV=py3.6-django1.11-sqlite3-redis
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-sqlite3-memcached
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-sqlite3-pylibmc
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-sqlite3-locmem
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-sqlite3-filebased
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-postgresql-redis
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-postgresql-memcached
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-postgresql-pylibmc
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-postgresql-locmem
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-postgresql-filebased
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-mysql-redis
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-mysql-memcached
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-mysql-pylibmc
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-mysql-locmem
+    # - python: 3.6
+    #   env: TOXENV=py3.6-django1.11-mysql-filebased
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-sqlite3-memcached
+      env: TOXENV=py3.6-django2.0-sqlite3-redis
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-sqlite3-pylibmc
+      env: TOXENV=py3.6-django2.0-sqlite3-memcached
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-sqlite3-locmem
+      env: TOXENV=py3.6-django2.0-sqlite3-pylibmc
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-sqlite3-filebased
+      env: TOXENV=py3.6-django2.0-sqlite3-locmem
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-postgresql-redis
+      env: TOXENV=py3.6-django2.0-sqlite3-filebased
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-postgresql-memcached
+      env: TOXENV=py3.6-django2.0-postgresql-redis
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-postgresql-pylibmc
+      env: TOXENV=py3.6-django2.0-postgresql-memcached
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-postgresql-locmem
+      env: TOXENV=py3.6-django2.0-postgresql-pylibmc
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-postgresql-filebased
+      env: TOXENV=py3.6-django2.0-postgresql-locmem
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-mysql-redis
+      env: TOXENV=py3.6-django2.0-postgresql-filebased
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-mysql-memcached
+      env: TOXENV=py3.6-django2.0-mysql-redis
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-mysql-pylibmc
+      env: TOXENV=py3.6-django2.0-mysql-memcached
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-mysql-locmem
+      env: TOXENV=py3.6-django2.0-mysql-pylibmc
     - python: 3.6
-      env: TOXENV=py3.6-django1.11-mysql-filebased
+      env: TOXENV=py3.6-django2.0-mysql-locmem
+    - python: 3.6
+      env: TOXENV=py3.6-django2.0-mysql-filebased
 
 sudo: false
 
