@@ -1038,7 +1038,7 @@ class DatabaseCommandTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertListEqual(list(Test.objects.all()), [self.t])
 
         call_command('loaddata', 'cachalot/tests/loaddata_fixture.json',
-                     verbosity=0, interactive=False)
+                     verbosity=0)
 
         self.force_repoen_connection()
 
