@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 import os
 
-from django import VERSION as django_version
 
 DATABASES = {
     'sqlite3': {
@@ -21,8 +20,6 @@ DATABASES = {
         'USER': 'root',
     },
 }
-if django_version[:2] == (1, 8):
-    DATABASES['postgresql']['ENGINE'] = 'django.db.backends.postgresql_psycopg2'
 for alias in DATABASES:
     if 'TEST' not in DATABASES[alias]:
         test_db_name = 'test_' + DATABASES[alias]['NAME']

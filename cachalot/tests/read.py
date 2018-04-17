@@ -6,13 +6,13 @@ from unittest import skipIf, skipUnless
 from uuid import UUID
 from decimal import Decimal
 
-from django import VERSION as django_version
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
 from django.db.models.expressions import RawSQL
+from django.db.models.functions import Now
 from django.db.transaction import TransactionManagementError
 from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
@@ -22,12 +22,6 @@ from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent
 from .test_utils import TestUtilsMixin
-
-
-DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
-
-if DJANGO_GTE_1_9:
-    from django.db.models.functions import Now
 
 
 class ReadTestCase(TestUtilsMixin, TransactionTestCase):
@@ -839,7 +833,6 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))
 
-    @skipUnless(DJANGO_GTE_1_9, 'Now is only available on Django >= 1.9')
     def test_now(self):
         """
         Checks that queries with a Now() parameter are not cached.

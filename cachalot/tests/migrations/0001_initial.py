@@ -6,7 +6,7 @@ from django import VERSION as django_version
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField,
-    IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
+    IntegerRangeField, JSONField, FloatRangeField, DateRangeField, DateTimeRangeField)
 from django.db import models, migrations
 
 
@@ -68,6 +68,7 @@ class Migration(migrations.Migration):
                     models.IntegerField(null=True, blank=True), size=3,
                     null=True, blank=True)),
                 ('hstore', HStoreField(null=True, blank=True)),
+                ('json', JSONField(null=True, blank=True)),
                 ('int_range', IntegerRangeField(null=True, blank=True)),
                 ('float_range', FloatRangeField(null=True, blank=True)),
                 ('date_range', DateRangeField(null=True, blank=True)),
@@ -75,11 +76,3 @@ class Migration(migrations.Migration):
             ],
         ),
     ]
-
-
-if django_version[:2] >= (1, 9):
-    from django.contrib.postgres.fields import JSONField
-    Migration.operations.append(
-        migrations.AddField('PostgresModel', 'json',
-                            JSONField(null=True, blank=True))
-    )
