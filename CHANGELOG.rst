@@ -4,7 +4,7 @@ What’s new in django-cachalot?
 Unreleased
 ----------
 
-- Drops Django 1.8 support
+- Drops Django 1.8 support (1.9 support was dropped in 1.5.0)
 - Drops Django 1.10 support
 
 1.5.0

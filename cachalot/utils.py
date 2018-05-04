@@ -7,6 +7,7 @@ from hashlib import sha1
 from time import time
 from uuid import UUID
 
+from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
 from django.db.models import QuerySet
 from django.db.models.functions import Now
@@ -31,26 +32,21 @@ CACHABLE_PARAM_TYPES = {
     bool, int, float, Decimal, bytearray, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
-CACHABLE_PARAM_TYPES.update(integer_types)  # Add long for Python 2
-UNCACHABLE_FUNCS = {
-    Now,
-}
+CACHABLE_PARAM_TYPES.update(integer_types)  # Adds long for Python 2
+UNCACHABLE_FUNCS = {Now, TransactionNow}
 
 try:
     from psycopg2 import Binary
     from psycopg2.extras import (
         NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json)
     from django.contrib.postgres.fields.jsonb import JsonAdapter
-    from django.contrib.postgres.functions import TransactionNow
+
 except ImportError:
     pass
 else:
     CACHABLE_PARAM_TYPES.update((
-        Binary,
-        NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json,
-        JsonAdapter, ))
-    UNCACHABLE_FUNCS.update((
-        TransactionNow, ))
+        Binary, NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet,
+        Json, JsonAdapter))
 
 
 def check_parameter_types(params):
