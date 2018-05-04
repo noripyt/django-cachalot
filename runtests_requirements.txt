@@ -1,6 +1,6 @@
 -r requirements.txt
 
-psycopg2
+psycopg2-binary
 mysqlclient
 django-redis
 python-memcached

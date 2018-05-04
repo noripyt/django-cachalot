@@ -20,6 +20,8 @@ DATABASES = {
         'USER': 'root',
     },
 }
+if 'MYSQL_PASSWORD' in os.environ:
+    DATABASES['mysql']['PASSWORD'] = os.environ['MYSQL_PASSWORD']
 for alias in DATABASES:
     if 'TEST' not in DATABASES[alias]:
         test_db_name = 'test_' + DATABASES[alias]['NAME']
