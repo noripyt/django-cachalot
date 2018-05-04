@@ -4,8 +4,10 @@ from __future__ import unicode_literals
 
 from django.conf import settings
 from django.contrib.postgres.fields import (
-    ArrayField, HStoreField,
-    IntegerRangeField, JSONField, FloatRangeField, DateRangeField, DateTimeRangeField)
+    ArrayField, HStoreField, IntegerRangeField, JSONField, FloatRangeField,
+    DateRangeField, DateTimeRangeField)
+from django.contrib.postgres.operations import (
+    HStoreExtension, UnaccentExtension)
 from django.db import models, migrations
 
 
@@ -54,10 +56,8 @@ class Migration(migrations.Migration):
             ],
             bases=('cachalot.testparent',),
         ),
-        migrations.RunSQL('CREATE EXTENSION hstore;',
-                          hints={'extension': 'hstore'}),
-        migrations.RunSQL('CREATE EXTENSION unaccent;',
-                          hints={'extension': 'unaccent'}),
+        HStoreExtension(),
+        UnaccentExtension(),
         migrations.CreateModel(
             name='PostgresModel',
             fields=[
