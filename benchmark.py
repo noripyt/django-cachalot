@@ -87,7 +87,7 @@ def write_conditions():
     # PostgreSQL
     with connections['postgresql'].cursor() as cursor:
         cursor.execute('SELECT version();')
-        versions['PostgreSQL'] = re.match(r'^PostgreSQL ([\d\.]+) on .+$',
+        versions['PostgreSQL'] = re.match(r'^PostgreSQL\s+(\S+)\s',
                                           cursor.fetchone()[0]).group(1)
     # MySQL
     with connections['mysql'].cursor() as cursor:
