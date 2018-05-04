@@ -324,3 +324,48 @@ Example:
     def warn_admin(sender, **kwargs):
         mail_admins('User permissions changed',
                     'Someone probably gained or lost Django permissions.')
+
+
+Disabling the cache for a transaction
+....
+
+If you have a long running data import which is mostly inserting and updating data
+or uses a lot of tables that you do not want cached you may find that cachalot can
+slow things down because of the overhead of invalidating and checking if caching should
+occur for each sql statement.  If this is the case you can disable caching for the
+transaction which will make the transaction run faster because of a lower overhead.
+
+Two methods of use exist where you can either use ``with`` or use a ``try: finally:``.
+Each method provides a way to modify the cache and db aliases that are used when
+invalidate is called.  Each method also provides a way to turn off the default
+invalidation in case you want to.
+
+Example 1:
+
+.. code:: python
+
+    from cachalot.monkey_patch import DISABLE_CACHING
+
+    with DISABLE_CACHING:
+        DISABLE_CACHING.do_not_invalidate()  # Only needed if you do not want to invalidate.
+
+        # Optional line that allows you to change the cache and db aliases used when invalidating.
+        DISABLE_CACHING.set_aliases(cache_alias='default', db_alias='default')
+
+        # Code to run while the cache is disabled
+
+Example 2:
+
+.. code:: python
+
+    from cachalot.monkey_patch import DISABLE_CACHING
+
+    try:
+        DISABLE_CACHING.enable()
+
+        # Code to run while the cache is disabled
+
+    finally:
+        # invalidate_cache is only needed if you do not want to invalidate the cache.
+        # Also allow you to change the cache and db aliases used when invalidating.
+        DISABLE_CACHING.disable(invalidate_cache=False, cache_alias='default', db_alias='default'):
