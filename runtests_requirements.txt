@@ -1,6 +1,7 @@
 -r requirements.txt
 
-psycopg2-binary
+# TODO: Switch to psycopg2-binary when psycopg/psycopg2#708 is fixed.
+psycopg2
 mysqlclient
 django-redis
 python-memcached

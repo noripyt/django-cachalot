@@ -5,20 +5,23 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField,
-    IntegerRangeField, JSONField, FloatRangeField, DateRangeField, DateTimeRangeField)
+    IntegerRangeField, JSONField, FloatRangeField, DateRangeField,
+    DateTimeRangeField)
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
-    FloatField, DecimalField, DurationField, UUIDField)
+    FloatField, DecimalField, DurationField, UUIDField, SET_NULL, PROTECT)
 
 
 class Test(Model):
     name = CharField(max_length=20)
-    owner = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True)
+    owner = ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                       on_delete=SET_NULL)
     public = BooleanField(default=False)
     date = DateField(null=True, blank=True)
     datetime = DateTimeField(null=True, blank=True)
-    permission = ForeignKey('auth.Permission', null=True, blank=True)
+    permission = ForeignKey('auth.Permission', null=True, blank=True,
+                            on_delete=PROTECT)
 
     # We can’t use the exact names `float` or `decimal` as database column name
     # since it fails on MySQL.

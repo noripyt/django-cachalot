@@ -9,11 +9,10 @@ from uuid import UUID
 
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
-from django.db.models import QuerySet
+from django.db.models import QuerySet, Subquery, Exists
 from django.db.models.functions import Now
-from django.db.models.sql import Query
-from django.db.models.sql.where import (
-    ExtraWhere, SubqueryConstraint, WhereNode)
+from django.db.models.sql import Query, AggregateQuery
+from django.db.models.sql.where import ExtraWhere, WhereNode
 from django.utils.six import text_type, binary_type, integer_types
 
 from .settings import ITERABLES, cachalot_settings
@@ -101,26 +100,23 @@ def _get_tables_from_sql(connection, lowercased_sql):
             if t in lowercased_sql}
 
 
-def _find_subqueries(children):
+def _find_subqueries_in_where(children):
     for child in children:
         child_class = child.__class__
         if child_class is WhereNode:
-            for grand_child in _find_subqueries(child.children):
+            for grand_child in _find_subqueries_in_where(child.children):
                 yield grand_child
-        # TODO: Remove this condition when we drop Django 1.8 support.
-        elif child_class is SubqueryConstraint:
-            query_object = child.query_object
-            yield (query_object if query_object.__class__ is Query
-                   else query_object.query)
         elif child_class is ExtraWhere:
             raise IsRawQuery
         else:
-            rhs = getattr(child, 'rhs', None)
+            rhs = child.rhs
             rhs_class = rhs.__class__
             if rhs_class is Query:
                 yield rhs
             elif rhs_class is QuerySet:
                 yield rhs.query
+            elif rhs_class is Subquery or rhs_class is Exists:
+                yield rhs.queryset.query
             elif rhs_class in UNCACHABLE_FUNCS:
                 raise UncachableQuery
 
@@ -154,12 +150,22 @@ def _get_tables(db_alias, query):
         raise UncachableQuery
 
     try:
-        if query.extra_select or getattr(query, 'subquery', False):
+        if query.extra_select:
             raise IsRawQuery
+        # Gets all tables already found by the ORM.
         tables = set(query.table_map)
         tables.add(query.get_meta().db_table)
-        for subquery in _find_subqueries(query.where.children):
+        # Gets tables in subquery annotations.
+        for annotation in query.annotations.values():
+            if isinstance(annotation, Subquery):
+                tables.update(_get_tables(db_alias, annotation.queryset.query))
+        # Gets tables in WHERE subqueries.
+        for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))
+        # Gets tables in HAVING subqueries.
+        if isinstance(query, AggregateQuery):
+            tables.update(
+                _get_tables_from_sql(connections[db_alias], query.subquery))
     except IsRawQuery:
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         tables = _get_tables_from_sql(connections[db_alias], sql)

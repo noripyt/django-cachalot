@@ -2,7 +2,6 @@
 
 from __future__ import unicode_literals
 
-from django import VERSION as django_version
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField,
@@ -26,8 +25,8 @@ class Migration(migrations.Migration):
                 ('public', models.BooleanField(default=False)),
                 ('date', models.DateField(null=True, blank=True)),
                 ('datetime', models.DateTimeField(null=True, blank=True)),
-                ('owner', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True)),
-                ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True)),
+                ('owner', models.ForeignKey(blank=True, to=settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)),
+                ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True, on_delete=models.PROTECT)),
                 ('a_float', models.FloatField(null=True, blank=True)),
                 ('a_decimal', models.DecimalField(null=True, blank=True, max_digits=5, decimal_places=2)),
                 ('bin', models.BinaryField(null=True, blank=True)),
@@ -49,7 +48,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TestChild',
             fields=[
-                ('testparent_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='cachalot.TestParent')),
+                ('testparent_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='cachalot.TestParent', on_delete=models.CASCADE)),
                 ('public', models.BooleanField(default=False)),
                 ('permissions', models.ManyToManyField('auth.Permission', blank=True))
             ],

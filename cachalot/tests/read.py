@@ -2,7 +2,7 @@
 
 from __future__ import unicode_literals
 import datetime
-from unittest import skipIf, skipUnless
+from unittest import skipIf
 from uuid import UUID
 from decimal import Decimal
 
@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count
-from django.db.models.expressions import RawSQL
+from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
 from django.db.transaction import TransactionManagementError
 from django.test import (
@@ -311,6 +311,23 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                            TestChild.permissions.through, Permission)
         self.assert_query_cached(qs, [])
 
+        qs = TestChild.objects.exclude(permissions__name='')
+        self.assert_tables(qs, TestParent, TestChild,
+                           TestChild.permissions.through, Permission)
+        self.assert_query_cached(qs, [])
+
+    def test_custom_subquery(self):
+        tests = Test.objects.filter(permission=OuterRef('pk')).values('name')
+        qs = Permission.objects.annotate(first_permission=Subquery(tests[:1]))
+        self.assert_tables(qs, Permission, Test)
+        self.assert_query_cached(qs, list(Permission.objects.all()))
+
+    def test_custom_subquery_exists(self):
+        tests = Test.objects.filter(permission=OuterRef('pk'))
+        qs = Permission.objects.annotate(has_tests=Exists(tests))
+        self.assert_tables(qs, Permission, Test)
+        self.assert_query_cached(qs, list(Permission.objects.all()))
+
     def test_raw_subquery(self):
         with self.assertNumQueries(0):
             raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
@@ -339,6 +356,12 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
               .values_list('n', flat=True))
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [2, 1])
+
+    def test_annotate_subquery(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(first_test=Subquery(tests[:1]))
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
 
     def test_only(self):
         with self.assertNumQueries(1):
