@@ -3,8 +3,8 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth.models import User
-from django.db import transaction
-from django.test import TransactionTestCase
+from django.db import transaction, connection, IntegrityError
+from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test
 from .test_utils import TestUtilsMixin
@@ -171,3 +171,23 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1])
+
+    @skipUnlessDBFeature('can_defer_constraint_checks')
+    def test_deferred_error(self):
+        """
+        Checks that an error occurring during the end of a transaction
+        has no impact on future queries.
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(
+                'CREATE TABLE example ('
+                'id int UNIQUE DEFERRABLE INITIALLY DEFERRED);')
+            with self.assertRaises(IntegrityError):
+                with transaction.atomic():
+                    with self.assertNumQueries(1):
+                        list(Test.objects.all())
+                    cursor.execute(
+                        'INSERT INTO example VALUES (1), (1);'
+                        '-- ' + Test._meta.db_table)  # Should invalidate Test.
+        with self.assertNumQueries(1):
+            list(Test.objects.all())
