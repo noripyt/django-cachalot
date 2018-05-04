@@ -1,22 +1,16 @@
 from __future__ import unicode_literals
 
-from django import VERSION as django_version
 from django.apps import AppConfig
 from django.conf import settings
 from django.core.checks import register, Tags, Warning, Error
 from cachalot.utils import ITERABLES
 
-from .monkey_patch import patch
 from .settings import (
     cachalot_settings, SUPPORTED_CACHE_BACKENDS, SUPPORTED_DATABASE_ENGINES,
     SUPPORTED_ONLY)
 
 
-DJANGO_GTE_1_10 = django_version[:2] >= (1, 10)
-
-
-@register(*((Tags.caches, Tags.compatibility)
-            if DJANGO_GTE_1_10 else (Tags.compatibility,)))
+@register(Tags.caches, Tags.compatibility)
 def check_cache_compatibility(app_configs, **kwargs):
     cache = settings.CACHES[cachalot_settings.CACHALOT_CACHE]
     cache_backend = cache['BACKEND']
@@ -30,8 +24,7 @@ def check_cache_compatibility(app_configs, **kwargs):
     return []
 
 
-@register(*((Tags.database, Tags.compatibility)
-            if DJANGO_GTE_1_10 else (Tags.compatibility,)))
+@register(Tags.database, Tags.compatibility)
 def check_databases_compatibility(app_configs, **kwargs):
     errors = []
     databases = settings.DATABASES

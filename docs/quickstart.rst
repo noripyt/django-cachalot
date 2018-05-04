@@ -4,7 +4,7 @@ Quick start
 Requirements
 ............
 
-- Django 1.8, 1.10 or 1.11
+- Django 1.11
 - Python 2.7, 3.4, 3.5 or 3.6
 - a cache configured as ``'default'`` with one of these backends:
 
@@ -191,7 +191,7 @@ Examples:
 Template utils
 ..............
 
-`Caching template fragments <https://docs.djangoproject.com/en/1.8/topics/cache/#template-fragment-caching>`_
+`Caching template fragments <https://docs.djangoproject.com/en/1.11/topics/cache/#template-fragment-caching>`_
 can be extremely powerful to speedup a Django application.  However, it often
 means you have to adapt your models to get a relevant cache key, typically
 by adding a timestamp that refers to the last modification of the object.

@@ -2,19 +2,14 @@
 
 from __future__ import unicode_literals
 
-from django import VERSION as django_version
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField,
-    IntegerRangeField, FloatRangeField, DateRangeField, DateTimeRangeField)
+    IntegerRangeField, JSONField, FloatRangeField, DateRangeField, DateTimeRangeField)
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
     ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
     FloatField, DecimalField, DurationField, UUIDField)
-
-DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
-if DJANGO_GTE_1_9:
-    from django.contrib.postgres.fields import JSONField
 
 
 class Test(Model):
@@ -54,8 +49,7 @@ class PostgresModel(Model):
 
     hstore = HStoreField(null=True, blank=True)
 
-    if DJANGO_GTE_1_9:
-        json = JSONField(null=True, blank=True)
+    json = JSONField(null=True, blank=True)
 
     int_range = IntegerRangeField(null=True, blank=True)
     float_range = FloatRangeField(null=True, blank=True)

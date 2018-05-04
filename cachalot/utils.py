@@ -7,13 +7,13 @@ from hashlib import sha1
 from time import time
 from uuid import UUID
 
-from django import VERSION as django_version
 from django.db import connections
 from django.db.models import QuerySet
+from django.db.models.functions import Now
 from django.db.models.sql import Query
 from django.db.models.sql.where import (
     ExtraWhere, SubqueryConstraint, WhereNode)
-from django.utils.six import text_type, binary_type, PY2
+from django.utils.six import text_type, binary_type, integer_types
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
@@ -31,29 +31,26 @@ CACHABLE_PARAM_TYPES = {
     bool, int, float, Decimal, bytearray, binary_type, text_type, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
-
-if PY2:
-    CACHABLE_PARAM_TYPES.add(long)
-
-UNCACHABLE_FUNCS = set()
-if django_version[:2] >= (1, 9):
-    from django.db.models.functions import Now
-    from django.contrib.postgres.functions import TransactionNow
-    UNCACHABLE_FUNCS.update((Now, TransactionNow))
+CACHABLE_PARAM_TYPES.update(integer_types)  # Add long for Python 2
+UNCACHABLE_FUNCS = {
+    Now,
+}
 
 try:
     from psycopg2 import Binary
     from psycopg2.extras import (
         NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json)
+    from django.contrib.postgres.fields.jsonb import JsonAdapter
+    from django.contrib.postgres.functions import TransactionNow
 except ImportError:
     pass
 else:
     CACHABLE_PARAM_TYPES.update((
         Binary,
-        NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json))
-    if django_version[:2] >= (1, 11):
-        from django.contrib.postgres.fields.jsonb import JsonAdapter
-        CACHABLE_PARAM_TYPES.add(JsonAdapter)
+        NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json,
+        JsonAdapter, ))
+    UNCACHABLE_FUNCS.update((
+        TransactionNow, ))
 
 
 def check_parameter_types(params):

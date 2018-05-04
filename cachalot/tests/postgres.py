@@ -6,7 +6,7 @@ from decimal import Decimal
 from platform import python_version_tuple
 from unittest import skipUnless, skipIf
 
-from django import VERSION as django_version
+from django.contrib.postgres.functions import TransactionNow
 from django.core.cache import caches
 from django.core.cache.backends.filebased import FileBasedCache
 from django.db import connection
@@ -18,10 +18,6 @@ from ..utils import UncachableQuery
 from .api import invalidate
 from .models import PostgresModel, Test
 from .test_utils import TestUtilsMixin
-
-DJANGO_GTE_1_9 = django_version[:2] >= (1, 9)
-if DJANGO_GTE_1_9:
-    from django.contrib.postgres.functions import TransactionNow
 
 
 # FIXME: Add tests for aggregations.
@@ -38,23 +34,17 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
     def setUp(self):
         self.obj1 = PostgresModel(
             int_array=[1, 2, 3],
+            json={'a': 1, 'b': 2},
             hstore={'a': 'b', 'c': None},
             int_range=[1900, 2000], float_range=[-1e3, 9.87654321],
             date_range=['1678-03-04', '1741-07-28'],
             datetime_range=[datetime(1989, 1, 30, 12, 20,
                                      tzinfo=timezone('Europe/Paris')), None])
-        if DJANGO_GTE_1_9:
-            self.obj1.json = {'a': 1, 'b': 2}
         self.obj1.save()
 
         self.obj2 = PostgresModel(
             int_array=[4, None, 6],
-            hstore={'a': '1', 'b': '2'},
-            int_range=[1989, None], float_range=[0.0, None],
-            date_range=['1989-01-30', None],
-            datetime_range=[None, None])
-        if DJANGO_GTE_1_9:
-            self.obj2.json = [
+            json=[
                 'something',
                 {
                     'a': 1,
@@ -69,7 +59,11 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
                         },
                     },
                 },
-            ]
+            ],
+            hstore={'a': '1', 'b': '2'},
+            int_range=[1989, None], float_range=[0.0, None],
+            date_range=['1989-01-30', None],
+            datetime_range=[None, None])
         self.obj2.save()
 
     def test_unaccent(self):
@@ -179,8 +173,6 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, PostgresModel)
         self.assert_query_cached(qs, [{'a': '1', 'b': '2'}])
 
-    @skipUnless(DJANGO_GTE_1_9,
-                'JSON field is only available in Django >= 1.9')
     def test_json(self):
         with self.assertNumQueries(1):
             data1 = [o.json for o in PostgresModel.objects.all()]
@@ -256,38 +248,37 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
 
         self.assertListEqual(list(qs.all()), [[1, 2, 3], [4, None, 6]])
 
-        if DJANGO_GTE_1_9:
-            qs = PostgresModel.objects.values_list('json', flat=True)
+        qs = PostgresModel.objects.values_list('json', flat=True)
 
-            data = list(qs.all())
-            self.assertListEqual(data, [self.obj1.json, self.obj2.json])
-            data[0]['c'] = 3
-            del data[0]['b']
-            data[1].pop(0)
-            data[1][0]['e']['and yet']['some other'] = True
-            data[1][0]['f'] = 6
-            json1 = {'a': 1, 'c': 3}
-            json2 = [
-                {
-                    'a': 1,
-                    'b': None,
-                    'c': 123.456,
-                    'd': True,
-                    'e': {
-                        'another': 'dict',
-                        'and yet': {
-                            'another': 'one',
-                            'with a list': [],
-                            'some other': True
-                        },
+        data = list(qs.all())
+        self.assertListEqual(data, [self.obj1.json, self.obj2.json])
+        data[0]['c'] = 3
+        del data[0]['b']
+        data[1].pop(0)
+        data[1][0]['e']['and yet']['some other'] = True
+        data[1][0]['f'] = 6
+        json1 = {'a': 1, 'c': 3}
+        json2 = [
+            {
+                'a': 1,
+                'b': None,
+                'c': 123.456,
+                'd': True,
+                'e': {
+                    'another': 'dict',
+                    'and yet': {
+                        'another': 'one',
+                        'with a list': [],
+                        'some other': True
                     },
-                    'f': 6
                 },
-            ]
-            self.assertListEqual(data, [json1, json2])
+                'f': 6
+            },
+        ]
+        self.assertListEqual(data, [json1, json2])
 
-            self.assertListEqual(list(qs.all()),
-                                 [self.obj1.json, self.obj2.json])
+        self.assertListEqual(list(qs.all()),
+                             [self.obj1.json, self.obj2.json])
 
     def test_int_range(self):
         with self.assertNumQueries(1):
@@ -390,8 +381,6 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
                                      tzinfo=timezone('Europe/Paris'))),
             DateTimeTZRange(bounds='()')])
 
-    @skipUnless(DJANGO_GTE_1_9,
-                'TransactionNow is only available in Django >= 1.9')
     def test_transaction_now(self):
         """
         Checks that queries with a TransactionNow() parameter are not cached.
