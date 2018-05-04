@@ -28,9 +28,10 @@ WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 def _unset_raw_connection(original):
     def inner(compiler, *args, **kwargs):
         compiler.connection.raw = False
-        out = original(compiler, *args, **kwargs)
-        compiler.connection.raw = True
-        return out
+        try:
+            return original(compiler, *args, **kwargs)
+        finally:
+            compiler.connection.raw = True
     return inner
 
 
@@ -114,20 +115,23 @@ def _patch_cursor():
     def _patch_cursor_execute(original):
         @wraps(original)
         def inner(cursor, sql, *args, **kwargs):
-            out = original(cursor, sql, *args, **kwargs)
-            connection = cursor.db
-            if getattr(connection, 'raw', True):
-                if isinstance(sql, binary_type):
-                    sql = sql.decode('utf-8')
-                sql = sql.lower()
-                if 'update' in sql or 'insert' in sql or 'delete' in sql \
-                        or 'alter' in sql or 'create' in sql or 'drop' in sql:
-                    tables = filter_cachable(
-                        _get_tables_from_sql(connection, sql))
-                    if tables:
-                        invalidate(*tables, db_alias=connection.alias,
-                                   cache_alias=cachalot_settings.CACHALOT_CACHE)
-            return out
+            try:
+                return original(cursor, sql, *args, **kwargs)
+            finally:
+                connection = cursor.db
+                if getattr(connection, 'raw', True):
+                    if isinstance(sql, binary_type):
+                        sql = sql.decode('utf-8')
+                    sql = sql.lower()
+                    if 'update' in sql or 'insert' in sql or 'delete' in sql \
+                            or 'alter' in sql or 'create' in sql \
+                            or 'drop' in sql:
+                        tables = filter_cachable(
+                            _get_tables_from_sql(connection, sql))
+                        if tables:
+                            invalidate(
+                                *tables, db_alias=connection.alias,
+                                cache_alias=cachalot_settings.CACHALOT_CACHE)
 
         return inner
 
@@ -156,9 +160,11 @@ def _patch_atomic():
         @wraps(original)
         def inner(self, exc_type, exc_value, traceback):
             needs_rollback = get_connection(self.using).needs_rollback
-            original(self, exc_type, exc_value, traceback)
-            cachalot_caches.exit_atomic(
-                self.using, exc_type is None and not needs_rollback)
+            try:
+                original(self, exc_type, exc_value, traceback)
+            finally:
+                cachalot_caches.exit_atomic(
+                    self.using, exc_type is None and not needs_rollback)
 
         return inner
 
