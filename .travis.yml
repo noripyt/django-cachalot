@@ -5,7 +5,7 @@ services:
   - redis-server
 
 addons:
-  postgresql: 10
+  postgresql: 9.6
 
 cache: pip
 
