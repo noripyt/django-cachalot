@@ -1,11 +1,16 @@
 What’s new in django-cachalot?
 ==============================
 
-Unreleased
-----------
+2.0.0
+-----
 
-- Drops Django 1.8 support (1.9 support was dropped in 1.5.0)
+- Adds Django 2.0 support
 - Drops Django 1.10 support
+- Drops Django 1.8 support (1.9 support was dropped in 1.5.0)
+- Adds a check to make sure it is used with a supported Django version
+- Fixes a bug partially breaking django-cachalot when an error occurred during
+  the end of a `transaction.atomic` block,
+  typically when using deferred constraints
 
 1.5.0
 -----
