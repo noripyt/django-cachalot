@@ -4,7 +4,7 @@ Bug reports, questions, discussion, new features
 ------------------------------------------------
 
 - If you spotted **a bug**, please file a precise bug report
-  `on GitHub <https://github.com/BertrandBordage/django-cachalot/issues>`_
+  `on GitHub <https://github.com/noripyt/django-cachalot/issues>`_
 - If you have **a question** on how django-cachalot works
   or to **simply discuss**,
   `chat with us on gitter <https://gitter.im/django-cachalot/Lobby>`_.

@@ -16,7 +16,7 @@ setup(
     version=__version__,
     author='Bertrand Bordage',
     author_email='bordage.bertrand@gmail.com',
-    url='https://github.com/BertrandBordage/django-cachalot',
+    url='https://github.com/noripyt/django-cachalot',
     description='Caches your Django ORM queries '
                 'and automatically invalidates them.',
     long_description=open('README.rst').read(),
