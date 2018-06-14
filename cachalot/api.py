@@ -30,9 +30,14 @@ def _cache_db_tables_iterator(tables, cache_alias, db_alias):
 
 
 def _get_tables(tables_or_models):
-    return [(apps.get_model(o)._meta.db_table if '.' in o else o)
-            if isinstance(o, string_types) else o._meta.db_table
-            for o in tables_or_models]
+    for table_or_model in tables_or_models:
+        if isinstance(table_or_model, string_types) and '.' in table_or_model:
+            try:
+                table_or_model = apps.get_model(table_or_model)
+            except LookupError:
+                pass
+        yield (table_or_model if isinstance(table_or_model, string_types)
+               else table_or_model._meta.db_table)
 
 
 def invalidate(*tables_or_models, **kwargs):
@@ -68,7 +73,7 @@ def invalidate(*tables_or_models, **kwargs):
     send_signal = False
     invalidated = set()
     for cache_alias, db_alias, tables in _cache_db_tables_iterator(
-            _get_tables(tables_or_models), cache_alias, db_alias):
+            list(_get_tables(tables_or_models)), cache_alias, db_alias):
         cache = cachalot_caches.get_cache(cache_alias, db_alias)
         if not isinstance(cache, AtomicCache):
             send_signal = True
@@ -111,7 +116,7 @@ def get_last_invalidation(*tables_or_models, **kwargs):
 
     last_invalidation = 0.0
     for cache_alias, db_alias, tables in _cache_db_tables_iterator(
-            _get_tables(tables_or_models), cache_alias, db_alias):
+            list(_get_tables(tables_or_models)), cache_alias, db_alias):
         get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
         table_cache_keys = [get_table_cache_key(db_alias, t) for t in tables]
         invalidations = cachalot_caches.get_cache(
