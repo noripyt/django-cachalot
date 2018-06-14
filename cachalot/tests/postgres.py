@@ -3,12 +3,9 @@
 from __future__ import unicode_literals
 from datetime import date, datetime
 from decimal import Decimal
-from platform import python_version_tuple
-from unittest import skipUnless, skipIf
+from unittest import skipUnless
 
 from django.contrib.postgres.functions import TransactionNow
-from django.core.cache import caches
-from django.core.cache.backends.filebased import FileBasedCache
 from django.db import connection
 from django.test import TransactionTestCase, override_settings
 from psycopg2.extras import NumericRange, DateRange, DateTimeTZRange
@@ -25,10 +22,6 @@ from .test_utils import TestUtilsMixin
 
 @skipUnless(connection.vendor == 'postgresql',
             'This test is only for PostgreSQL')
-@skipIf(isinstance(caches['default'], FileBasedCache)
-        and python_version_tuple()[:2] == ('2', '7'),
-        'Caching psycopg2 objects is not working with file-based cache '
-        'and Python 2.7 (see https://code.djangoproject.com/ticket/25501).')
 @override_settings(USE_TZ=True)
 class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
     def setUp(self):
