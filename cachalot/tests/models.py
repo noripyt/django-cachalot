@@ -33,7 +33,7 @@ class Test(Model):
     duration = DurationField(null=True, blank=True)
     uuid = UUIDField(null=True, blank=True)
 
-    class Meta(object):
+    class Meta:
         ordering = ('name',)
 
 
@@ -58,3 +58,7 @@ class PostgresModel(Model):
     float_range = FloatRangeField(null=True, blank=True)
     date_range = DateRangeField(null=True, blank=True)
     datetime_range = DateTimeRangeField(null=True, blank=True)
+
+    class Meta:
+        # Tests schema name in table name.
+        db_table = '"public"."cachalot_postgresmodel"'
