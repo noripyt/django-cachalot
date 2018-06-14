@@ -1,5 +1,5 @@
 from django.core.management.color import no_style
-from django.db import connection, DEFAULT_DB_ALIAS
+from django.db import connection, transaction
 from django.utils.six import string_types
 
 from .models import PostgresModel
@@ -15,9 +15,13 @@ class TestUtilsMixin:
     # TODO: Remove this workaround when this issue is fixed:
     #       https://code.djangoproject.com/ticket/29494
     def tearDown(self):
-        flush_sql_list = connection.ops.sql_flush(
-            no_style(), (PostgresModel._meta.db_table,), ())
-        connection.ops.execute_sql_flush(DEFAULT_DB_ALIAS, flush_sql_list)
+        if connection.vendor == 'postgresql':
+            flush_sql_list = connection.ops.sql_flush(
+                no_style(), (PostgresModel._meta.db_table,), ())
+            with transaction.atomic():
+                for sql in flush_sql_list:
+                    with connection.cursor() as cursor:
+                        cursor.execute(sql)
 
     def force_repoen_connection(self):
         if connection.vendor in ('mysql', 'postgresql'):
