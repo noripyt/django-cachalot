@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.0.1
+-----
+
+- Allows specifying a schema name in ``Model._meta.db_table``
+
 2.0.0
 -----
 
