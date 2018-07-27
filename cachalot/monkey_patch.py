@@ -42,10 +42,15 @@ def _get_result_or_execute_query(execute_query_func, cache,
     new_table_cache_keys = set(table_cache_keys)
     new_table_cache_keys.difference_update(data)
 
-    if not new_table_cache_keys and cache_key in data:
-        timestamp, result = data.pop(cache_key)
-        if timestamp >= max(data.values()):
-            return result
+    if not new_table_cache_keys:
+        try:
+            timestamp, result = data.pop(cache_key)
+            if timestamp >= max(data.values()):
+                return result
+        except (KeyError, TypeError, ValueError):
+            # In case `cache_key` is not in `data` or contains bad data,
+            # we simply run the query and cache again the results.
+            pass
 
     result = execute_query_func()
     if result.__class__ not in ITERABLES and isinstance(result, Iterable):
