@@ -20,7 +20,7 @@ from pytz import UTC
 
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
-from .models import Test, TestChild, TestParent
+from .models import Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin
 
 
@@ -697,6 +697,11 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs)
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE %s;' % table_name)
+
+    def test_unmanaged_model(self):
+        qs = UnmanagedModel.objects.all()
+        self.assert_tables(qs, UnmanagedModel)
+        self.assert_query_cached(qs)
 
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):

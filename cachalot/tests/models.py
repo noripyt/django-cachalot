@@ -62,3 +62,10 @@ class PostgresModel(Model):
     class Meta:
         # Tests schema name in table name.
         db_table = '"public"."cachalot_postgresmodel"'
+
+
+class UnmanagedModel(Model):
+    name = CharField(max_length=50)
+
+    class Meta:
+        managed = False

@@ -74,4 +74,6 @@ class Migration(migrations.Migration):
                 ('datetime_range', DateTimeRangeField(null=True, blank=True)),
             ],
         ),
+        migrations.RunSQL('CREATE TABLE cachalot_unmanagedmodel '
+                          '(id SERIAL PRIMARY KEY, name VARCHAR(50));'),
     ]
