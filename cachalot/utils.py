@@ -166,6 +166,11 @@ def _get_tables(db_alias, query):
         if isinstance(query, AggregateQuery):
             tables.update(
                 _get_tables_from_sql(connections[db_alias], query.subquery))
+        # Gets tables in combined queries
+        # using `.union`, `.intersection`, or `difference`.
+        if query.combined_queries:
+            for combined_query in query.combined_queries:
+                tables.update(_get_tables(db_alias, combined_query))
     except IsRawQuery:
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         tables = _get_tables_from_sql(connections[db_alias], sql)
