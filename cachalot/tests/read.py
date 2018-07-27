@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import (
     connection, transaction, DEFAULT_DB_ALIAS, ProgrammingError)
-from django.db.models import Count, FilteredRelation, Q
+from django.db.models import Count, Q
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
 from django.db.transaction import TransactionManagementError
@@ -485,6 +485,8 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     @skipIf(django_version < (2, 0),
             '`FilteredRelation` was introduced in Django 2.0.')
     def test_filtered_relation(self):
+        from django.db.models import FilteredRelation
+
         qs = TestChild.objects.annotate(
             filtered_permissions=FilteredRelation(
                 'permissions', condition=Q(permissions__pk__gt=1)))
