@@ -215,7 +215,7 @@ class Benchmark(object):
         self.output('cache')
 
     def output(self, param):
-        gp = self.df.groupby(('context', 'query', param))['time']
+        gp = self.df.groupby(['context', 'query', param])['time']
         self.means = gp.mean().unstack().unstack().reindex(CONTEXTS)
         los = self.means - gp.min().unstack().unstack().reindex(CONTEXTS)
         ups = gp.max().unstack().unstack().reindex(CONTEXTS) - self.means
@@ -229,7 +229,7 @@ class Benchmark(object):
         self.get_perfs(param)
         self.plot_detail(param)
 
-        gp = self.df.groupby(('context', param))['time']
+        gp = self.df.groupby(['context', param])['time']
         self.means = gp.mean().unstack().reindex(CONTEXTS)
         los = self.means - gp.min().unstack().reindex(CONTEXTS)
         ups = gp.max().unstack().reindex(CONTEXTS) - self.means

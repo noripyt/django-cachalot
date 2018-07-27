@@ -1,6 +1,14 @@
 What’s new in django-cachalot?
 ==============================
 
+2.0.2
+-----
+
+- Adds support for ``.union``, ``.intersection`` & ``.difference``
+  that should have been introduced since 1.5.0
+- Fixes error raised in some rare and undetermined cases, when the cache
+  backend doesn’t yield data as expected
+
 2.0.1
 -----
 
