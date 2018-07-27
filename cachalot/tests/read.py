@@ -10,7 +10,8 @@ from django import VERSION as django_version
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import (
-    connection, transaction, DEFAULT_DB_ALIAS, ProgrammingError)
+    connection, transaction, DEFAULT_DB_ALIAS, ProgrammingError,
+    OperationalError)
 from django.db.models import Count, Q
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
@@ -503,6 +504,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             values_qs, TestChild, TestChild.permissions.through, Permission)
         self.assert_query_cached(filtered_qs)
 
+    @skipUnlessDBFeature('supports_select_union')
     def test_union(self):
         qs = (Test.objects.filter(pk__lt=5)
               | Test.objects.filter(permission__name__contains='a'))
@@ -514,16 +516,22 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() | Permission.objects.all()
 
-        qs = Test.objects.filter(pk__lt=5).union(
-            Test.objects.filter(permission__name__contains='a'))
+        sub_qs = Test.objects.filter(permission__name__contains='a')
+        if self.is_sqlite:
+            sub_qs = sub_qs.order_by()
+        qs = Test.objects.filter(pk__lt=5).union(sub_qs)
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
-        qs = Test.objects.union(Permission.objects.all())
+        sub_qs = Permission.objects.all()
+        if self.is_sqlite:
+            sub_qs = sub_qs.order_by()
+        qs = Test.objects.union(sub_qs)
         self.assert_tables(qs, Test, Permission)
-        with self.assertRaises(ProgrammingError):
+        with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
+    @skipUnlessDBFeature('supports_select_intersection')
     def test_intersection(self):
         qs = (Test.objects.filter(pk__lt=5)
               & Test.objects.filter(permission__name__contains='a'))
@@ -535,23 +543,34 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() & Permission.objects.all()
 
-        qs = Test.objects.filter(pk__lt=5).intersection(
-            Test.objects.filter(permission__name__contains='a'))
+        sub_qs = Test.objects.filter(permission__name__contains='a')
+        if self.is_sqlite:
+            sub_qs = sub_qs.order_by()
+        qs = Test.objects.filter(pk__lt=5).intersection(sub_qs)
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
-        qs = Test.objects.intersection(Permission.objects.all())
+        sub_qs = Permission.objects.all()
+        if self.is_sqlite:
+            sub_qs = sub_qs.order_by()
+        qs = Test.objects.intersection(sub_qs)
         self.assert_tables(qs, Test, Permission)
         with self.assertRaises(ProgrammingError):
             self.assert_query_cached(qs)
 
+    @skipUnlessDBFeature('supports_select_difference')
     def test_difference(self):
-        qs = Test.objects.filter(pk__lt=5).difference(
-            Test.objects.filter(permission__name__contains='a'))
+        sub_qs = Test.objects.filter(permission__name__contains='a')
+        if self.is_sqlite:
+            sub_qs = sub_qs.order_by()
+        qs = Test.objects.filter(pk__lt=5).difference(sub_qs)
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
-        qs = Test.objects.difference(Permission.objects.all())
+        sub_qs = Permission.objects.all()
+        if self.is_sqlite:
+            sub_qs = sub_qs.order_by()
+        qs = Test.objects.difference(sub_qs)
         self.assert_tables(qs, Test, Permission)
         with self.assertRaises(ProgrammingError):
             self.assert_query_cached(qs)
