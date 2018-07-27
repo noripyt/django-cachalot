@@ -6,10 +6,12 @@ from unittest import skipIf
 from uuid import UUID
 from decimal import Decimal
 
+from django import VERSION as django_version
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, transaction, DEFAULT_DB_ALIAS
-from django.db.models import Count
+from django.db import (
+    connection, transaction, DEFAULT_DB_ALIAS, ProgrammingError)
+from django.db.models import Count, FilteredRelation, Q
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
 from django.db.transaction import TransactionManagementError
@@ -479,6 +481,78 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                             for p in g.permissions.all()]
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
+
+    @skipIf(django_version < (2, 0),
+            '`FilteredRelation` was introduced in Django 2.0.')
+    def test_filtered_relation(self):
+        qs = TestChild.objects.annotate(
+            filtered_permissions=FilteredRelation(
+                'permissions', condition=Q(permissions__pk__gt=1)))
+        self.assert_tables(qs, TestChild)
+        self.assert_query_cached(qs)
+
+        values_qs = qs.values('filtered_permissions')
+        self.assert_tables(
+            values_qs, TestChild, TestChild.permissions.through, Permission)
+        self.assert_query_cached(values_qs)
+
+        filtered_qs = qs.filter(filtered_permissions__pk__gt=2)
+        self.assert_tables(
+            values_qs, TestChild, TestChild.permissions.through, Permission)
+        self.assert_query_cached(filtered_qs)
+
+    def test_union(self):
+        qs = (Test.objects.filter(pk__lt=5)
+              | Test.objects.filter(permission__name__contains='a'))
+        self.assert_tables(qs, Test, Permission)
+        self.assert_query_cached(qs)
+
+        with self.assertRaisesMessage(
+                AssertionError,
+                'Cannot combine queries on two different base models.'):
+            Test.objects.all() | Permission.objects.all()
+
+        qs = Test.objects.filter(pk__lt=5).union(
+            Test.objects.filter(permission__name__contains='a'))
+        self.assert_tables(qs, Test, Permission)
+        self.assert_query_cached(qs)
+
+        qs = Test.objects.union(Permission.objects.all())
+        self.assert_tables(qs, Test, Permission)
+        with self.assertRaises(ProgrammingError):
+            self.assert_query_cached(qs)
+
+    def test_intersection(self):
+        qs = (Test.objects.filter(pk__lt=5)
+              & Test.objects.filter(permission__name__contains='a'))
+        self.assert_tables(qs, Test, Permission)
+        self.assert_query_cached(qs)
+
+        with self.assertRaisesMessage(
+                AssertionError,
+                'Cannot combine queries on two different base models.'):
+            Test.objects.all() & Permission.objects.all()
+
+        qs = Test.objects.filter(pk__lt=5).intersection(
+            Test.objects.filter(permission__name__contains='a'))
+        self.assert_tables(qs, Test, Permission)
+        self.assert_query_cached(qs)
+
+        qs = Test.objects.intersection(Permission.objects.all())
+        self.assert_tables(qs, Test, Permission)
+        with self.assertRaises(ProgrammingError):
+            self.assert_query_cached(qs)
+
+    def test_difference(self):
+        qs = Test.objects.filter(pk__lt=5).difference(
+            Test.objects.filter(permission__name__contains='a'))
+        self.assert_tables(qs, Test, Permission)
+        self.assert_query_cached(qs)
+
+        qs = Test.objects.difference(Permission.objects.all())
+        self.assert_tables(qs, Test, Permission)
+        with self.assertRaises(ProgrammingError):
+            self.assert_query_cached(qs)
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_select_for_update(self):
