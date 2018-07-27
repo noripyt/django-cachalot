@@ -516,17 +516,21 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() | Permission.objects.all()
 
+        qs = Test.objects.filter(pk__lt=5)
         sub_qs = Test.objects.filter(permission__name__contains='a')
         if self.is_sqlite:
+            qs = qs.order_by()
             sub_qs = sub_qs.order_by()
-        qs = Test.objects.filter(pk__lt=5).union(sub_qs)
+        qs = qs.union(sub_qs)
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
+        qs = Test.objects.all()
         sub_qs = Permission.objects.all()
         if self.is_sqlite:
+            qs = qs.order_by()
             sub_qs = sub_qs.order_by()
-        qs = Test.objects.union(sub_qs)
+        qs = qs.union(sub_qs)
         self.assert_tables(qs, Test, Permission)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
@@ -543,36 +547,44 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() & Permission.objects.all()
 
+        qs = Test.objects.filter(pk__lt=5)
         sub_qs = Test.objects.filter(permission__name__contains='a')
         if self.is_sqlite:
+            qs = qs.order_by()
             sub_qs = sub_qs.order_by()
-        qs = Test.objects.filter(pk__lt=5).intersection(sub_qs)
+        qs = qs.intersection(sub_qs)
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
+        qs = Test.objects.all()
         sub_qs = Permission.objects.all()
         if self.is_sqlite:
+            qs = qs.order_by()
             sub_qs = sub_qs.order_by()
-        qs = Test.objects.intersection(sub_qs)
+        qs = qs.intersection(sub_qs)
         self.assert_tables(qs, Test, Permission)
-        with self.assertRaises(ProgrammingError):
+        with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
     @skipUnlessDBFeature('supports_select_difference')
     def test_difference(self):
+        qs = Test.objects.filter(pk__lt=5)
         sub_qs = Test.objects.filter(permission__name__contains='a')
         if self.is_sqlite:
+            qs = qs.order_by()
             sub_qs = sub_qs.order_by()
-        qs = Test.objects.filter(pk__lt=5).difference(sub_qs)
+        qs = qs.difference(sub_qs)
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
+        qs = Test.objects.all()
         sub_qs = Permission.objects.all()
         if self.is_sqlite:
+            qs = qs.order_by()
             sub_qs = sub_qs.order_by()
-        qs = Test.objects.difference(sub_qs)
+        qs = qs.difference(sub_qs)
         self.assert_tables(qs, Test, Permission)
-        with self.assertRaises(ProgrammingError):
+        with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
     @skipUnlessDBFeature('has_select_for_update')
