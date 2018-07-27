@@ -8,8 +8,7 @@ from decimal import Decimal
 
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
-from django.core.cache import cache
-from django.db import connection, transaction
+from django.db import connection, transaction, DEFAULT_DB_ALIAS
 from django.db.models import Count
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
@@ -18,6 +17,7 @@ from django.test import (
     TransactionTestCase, skipUnlessDBFeature, override_settings)
 from pytz import UTC
 
+from cachalot.cache import cachalot_caches
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent, UnmanagedModel
@@ -667,7 +667,27 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
         table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN(
             connection.alias, Test._meta.db_table)
-        cache.delete(table_cache_key)
+        cachalot_caches.get_cache().delete(table_cache_key)
+
+        self.assert_query_cached(qs)
+
+    def test_broken_query_cache_value(self):
+        """
+        In some undetermined cases, cache.get_many return wrong values such
+        as `None` or other invalid values. They should be gracefully handled.
+        See https://github.com/noripyt/django-cachalot/issues/110
+
+        This test artificially creates a wrong value, but it’s usually
+        a cache backend bug that leads to these wrong values.
+        """
+        qs = Test.objects.all()
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
+        query_cache_key = cachalot_settings.CACHALOT_QUERY_KEYGEN(
+            qs.query.get_compiler(DEFAULT_DB_ALIAS))
+        cachalot_caches.get_cache().set(query_cache_key, (),
+                                        cachalot_settings.CACHALOT_TIMEOUT)
 
         self.assert_query_cached(qs)
 
