@@ -2,7 +2,6 @@
 
 from __future__ import unicode_literals
 import datetime
-import re
 from unittest import skipIf
 from uuid import UUID
 from decimal import Decimal
@@ -687,12 +686,12 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     def test_explain(self):
         explain_kwargs = {}
         if self.is_sqlite:
-            expected = re.escape('0 0 0 SCAN TABLE cachalot_test\n'
-                                 '0 0 0 USE TEMP B-TREE FOR ORDER BY')
+            expected = (r'0 0 0 SCAN TABLE cachalot_test\n'
+                        r'0 0 0 USE TEMP B-TREE FOR ORDER BY')
         elif self.is_mysql:
-            expected = re.escape(
-                '1 SIMPLE cachalot_test '
-                'None ALL None None None None 2 100.0 Using filesort')
+            expected = (
+                r'1 SIMPLE cachalot_test '
+                r'(?:None)? ALL None None None None 2 100\.0 Using filesort')
         else:
             explain_kwargs.update(
                 analyze=True,
