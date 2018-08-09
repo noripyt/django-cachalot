@@ -13,7 +13,7 @@ from .settings import (
 
 @register(Tags.compatibility)
 def check_django_version(app_configs, **kwargs):
-    if not (1, 11) <= django_version < (2, 1):
+    if not (1, 11) <= django_version < (2, 2):
         return [Error(
             'Django %s is not compatible with this version of django-cachalot.'
             % django__version__,
