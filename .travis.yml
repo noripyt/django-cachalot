@@ -311,6 +311,22 @@ matrix:
       env: TOXENV=py3.7-django2.1-mysql-locmem
     - python: 3.7
       env: TOXENV=py3.7-django2.1-mysql-filebased
+  allow_failures:
+    - env: TOXENV=py3.7-django2.1-sqlite3-redis
+    - env: TOXENV=py3.7-django2.1-sqlite3-memcached
+    - env: TOXENV=py3.7-django2.1-sqlite3-pylibmc
+    - env: TOXENV=py3.7-django2.1-sqlite3-locmem
+    - env: TOXENV=py3.7-django2.1-sqlite3-filebased
+    - env: TOXENV=py3.7-django2.1-postgresql-redis
+    - env: TOXENV=py3.7-django2.1-postgresql-memcached
+    - env: TOXENV=py3.7-django2.1-postgresql-pylibmc
+    - env: TOXENV=py3.7-django2.1-postgresql-locmem
+    - env: TOXENV=py3.7-django2.1-postgresql-filebased
+    - env: TOXENV=py3.7-django2.1-mysql-redis
+    - env: TOXENV=py3.7-django2.1-mysql-memcached
+    - env: TOXENV=py3.7-django2.1-mysql-pylibmc
+    - env: TOXENV=py3.7-django2.1-mysql-locmem
+    - env: TOXENV=py3.7-django2.1-mysql-filebased
 
 sudo: false
 
