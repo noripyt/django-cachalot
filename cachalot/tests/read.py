@@ -691,7 +691,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         elif self.is_mysql:
             expected = (
                 r'1 SIMPLE cachalot_test '
-                r'(?:None)? ALL None None None None 2 100\.0 Using filesort')
+                r'(?:None )?ALL None None None None 2 100\.0 Using filesort')
         else:
             explain_kwargs.update(
                 analyze=True,
