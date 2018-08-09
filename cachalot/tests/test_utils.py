@@ -10,6 +10,7 @@ class TestUtilsMixin:
     def setUp(self):
         self.is_sqlite = connection.vendor == 'sqlite'
         self.is_mysql = connection.vendor == 'mysql'
+        self.is_postgresql = connection.vendor == 'postgresql'
         self.force_repoen_connection()
 
     # TODO: Remove this workaround when this issue is fixed:

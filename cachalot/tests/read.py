@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 import datetime
+import re
 from unittest import skipIf
 from uuid import UUID
 from decimal import Decimal
@@ -681,6 +682,39 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             self.assertEqual(TestChild.objects.get(), t_child)
 
+    @skipIf(django_version < (2, 1),
+            '`QuerySet.explain()` was introduced in Django 2.1.')
+    def test_explain(self):
+        explain_kwargs = {}
+        if self.is_sqlite:
+            expected = re.escape('0 0 0 SCAN TABLE cachalot_test\n'
+                                 '0 0 0 USE TEMP B-TREE FOR ORDER BY')
+        elif self.is_mysql:
+            expected = re.escape(
+                '1 SIMPLE cachalot_test '
+                'None ALL None None None None 2 100.0 Using filesort')
+        else:
+            explain_kwargs.update(
+                analyze=True,
+                costs=False,
+            )
+            operation_detail = (r'\(actual time=[\d\.]+..[\d\.]+\ '
+                                r'rows=\d+ loops=\d+\)')
+            expected = (
+                r'^Sort %s\n'
+                r'  Sort Key: name\n'
+                r'  Sort Method: quicksort  Memory: \d+kB\n'
+                r'  ->  Seq Scan on cachalot_test %s\n'
+                r'Planning time: [\d\.]+ ms\n'
+                r'Execution time: [\d\.]+ ms$') % (operation_detail,
+                                                   operation_detail)
+        with self.assertNumQueries(2 if self.is_mysql else 1):
+            explanation1 = Test.objects.explain(**explain_kwargs)
+        self.assertRegex(explanation1, expected)
+        with self.assertNumQueries(0):
+            explanation2 = Test.objects.explain(**explain_kwargs)
+        self.assertEqual(explanation2, explanation1)
+
     def test_raw(self):
         """
         Tests if ``Model.objects.raw`` queries are not cached.
@@ -811,7 +845,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         Tests if using unicode in table names does not break caching.
         """
         table_name = 'Clémentine'
-        if connection.vendor == 'postgresql':
+        if self.is_postgresql:
             table_name = '"%s"' % table_name
         with connection.cursor() as cursor:
             cursor.execute('CREATE TABLE %s (taste VARCHAR(20));' % table_name)
