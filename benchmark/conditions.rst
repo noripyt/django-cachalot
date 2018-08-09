@@ -5,12 +5,12 @@ CPU                  Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
 RAM                  24634516 kB
 Disk                 SAMSUNG MZVPW256HEGL-00000
 Linux distribution   Ubuntu 18.04 bionic
-Python               3.6.5
-Django               2.0.7
-cachalot             2.0.2
+Python               3.7.0b3
+Django               2.1
+cachalot             2.1.0
 sqlite               3.22.0
 PostgreSQL           10.4
-MySQL                5.7.22
+MySQL                5.7.23
 Redis                4.0.9
 memcached            1.5.6
 psycopg2             2.7.5

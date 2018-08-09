@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.1.0
+-----
+
+- Adds Django 2.1 support.
+
 2.0.2
 -----
 
