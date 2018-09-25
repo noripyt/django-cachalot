@@ -6,6 +6,7 @@ SUPPORTED_DATABASE_ENGINES = {
     'django.db.backends.sqlite3',
     'django.db.backends.postgresql',
     'django.db.backends.mysql',
+    'django_prometheus.db.backends.postgresql',
     # TODO: Remove when we drop Django 2.x support.
     'django.db.backends.postgresql_psycopg2',
 
