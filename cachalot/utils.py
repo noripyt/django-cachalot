@@ -15,6 +15,7 @@ from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode
 from django.utils.six import text_type, binary_type, integer_types
 
+from cachalot.tenants import tenant_handler
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
 
@@ -93,6 +94,24 @@ def get_table_cache_key(db_alias, table):
     """
     cache_key = '%s:%s' % (db_alias, table)
     return sha1(cache_key.encode('utf-8')).hexdigest()
+
+
+def get_multi_tenant_table_cache_key(db_alias, table):
+    """
+    Generates a cache key from a SQL table for multi-tenant deployments.
+
+    :arg db_alias: Alias of the used database
+    :type db_alias: str or unicode
+    :arg table: Name of the SQL table
+    :type table: str or unicode
+    :return: A cache key
+    :rtype: int
+    """
+    cache_key = get_table_cache_key(db_alias, table)
+    if tenant_handler.get_active_schema_for_table(table) == tenant_handler.public_schema_name:
+        tenant_handler.public_schema_keys.add(cache_key)
+
+    return cache_key
 
 
 def _get_tables_from_sql(connection, lowercased_sql):

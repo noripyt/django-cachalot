@@ -20,6 +20,9 @@ SUPPORTED_DATABASE_ENGINES = {
     # TODO: Remove when we drop Django 2.x support.
     'transaction_hooks.backends.postgresql_psycopg2',
     'transaction_hooks.backends.mysql',
+
+    # django-tenants
+    'django_tenants.postgresql_backend',
 }
 
 SUPPORTED_CACHE_BACKENDS = {

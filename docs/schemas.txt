@@ -1,0 +1,13 @@
+Multi-tenant support
+--------------------
+
+- django-cachalot provides support for multi-tenant deployments based on `django-tenants <https://github.com/tomturner/django-tenants>`_.
+- All that is needed to enable django-tenants support is to set the following configuration values in your settings.py
+file:
+
+#. ``KEY_FUNCTION: cachalot.cache.make_key``
+#. ``REVERSE_KEY_FUNCTION: cachalot.cache.reverse_key``
+#. ``CACHALOT_TABLE_KEYGEN = cachalot.utils.get_multi_tenant_table_cache_key``
+
+- Once configured, the tables and queries for each tenant's schema will be cached separately, while cache entries
+related to tables in the public schema configured in `PUBLIC_SCHEMA_NAME` will be shared by all tenants.

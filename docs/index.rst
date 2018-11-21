@@ -32,6 +32,7 @@ Caches your Django ORM queries and automatically invalidates them.
    limits
    api
    benchmark
+   multi-tenant
    todo
    reporting
    how
