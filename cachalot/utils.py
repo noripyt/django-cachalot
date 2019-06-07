@@ -103,22 +103,23 @@ def _get_tables_from_sql(connection, lowercased_sql):
 def _find_subqueries_in_where(children):
     for child in children:
         child_class = child.__class__
-        if child_class is WhereNode:
+        if isinstance(child, WhereNode):
             for grand_child in _find_subqueries_in_where(child.children):
                 yield grand_child
-        elif child_class is ExtraWhere:
+        elif isinstance(child, ExtraWhere):
             raise IsRawQuery
-        else:
+        try:
             rhs = child.rhs
-            rhs_class = rhs.__class__
-            if rhs_class is Query:
-                yield rhs
-            elif rhs_class is QuerySet:
-                yield rhs.query
-            elif rhs_class is Subquery or rhs_class is Exists:
-                yield rhs.queryset.query
-            elif rhs_class in UNCACHABLE_FUNCS:
-                raise UncachableQuery
+        except AttributeError:
+            raise UncachableQuery
+        if isinstance(rhs, Query):
+            yield rhs
+        elif isinstance(rhs, QuerySet):
+            yield rhs.query
+        elif isinstance(rhs, (Subquery, Exists):
+            yield rhs.queryset.query
+        elif isinstance(rhs, UNCACHABLE_FUNCS):
+            raise UncachableQuery
 
 
 def is_cachable(table):
