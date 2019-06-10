@@ -118,7 +118,7 @@ def _find_subqueries_in_where(children):
             yield rhs.query
         elif isinstance(rhs, (Subquery, Exists)):
             yield rhs.queryset.query
-        elif isinstance(rhs, UNCACHABLE_FUNCS):
+        elif isinstance(rhs, tuple(UNCACHABLE_FUNCS)):
             raise UncachableQuery
 
 
