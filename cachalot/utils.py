@@ -102,8 +102,6 @@ def _get_tables_from_sql(connection, lowercased_sql):
 
 def _find_subqueries_in_where(children):
     for child in children:
-        if isinstance(rhs, tuple(UNCACHABLE_FUNCS)):
-            raise UncachableQuery
         if isinstance(child, ExtraWhere):
             raise IsRawQuery
         elif isinstance(child, WhereNode):
@@ -112,6 +110,8 @@ def _find_subqueries_in_where(children):
         try:
             rhs = child.rhs
         except AttributeError:
+            raise UncachableQuery
+        if isinstance(rhs, tuple(UNCACHABLE_FUNCS)):
             raise UncachableQuery
         try:
             yield rhs.queryset.query
