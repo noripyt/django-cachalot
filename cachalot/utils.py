@@ -102,25 +102,24 @@ def _get_tables_from_sql(connection, lowercased_sql):
 
 def _find_subqueries_in_where(children):
     for child in children:
-        child_class = child.__class__
-        if isinstance(child, WhereNode):
+        if isinstance(rhs, tuple(UNCACHABLE_FUNCS)):
+            raise UncachableQuery
+        if isinstance(child, ExtraWhere):
+            raise IsRawQuery
+        elif isinstance(child, WhereNode):
             for grand_child in _find_subqueries_in_where(child.children):
                 yield grand_child
-        elif isinstance(child, ExtraWhere):
-            raise IsRawQuery
         try:
             rhs = child.rhs
         except AttributeError:
             raise UncachableQuery
-        if isinstance(rhs, Query):
-            yield rhs
-        elif isinstance(rhs, QuerySet):
-            yield rhs.query
-        elif isinstance(rhs, (Subquery, Exists)):
+        try:
             yield rhs.queryset.query
-        elif isinstance(rhs, tuple(UNCACHABLE_FUNCS)):
-            raise UncachableQuery
-
+        except AttributeError:
+            try:
+                yield rhs.query
+            except AttributeError:
+                yield rhs
 
 def is_cachable(table):
     whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
