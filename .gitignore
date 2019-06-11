@@ -8,3 +8,4 @@ sdist/
 .coverage
 docs/_*/
 .tox/
+.mypy_cache/
