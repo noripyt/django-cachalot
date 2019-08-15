@@ -33,6 +33,7 @@ CACHABLE_PARAM_TYPES = {
 }
 CACHABLE_PARAM_TYPES.update(integer_types)  # Adds long for Python 2
 UNCACHABLE_FUNCS = {Now, TransactionNow}
+OVERRIDE_DB_ALIAS_KEY = 'CACHE_KEY'
 
 try:
     from psycopg2 import Binary
@@ -91,6 +92,8 @@ def get_table_cache_key(db_alias, table):
     :return: A cache key
     :rtype: int
     """
+    if OVERRIDE_DB_ALIAS_KEY in cachalot_settings.DATABASES[db_alias]:
+        db_alias = cachalot_settings.DATABASES[db_alias][OVERRIDE_DB_ALIAS_KEY]
     cache_key = '%s:%s' % (db_alias, table)
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
