@@ -1,3 +1,5 @@
+**WARNING: This project is in need of a new maintainer.** NoriPyt and its developer Bertrand Bordage no longer use it and therefore don’t have time to develop it.
+
 Django-cachalot
 ===============
 
