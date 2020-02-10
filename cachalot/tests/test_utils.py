@@ -1,6 +1,9 @@
 from django.core.management.color import no_style
 from django.db import connection, transaction
-from django.utils.six import string_types
+try:
+    from django.utils.six import string_types
+except ImportError:
+    from six import string_types
 
 from .models import PostgresModel
 from ..utils import _get_tables
