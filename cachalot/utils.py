@@ -13,7 +13,10 @@ from django.db.models import QuerySet, Subquery, Exists
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
-from six import text_type, binary_type, integer_types
+try:
+    from django.utils.six import text_type, binary_type, integer_types
+except ImportError:
+    from six import text_type, binary_type, integer_types
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
