@@ -3,6 +3,7 @@ language: python
 services:
   - memcached
   - redis-server
+  - mysql
 
 addons:
   postgresql: 9.6
