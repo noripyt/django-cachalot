@@ -11,7 +11,7 @@ from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
 )
 from django.db.transaction import Atomic, get_connection
-from django.utils.six import binary_type, wraps
+from six import binary_type, wraps
 
 from .api import invalidate
 from .cache import cachalot_caches
