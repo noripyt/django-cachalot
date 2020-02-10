@@ -12,8 +12,8 @@ from django.db import connections
 from django.db.models import QuerySet, Subquery, Exists
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
-from django.db.models.sql.where import ExtraWhere, WhereNode
-from django.utils.six import text_type, binary_type, integer_types
+from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
+from six import text_type, binary_type, integer_types
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
@@ -107,6 +107,8 @@ def _find_subqueries_in_where(children):
         elif isinstance(child, WhereNode):
             for grand_child in _find_subqueries_in_where(child.children):
                 yield grand_child
+        elif isinstance(child, NothingNode):
+            pass
         try:
             rhs = child.rhs
         except AttributeError:
