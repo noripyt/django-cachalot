@@ -1,9 +1,11 @@
-**WARNING: This project is in need of a new maintainer.** NoriPyt and its developer Bertrand Bordage no longer use it and therefore don’t have time to develop it.
+**New Maintainer**: `Andrew Chen Wang`_ is a new maintainer of this repo. Bordage is still the admin but will most likely be inactive.
 
-Django-cachalot
+Django Cachalot
 ===============
 
 Caches your Django ORM queries and automatically invalidates them.
+
+Documentation: http://django-cachalot.readthedocs.io
 
 .. image:: https://raw.github.com/noripyt/django-cachalot/master/django-cachalot.jpg
 
@@ -21,17 +23,42 @@ Caches your Django ORM queries and automatically invalidates them.
 .. image:: http://img.shields.io/scrutinizer/g/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
    :target: https://scrutinizer-ci.com/g/noripyt/django-cachalot/
 
-.. image:: https://img.shields.io/gitter/room/django-cachalot/Lobby.svg?style=flat-square&maxAge=3600
-   :target: https://gitter.im/django-cachalot/Lobby
+.. image:: https://img.shields.io/badge/cachalot-Chat%20on%20Slack-green?style=flat&logo=slack
+    :target: https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI
 
+Third-Party Cache Comparison
+----------------------------
 
-Documentation
--------------
+There are three main third party caches: cachalot, cache-machine, and cache-ops. Which do you use? We suggest a mix:
 
-Available `on Read The Docs <http://django-cachalot.readthedocs.io>`_.
+TL;DR Use cachalot for cold or accessed <50 times per minutes (Most people should stick with only cachalot since you
+most likely won't need to scale to the point of needing cache-machine added to the bowl). If you're an enterprise that
+already has huge statistics, then mixing cold caches for cachalot and your hot caches with cache-machine is the best
+mix.
 
+Recall, cachalot caches THE ENTIRE TABLE. That's where its inefficiency stems from: if you keep updating the records,
+then the cachalot constantly invalidates the table and re-caches. Luckily caching is very efficient, it's just the cache
+invalidation part that kills all our systems. Look at Note 1 below to see how Reddit deals with it.
+
+Cachalot is more-or-less intended for cold caches or "just-right" conditions. If you find a partition library for
+Django (also authored but work-in-progress by `Andrew Chen Wang`_), then the caching will work better since sharding
+the cold/accessed-the-least records aren't invalidated as much.
+
+Cachalot is good when there are <50 updates per minute on a hot cached table. This is mostly due to cache invalidation. It's the same with any cache,
+which is why we suggest you use cache-machine for hot caches. Cache-machine caches individual objects, taking up more in the memory store but
+invalidates those individual objects instead of the entire table like cachalot.
+
+Yes, the bane of our entire existence lies in cache invalidation and naming variables. Why does cachalot suck when stuck with a huge table that's accessed rapidly? Since you've mixed your cold (90% of) with your hot (10% of) records, you're caching and invalidating an entire table. It's like trying to boil 1 ton of noodles inside ONE pot instead of 100 pots boiling 1 ton of noodles. Which is more efficient? The splitting up of them.
+
+Note 1: My personal experience with caches stems from Reddit's: https://redditblog.com/2017/01/17/caching-at-reddit/
+
+Note 2: Technical comparison: https://django-cachalot.readthedocs.io/en/latest/introduction.html#comparison-with-similar-tools
 
 Discussion
 ----------
 
-On `our public gitter chat room <https://gitter.im/django-cachalot/Lobby>`_.
+Help? Technical chat? `It's here on Slack <https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI>`_.
+
+Legacy chat: https://gitter.im/django-cachalot/Lobby
+
+.. _Andrew Chen Wang: https://github.com/Andrew-Chen-Wang
