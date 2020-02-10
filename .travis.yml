@@ -342,6 +342,39 @@ matrix:
     - python: 3.6
       env: TOXENV=py3.6-django2.2-mysql-filebased
 
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-sqlite3-redis
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-sqlite3-memcached
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-sqlite3-pylibmc
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-sqlite3-locmem
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-sqlite3-filebased
+
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-postgresql-redis
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-postgresql-memcached
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-postgresql-pylibmc
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-postgresql-locmem
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-postgresql-filebased
+
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-mysql-redis
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-mysql-memcached
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-mysql-pylibmc
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-mysql-locmem
+    - python: 3.6
+      env: TOXENV=py3.6-django3.0-mysql-filebased
+
     - python: 3.7
       env: TOXENV=py3.7-django2.1-sqlite3-redis
     - python: 3.7
@@ -408,22 +441,121 @@ matrix:
     - python: 3.7
       env: TOXENV=py3.7-django2.2-mysql-filebased
 
-  allow_failures:
-    - env: TOXENV=py3.7-django2.1-sqlite3-redis
-    - env: TOXENV=py3.7-django2.1-sqlite3-memcached
-    - env: TOXENV=py3.7-django2.1-sqlite3-pylibmc
-    - env: TOXENV=py3.7-django2.1-sqlite3-locmem
-    - env: TOXENV=py3.7-django2.1-sqlite3-filebased
-    - env: TOXENV=py3.7-django2.1-postgresql-redis
-    - env: TOXENV=py3.7-django2.1-postgresql-memcached
-    - env: TOXENV=py3.7-django2.1-postgresql-pylibmc
-    - env: TOXENV=py3.7-django2.1-postgresql-locmem
-    - env: TOXENV=py3.7-django2.1-postgresql-filebased
-    - env: TOXENV=py3.7-django2.1-mysql-redis
-    - env: TOXENV=py3.7-django2.1-mysql-memcached
-    - env: TOXENV=py3.7-django2.1-mysql-pylibmc
-    - env: TOXENV=py3.7-django2.1-mysql-locmem
-    - env: TOXENV=py3.7-django2.1-mysql-filebased
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-sqlite3-redis
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-sqlite3-memcached
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-sqlite3-pylibmc
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-sqlite3-locmem
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-sqlite3-filebased
+
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-postgresql-redis
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-postgresql-memcached
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-postgresql-pylibmc
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-postgresql-locmem
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-postgresql-filebased
+
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-mysql-redis
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-mysql-memcached
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-mysql-pylibmc
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-mysql-locmem
+    - python: 3.7
+      env: TOXENV=py3.7-django3.0-mysql-filebased
+
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-sqlite3-redis
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-sqlite3-memcached
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-sqlite3-pylibmc
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-sqlite3-locmem
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-sqlite3-filebased
+
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-postgresql-redis
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-postgresql-memcached
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-postgresql-pylibmc
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-postgresql-locmem
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-postgresql-filebased
+
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-mysql-redis
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-mysql-memcached
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-mysql-pylibmc
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-mysql-locmem
+    - python: 3.8
+      env: TOXENV=py3.7-django2.2-mysql-filebased
+
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-sqlite3-redis
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-sqlite3-memcached
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-sqlite3-pylibmc
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-sqlite3-locmem
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-sqlite3-filebased
+
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-postgresql-redis
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-postgresql-memcached
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-postgresql-pylibmc
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-postgresql-locmem
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-postgresql-filebased
+
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-mysql-redis
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-mysql-memcached
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-mysql-pylibmc
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-mysql-locmem
+    - python: 3.8
+      env: TOXENV=py3.7-django3.0-mysql-filebased
+
+#  allow_failures:
+#    - env: TOXENV=py3.7-django2.1-sqlite3-redis
+#    - env: TOXENV=py3.7-django2.1-sqlite3-memcached
+#    - env: TOXENV=py3.7-django2.1-sqlite3-pylibmc
+#    - env: TOXENV=py3.7-django2.1-sqlite3-locmem
+#    - env: TOXENV=py3.7-django2.1-sqlite3-filebased
+#    - env: TOXENV=py3.7-django2.1-postgresql-redis
+#    - env: TOXENV=py3.7-django2.1-postgresql-memcached
+#    - env: TOXENV=py3.7-django2.1-postgresql-pylibmc
+#    - env: TOXENV=py3.7-django2.1-postgresql-locmem
+#    - env: TOXENV=py3.7-django2.1-postgresql-filebased
+#    - env: TOXENV=py3.7-django2.1-mysql-redis
+#    - env: TOXENV=py3.7-django2.1-mysql-memcached
+#    - env: TOXENV=py3.7-django2.1-mysql-pylibmc
+#    - env: TOXENV=py3.7-django2.1-mysql-locmem
+#    - env: TOXENV=py3.7-django2.1-mysql-filebased
 
 sudo: false
 
@@ -437,3 +569,10 @@ before_script:
 script: tox -e $TOXENV
 
 after_success: coveralls
+
+notifications:
+  email:
+    recipients:
+      - acwangpython@gmail.com
+    on_success: change
+    on_failure: always

@@ -24,6 +24,11 @@ Documentation: http://django-cachalot.readthedocs.io
 .. image:: https://img.shields.io/badge/cachalot-Chat%20on%20Slack-green?style=flat&logo=slack
     :target: https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI
 
+Quickstart
+----------
+
+Cachalot officially supports Python 2.7, 3.4-3.8 and Django 1.11, 2.0-2.2, 3.0
+
 Third-Party Cache Comparison
 ----------------------------
 
