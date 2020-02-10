@@ -7,8 +7,6 @@ Caches your Django ORM queries and automatically invalidates them.
 
 Documentation: http://django-cachalot.readthedocs.io
 
-.. image:: https://raw.github.com/noripyt/django-cachalot/master/django-cachalot.jpg
-
 ----
 
 .. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square&maxAge=3600
@@ -31,7 +29,7 @@ Third-Party Cache Comparison
 
 There are three main third party caches: cachalot, cache-machine, and cache-ops. Which do you use? We suggest a mix:
 
-TL;DR Use cachalot for cold or accessed <50 times per minutes (Most people should stick with only cachalot since you
+TL;DR Use cachalot for cold or modified <50 times per seconds (Most people should stick with only cachalot since you
 most likely won't need to scale to the point of needing cache-machine added to the bowl). If you're an enterprise that
 already has huge statistics, then mixing cold caches for cachalot and your hot caches with cache-machine is the best
 mix.
@@ -44,7 +42,7 @@ Cachalot is more-or-less intended for cold caches or "just-right" conditions. If
 Django (also authored but work-in-progress by `Andrew Chen Wang`_), then the caching will work better since sharding
 the cold/accessed-the-least records aren't invalidated as much.
 
-Cachalot is good when there are <50 updates per minute on a hot cached table. This is mostly due to cache invalidation. It's the same with any cache,
+Cachalot is good when there are <50 modifications per second on a hot cached table. This is mostly due to cache invalidation. It's the same with any cache,
 which is why we suggest you use cache-machine for hot caches. Cache-machine caches individual objects, taking up more in the memory store but
 invalidates those individual objects instead of the entire table like cachalot.
 
@@ -62,3 +60,5 @@ Help? Technical chat? `It's here on Slack <https://join.slack.com/t/cachalotdjan
 Legacy chat: https://gitter.im/django-cachalot/Lobby
 
 .. _Andrew Chen Wang: https://github.com/Andrew-Chen-Wang
+
+.. image:: https://raw.github.com/noripyt/django-cachalot/master/django-cachalot.jpg
