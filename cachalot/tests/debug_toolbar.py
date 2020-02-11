@@ -1,11 +1,12 @@
 from uuid import UUID
 from bs4 import BeautifulSoup
+from django.conf import settings
 from django.test import LiveServerTestCase, override_settings
 
 
 @override_settings(DEBUG=True)
 class DebugToolbarTestCase(LiveServerTestCase):
-    databases = {"sqlite3", "postgresql", "mysql"}
+    databases = set(settings.DATABASES.keys())
 
     def test_rendering(self):
         #

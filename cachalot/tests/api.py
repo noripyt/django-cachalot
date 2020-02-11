@@ -19,7 +19,7 @@ from .test_utils import TestUtilsMixin
 
 
 class APITestCase(TestUtilsMixin, TransactionTestCase):
-    databases = {"sqlite3", "postgresql", "mysql"}
+    databases = set(settings.DATABASES.keys())
 
     def setUp(self):
         super(APITestCase, self).setUp()
