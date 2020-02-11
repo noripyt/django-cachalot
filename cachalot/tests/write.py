@@ -87,7 +87,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertEqual(t.name, 'test')
             self.assertEqual(t.public, True)
 
-        with self.assertNumQueries(3 if self.is_dj_21_below_and_is_sqlite() else 2):
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': False})
             self.assertFalse(created)
@@ -167,7 +167,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
                                       for i in range(2, 11)])
         with self.assertNumQueries(1):
             self.assertEqual(Test.objects.count(), 10)
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.all().delete()
         with self.assertNumQueries(1):
             self.assertEqual(Test.objects.count(), 0)
@@ -604,7 +604,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertEqual(data3[2].owner, u2)
             self.assertEqual(data3[3].owner, u1)
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.filter(name__in=['test1', 'test2']).delete()
         with self.assertNumQueries(1):
             data4 = list(Test.objects.select_related('owner'))
@@ -636,7 +636,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertEqual(data3[0].owner, u)
             self.assertListEqual(list(data3[0].owner.groups.all()), [])
 
-        with self.assertNumQueries(9 if self.is_dj_21_below_and_is_sqlite() else 6):
+        with self.assertNumQueries(9 if self.is_sqlite else 6):
             group = Group.objects.create(name='test_group')
             permissions = list(Permission.objects.all()[:5])
             group.permissions.add(*permissions)
@@ -867,7 +867,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             self.assertEqual(TestChild.objects.get(), t_child)
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             TestParent.objects.filter(pk=t_child.pk).update(name='modified')
 
         with self.assertNumQueries(1):
