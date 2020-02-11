@@ -63,7 +63,7 @@ class TestUtilsMixin:
         if result is not None:
             assert_function(data2, result)
 
-    def is_dj_21_below_and_is_sqlite(self) -> bool:
+    def is_dj_21_below_and_is_sqlite(self):
         """
         Checks if Django 2.1 or lower and if SQLite is the DB
         Django 2.1 and lower had two queries on SQLite DBs:
