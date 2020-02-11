@@ -40,12 +40,12 @@ class MultiDatabaseTestCase(TransactionTestCase):
             return False
         if django_version[0] < 2:
             # Takes Django 0 and 1 out of the picture
-            return False
+            return True
         else:
             if django_version[0] == 2 and django_version[1] < 2:
                 # Takes Django 2.0-2.1 out
-                return False
-            return True
+                return True
+            return False
 
     def test_read(self):
         with self.assertNumQueries(1):
