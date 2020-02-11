@@ -7,7 +7,6 @@ from hashlib import sha1
 from time import time
 from uuid import UUID
 
-from django import VERSION
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
 from django.db.models import QuerySet, Subquery, Exists
@@ -21,8 +20,6 @@ except ImportError:
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
-
-DJANGO_VERSION = VERSION
 
 
 class UncachableQuery(Exception):
@@ -166,9 +163,9 @@ def _get_tables(db_alias, query):
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if isinstance(annotation, Subquery):
-                if DJANGO_VERSION[0] <= 2 and DJANGO_VERSION[1] <= 1:
+                try:
                     tables.update(_get_tables(db_alias, annotation.queryset.query))
-                else:
+                except AttributeError:
                     tables.update(_get_tables(db_alias, annotation.query))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
