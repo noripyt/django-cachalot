@@ -41,7 +41,7 @@ class CachalotPanel(Panel):
 
     def process_request(self, request):
         self.collect_invalidations()
-        return super().process_request(request)
+        return super(CachalotPanel, self).process_request(request)
 
     def collect_invalidations(self):
         models = apps.get_models()
