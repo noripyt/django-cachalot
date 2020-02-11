@@ -27,7 +27,7 @@ Documentation: http://django-cachalot.readthedocs.io
 Quickstart
 ----------
 
-Cachalot officially supports Python 2.7, 3.4-3.8 and Django 1.11, 2.0-2.2, 3.0
+Cachalot officially supports Python 2.7, 3.5-3.8 and Django 1.11, 2.0-2.2, 3.0
 
 Third-Party Cache Comparison
 ----------------------------
