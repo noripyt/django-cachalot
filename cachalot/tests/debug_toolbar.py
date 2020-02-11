@@ -5,6 +5,8 @@ from django.test import LiveServerTestCase, override_settings
 
 @override_settings(DEBUG=True)
 class DebugToolbarTestCase(LiveServerTestCase):
+    databases = {"sqlite3", "postgresql", "mysql"}
+
     def test_rendering(self):
         #
         # Rendering toolbar

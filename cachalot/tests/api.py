@@ -19,6 +19,8 @@ from .test_utils import TestUtilsMixin
 
 
 class APITestCase(TestUtilsMixin, TransactionTestCase):
+    databases = {"sqlite3", "postgresql", "mysql"}
+
     def setUp(self):
         super(APITestCase, self).setUp()
         self.t1 = Test.objects.create(name='test1')

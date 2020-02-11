@@ -15,6 +15,8 @@ from .models import Test
 
 
 class SignalsTestCase(TransactionTestCase):
+    databases = {"sqlite3", "postgresql", "mysql"}
+
     def test_table_invalidated(self):
         l = []
 
