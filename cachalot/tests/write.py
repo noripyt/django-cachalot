@@ -58,7 +58,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(3 if self.is_dj_21_below_and_is_sqlite() else 2):
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
             t, created = Test.objects.get_or_create(name='test')
         self.assertTrue(created)
 
@@ -80,7 +80,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             self.assertListEqual(list(Test.objects.all()), [])
 
-        with self.assertNumQueries(5 if self.is_dj_21_below_and_is_sqlite() else 4):
+        with self.assertNumQueries(5 if self.is_sqlite else 4):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': True})
             self.assertTrue(created)
@@ -111,12 +111,12 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             unsaved_tests = [Test(name='test%02d' % i) for i in range(1, 11)]
             Test.objects.bulk_create(unsaved_tests)
         self.assertEqual(Test.objects.count(), 10)
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             unsaved_tests = [Test(name='test%02d' % i) for i in range(1, 11)]
             Test.objects.bulk_create(unsaved_tests)
         self.assertEqual(Test.objects.count(), 20)
@@ -162,7 +162,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data1, [t1.name, t2.name])
         self.assertListEqual(data2, [t1.name])
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.bulk_create([Test(name='test%s' % i)
                                       for i in range(2, 11)])
         with self.assertNumQueries(1):
@@ -362,7 +362,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data4, [user1, user2])
         self.assertListEqual([u.n for u in data4], [1, 0])
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.bulk_create([
                 Test(name='test3', owner=user1),
                 Test(name='test4', owner=user2),
@@ -590,7 +590,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             data2 = list(Test.objects.select_related('owner'))
         self.assertListEqual(data2, [])
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             Test.objects.bulk_create([
                 Test(name='test1', owner=u1),
                 Test(name='test2', owner=u2),
@@ -861,13 +861,13 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertRaises(TestChild.DoesNotExist):
                 TestChild.objects.get()
 
-        with self.assertNumQueries(3 if self.is_dj_21_below_and_is_sqlite() else 2):
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):
             self.assertEqual(TestChild.objects.get(), t_child)
 
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(2 if self.is_sqlite else 1):
             TestParent.objects.filter(pk=t_child.pk).update(name='modified')
 
         with self.assertNumQueries(1):

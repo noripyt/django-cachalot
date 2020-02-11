@@ -672,7 +672,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_table_inheritance(self):
-        with self.assertNumQueries(3 if self.is_dj_21_below_and_is_sqlite() else 2):
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):
