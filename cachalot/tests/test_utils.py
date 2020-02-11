@@ -1,3 +1,4 @@
+from django import VERSION as DJANGO_VERSION
 from django.core.management.color import no_style
 from django.db import connection, transaction
 try:
@@ -61,3 +62,30 @@ class TestUtilsMixin:
         assert_function(data2, data1)
         if result is not None:
             assert_function(data2, result)
+
+    def is_dj_21_below_and_is_sqlite(self) -> bool:
+        """
+        Checks if Django 2.1 or lower and if SQLite is the DB
+        Django 2.1 and lower had two queries on SQLite DBs:
+
+        After an insertion, e.g. Test.objects.create(name="asdf"),
+        SQLite returns the queries:
+        [{'sql': 'INSERT INTO "cachalot_test" ("name") VALUES (\'asd\')', 'time': '0.001'}, {'sql': 'BEGIN', 'time': '0.000'}]
+
+        This can be seen with django.db import connection; print(connection.queries)
+        In Django 2.2 and above, the latter was removed.
+
+        :return: bool is Django 2.1 or below and is SQLite the DB
+        """
+        django_version = DJANGO_VERSION
+        if not self.is_sqlite:
+            # Immediately know if SQLite
+            return False
+        if django_version[0] < 2:
+            # Takes Django 0 and 1 out of the picture
+            return True
+        else:
+            if django_version[0] == 2 and django_version[1] < 2:
+                # Takes Django 2.0-2.1 out
+                return True
+            return False

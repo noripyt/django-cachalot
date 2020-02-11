@@ -163,6 +163,7 @@ def _get_tables(db_alias, query):
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if isinstance(annotation, Subquery):
+                # Django 2.2+ removed queryset in favor of simply using query
                 try:
                     tables.update(_get_tables(db_alias, annotation.queryset.query))
                 except AttributeError:
