@@ -640,7 +640,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(
                 9 if self.is_dj_21_below_and_is_sqlite()
                 else 8 if self.is_sqlite and DJANGO_VERSION[0] == 2 and DJANGO_VERSION[1] == 2
-                else 4 if self.is_sqlite and DJANGO_VERSION[0] > 2
+                else 4 if self.is_postgresql and DJANGO_VERSION[0] > 2
                 else 6
         ):
             group = Group.objects.create(name='test_group')
