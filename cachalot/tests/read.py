@@ -708,9 +708,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 r'Execution time: [\d\.]+ ms$') % (operation_detail,
                                                    operation_detail)
         with self.assertNumQueries(
-                2 if
-                self.is_mysql
-                or self.is_mysql and django_version[0] == 3 and django_version[1] == 0
+                2 if self.is_mysql and django_version[0] < 3
                 else 1):
             explanation1 = Test.objects.explain(**explain_kwargs)
         self.assertRegex(explanation1, expected)
