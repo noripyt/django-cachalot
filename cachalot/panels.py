@@ -39,8 +39,9 @@ class CachalotPanel(Panel):
         settings.CACHALOT_ENABLED = False
         cachalot_settings.reload()
 
-    def process_response(self, request, response):
+    def process_request(self, request):
         self.collect_invalidations()
+        return super(CachalotPanel, self).process_request(request)
 
     def collect_invalidations(self):
         models = apps.get_models()

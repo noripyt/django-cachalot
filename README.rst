@@ -24,6 +24,13 @@ Documentation: http://django-cachalot.readthedocs.io
 .. image:: https://img.shields.io/badge/cachalot-Chat%20on%20Slack-green?style=flat&logo=slack
     :target: https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI
 
+Quickstart
+----------
+
+Cachalot officially supports Python 2.7, 3.4-3.8 and Django 1.11, 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
+
+Note: Python 3.4 with MySQL fails on tests. If you're MySQL is configured correctly,
+
 Third-Party Cache Comparison
 ----------------------------
 
@@ -46,7 +53,10 @@ Cachalot is good when there are <50 modifications per second on a hot cached tab
 which is why we suggest you use cache-machine for hot caches. Cache-machine caches individual objects, taking up more in the memory store but
 invalidates those individual objects instead of the entire table like cachalot.
 
-Yes, the bane of our entire existence lies in cache invalidation and naming variables. Why does cachalot suck when stuck with a huge table that's accessed rapidly? Since you've mixed your cold (90% of) with your hot (10% of) records, you're caching and invalidating an entire table. It's like trying to boil 1 ton of noodles inside ONE pot instead of 100 pots boiling 1 ton of noodles. Which is more efficient? The splitting up of them.
+Yes, the bane of our entire existence lies in cache invalidation and naming variables. Why does cachalot suck when
+stuck with a huge table that's modified rapidly? Since you've mixed your cold (90% of) with your hot (10% of) records,
+you're caching and invalidating an entire table. It's like trying to boil 1 ton of noodles inside ONE pot instead of
+100 pots boiling 1 ton of noodles. Which is more efficient? The splitting up of them.
 
 Note 1: My personal experience with caches stems from Reddit's: https://redditblog.com/2017/01/17/caching-at-reddit/
 

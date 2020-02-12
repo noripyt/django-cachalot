@@ -15,6 +15,8 @@ from .models import Test
 
 
 class SignalsTestCase(TransactionTestCase):
+    databases = set(settings.DATABASES.keys())
+
     def test_table_invalidated(self):
         l = []
 

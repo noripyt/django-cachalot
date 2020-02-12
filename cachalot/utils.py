@@ -13,7 +13,10 @@ from django.db.models import QuerySet, Subquery, Exists
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
-from six import text_type, binary_type, integer_types
+try:
+    from django.utils.six import text_type, binary_type, integer_types
+except ImportError:
+    from six import text_type, binary_type, integer_types
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
@@ -160,7 +163,11 @@ def _get_tables(db_alias, query):
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if isinstance(annotation, Subquery):
-                tables.update(_get_tables(db_alias, annotation.queryset.query))
+                # Django 2.2+ removed queryset in favor of simply using query
+                try:
+                    tables.update(_get_tables(db_alias, annotation.queryset.query))
+                except AttributeError:
+                    tables.update(_get_tables(db_alias, annotation.query))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))

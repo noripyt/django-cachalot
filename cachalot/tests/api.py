@@ -19,6 +19,8 @@ from .test_utils import TestUtilsMixin
 
 
 class APITestCase(TestUtilsMixin, TransactionTestCase):
+    databases = set(settings.DATABASES.keys())
+
     def setUp(self):
         super(APITestCase, self).setUp()
         self.t1 = Test.objects.create(name='test1')
