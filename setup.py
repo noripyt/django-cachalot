@@ -14,8 +14,8 @@ with open(os.path.join(CURRENT_PATH, 'requirements.txt')) as f:
 setup(
     name='django-cachalot',
     version=__version__,
-    author='Bertrand Bordage',
-    author_email='bordage.bertrand@gmail.com',
+    author='Bertrand Bordage, Andrew Chen Wang',
+    author_email='acwangpython@gmail.com',
     url='https://github.com/noripyt/django-cachalot',
     description='Caches your Django ORM queries '
                 'and automatically invalidates them.',
