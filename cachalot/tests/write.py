@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 from unittest import skipIf, skipUnless
 
+from django import VERSION as DJANGO_VERSION
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
@@ -96,7 +97,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
 
         # The number of SQL queries doesn’t decrease because update_or_create
         # always calls an UPDATE, even when data wasn’t changed.
-        with self.assertNumQueries(3 if self.is_dj_21_below_and_is_sqlite() else 2):
+        with self.assertNumQueries(3 if self.is_sqlite else 2):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': False})
             self.assertFalse(created)
@@ -636,7 +637,11 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertEqual(data3[0].owner, u)
             self.assertListEqual(list(data3[0].owner.groups.all()), [])
 
-        with self.assertNumQueries(9 if self.is_sqlite else 6):
+        with self.assertNumQueries(
+                9 if self.is_dj_21_below_and_is_sqlite()
+                else 8 if self.is_sqlite and DJANGO_VERSION[0] == 2 and DJANGO_VERSION[1] == 2
+                else 6
+        ):
             group = Group.objects.create(name='test_group')
             permissions = list(Permission.objects.all()[:5])
             group.permissions.add(*permissions)
