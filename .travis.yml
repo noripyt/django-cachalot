@@ -8,7 +8,6 @@ services:
 
 python:
   - "2.7"
-  - "3.4"
   - "3.5"
   - "3.6"
   - "3.7"
@@ -21,56 +20,25 @@ env:
   - DJANGO="3.0"
 
 matrix:
-  include:
+  exclude:
     - python: 2.7
-      env: DJANGO=1.11
-
-#    - python: 3.4  Uncomment when py3.4 fixed
-#      env: DJANGO=1.11
-#    - python: 3.4
-#      env: DJANGO=2.0
-
-    - python: 3.5
-      env: DJANGO=1.11
-    - python: 3.5
       env: DJANGO=2.0
-    - python: 3.5
+    - python: 2.7
       env: DJANGO=2.1
-    - python: 3.5
+    - python: 2.7
       env: DJANGO=2.2
-
-    - python: 3.6
-      env: DJANGO=1.11
-    - python: 3.6
-      env: DJANGO=2.0
-    - python: 3.6
-      env: DJANGO=2.1
-    - python: 3.6
-      env: DJANGO=2.2
-    - python: 3.6
+    - python: 2.7
       env: DJANGO=3.0
 
-    - python: 3.7
-      env: DJANGO=1.11
-    - python: 3.7
-      env: DJANGO=2.0
-    - python: 3.7
-      env: DJANGO=2.1
-    - python: 3.7
-      env: DJANGO=2.2
-    - python: 3.7
+    - python: 3.5
       env: DJANGO=3.0
 
     - python: 3.8
-      env: DJANGO=2.2
-    - python: 3.8
-      env: DJANGO=3.0
-
-  allow_failures:  # TODO Remove when Python 3.4 fixed
-    - python: 3.4
       env: DJANGO=1.11
-    - python: 3.4
+    - python: 3.8
       env: DJANGO=2.0
+    - python: 3.8
+      env: DJANGO=2.1
 
 sudo: false
 
