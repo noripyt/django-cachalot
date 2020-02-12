@@ -1,6 +1,14 @@
 What’s new in django-cachalot?
 ==============================
 
+2.2.0
+-----
+
+- Adds Django 2.2 and 3.0 support.
+- Dropped official support for Python 3.4
+    - It won't run properly with Travis CI tests on MySQL.
+- All Travis CI tests are fully functional.
+
 2.1.0
 -----
 
