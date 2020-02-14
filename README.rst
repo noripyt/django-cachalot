@@ -29,9 +29,9 @@ Quickstart
 
 Cachalot officially supports Python 2.7, 3.4-3.8 and Django 1.11, 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
 
-Note 1: Python 3.4 with MySQL fails on tests. If you're MySQL is configured correctly, then it may work.
+Note 1: Python 3.4 with MySQL fails on tests. If your MySQL is configured correctly, then it may work.
 
-Note 2: Python 3.5 with Django 1.11 in tests prove to have a performance issue.
+Note 2: Python 3.5 with Django 1.11 in tests prove to occasionally have performance issues.
 
 Third-Party Cache Comparison
 ----------------------------

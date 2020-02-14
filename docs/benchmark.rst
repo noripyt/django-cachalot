@@ -21,7 +21,7 @@ But what you may not know is that
 Conditions
 ..........
 
-.. include:: ../benchmark/conditions.rst
+.. include:: ../benchmark/docs/2018-08-09/conditions.rst
 
 Note that
 `MySQL’s query cache <http://dev.mysql.com/doc/refman/5.7/en/query-cache.html>`_
@@ -30,17 +30,17 @@ is active during the benchmark.
 Database results
 ................
 
-.. include:: ../benchmark/db_results.rst
+.. include:: ../benchmark/docs/2018-08-09/db_results.rst
 
-.. image:: ../benchmark/db.svg
+.. image:: ../benchmark/docs/2018-08-09/db.svg
 
 
 Cache results
 .............
 
-.. include:: ../benchmark/cache_results.rst
+.. include:: ../benchmark/docs/2018-08-09/cache_results.rst
 
-.. image:: ../benchmark/cache.svg
+.. image:: ../benchmark/docs/2018-08-09/cache.svg
 
 
 Database detailed results
@@ -49,17 +49,17 @@ Database detailed results
 MySQL
 ~~~~~
 
-.. image:: ../benchmark/db_mysql.svg
+.. image:: ../benchmark/docs/2018-08-09/db_mysql.svg
 
 PostgreSQL
 ~~~~~~~~~~
 
-.. image:: ../benchmark/db_postgresql.svg
+.. image:: ../benchmark/docs/2018-08-09/db_postgresql.svg
 
 SQLite
 ~~~~~~
 
-.. image:: ../benchmark/db_sqlite.svg
+.. image:: ../benchmark/docs/2018-08-09/db_sqlite.svg
 
 
 Cache detailed results
@@ -68,27 +68,27 @@ Cache detailed results
 File-based
 ~~~~~~~~~~
 
-.. image:: ../benchmark/cache_filebased.svg
+.. image:: ../benchmark/docs/2018-08-09/cache_filebased.svg
 
 Locmem
 ~~~~~~
 
-.. image:: ../benchmark/cache_locmem.svg
+.. image:: ../benchmark/docs/2018-08-09/cache_locmem.svg
 
 Memcached (python-memcached)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: ../benchmark/cache_memcached.svg
+.. image:: ../benchmark/docs/2018-08-09/cache_memcached.svg
 
 Memcached (pylibmc)
 ~~~~~~~~~~~~~~~~~~~
 
-.. image:: ../benchmark/cache_pylibmc.svg
+.. image:: ../benchmark/docs/2018-08-09/cache_pylibmc.svg
 
 Redis
 ~~~~~
 
-.. image:: ../benchmark/cache_redis.svg
+.. image:: ../benchmark/docs/2018-08-09/cache_redis.svg
 
 
 

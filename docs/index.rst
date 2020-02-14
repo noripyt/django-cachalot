@@ -44,6 +44,22 @@ Note: In settings, you can use `CACHALOT_UNCACHABLE_TABLES <https://django-cacha
 
 Why use cachalot? `Check out our comparison <https://django-cachalot.readthedocs.io/en/latest/introduction.html#comparison-with-similar-tools>`_
 
+Below the tree is an in-depth opinion from the new maintainer:
+
+.. toctree::
+   :maxdepth: 2
+
+   introduction
+   quickstart
+   limits
+   api
+   benchmark
+   todo
+   reporting
+   how
+   legacy
+   changelog
+
 In-depth opinion (from new maintainer):
 
 There are three main third party caches: cachalot, cache-machine, and cache-ops. Which do you use? We suggest a mix:
@@ -71,17 +87,3 @@ caching and invalidating an entire table. It's like trying to boil 1 ton of nood
 boiling 1 ton of noodles. Which is more efficient? The splitting up of them.
 
 Note 1: My personal experience with caches stems from Reddit's: https://redditblog.com/2017/01/17/caching-at-reddit/
-
-.. toctree::
-   :maxdepth: 2
-
-   introduction
-   quickstart
-   limits
-   api
-   benchmark
-   todo
-   reporting
-   how
-   legacy
-   changelog
