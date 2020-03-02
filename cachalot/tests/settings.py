@@ -43,7 +43,7 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             list(Test.objects.all())
 
         with self.settings(CACHALOT_ENABLED=False):
-            with self.assertNumQueries(2 if self.is_sqlite else 1):
+            with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
                 t = Test.objects.create(name='test')
         with self.assertNumQueries(1):
             data = list(Test.objects.all())

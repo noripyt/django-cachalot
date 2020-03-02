@@ -12,8 +12,11 @@ from django.db import connections
 from django.db.models import QuerySet, Subquery, Exists
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
-from django.db.models.sql.where import ExtraWhere, WhereNode
-from django.utils.six import text_type, binary_type, integer_types
+from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
+try:
+    from django.utils.six import text_type, binary_type, integer_types
+except ImportError:
+    from six import text_type, binary_type, integer_types
 
 from cachalot.tenants import tenant_handler
 from .settings import ITERABLES, cachalot_settings
@@ -127,6 +130,8 @@ def _find_subqueries_in_where(children):
                 yield grand_child
         elif child_class is ExtraWhere:
             raise IsRawQuery
+        elif child_class is NothingNode:
+            pass
         else:
             rhs = child.rhs
             rhs_class = rhs.__class__
@@ -177,7 +182,11 @@ def _get_tables(db_alias, query):
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if isinstance(annotation, Subquery):
-                tables.update(_get_tables(db_alias, annotation.queryset.query))
+                # Django 2.2+ removed queryset in favor of simply using query
+                try:
+                    tables.update(_get_tables(db_alias, annotation.queryset.query))
+                except AttributeError:
+                    tables.update(_get_tables(db_alias, annotation.query))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))

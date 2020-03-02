@@ -707,7 +707,9 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 r'Planning time: [\d\.]+ ms\n'
                 r'Execution time: [\d\.]+ ms$') % (operation_detail,
                                                    operation_detail)
-        with self.assertNumQueries(2 if self.is_mysql else 1):
+        with self.assertNumQueries(
+                2 if self.is_mysql and django_version[0] < 3
+                else 1):
             explanation1 = Test.objects.explain(**explain_kwargs)
         self.assertRegex(explanation1, expected)
         with self.assertNumQueries(0):
@@ -915,9 +917,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs, after=1 if self.is_sqlite else 0)
 
     def test_float(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1', a_float=0.123456789)
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test2', a_float=12345.6789)
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list('a_float', flat=True).filter(
@@ -936,9 +938,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(a_float=0.123456789)
 
     def test_decimal(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1', a_decimal=Decimal('123.45'))
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1', a_decimal=Decimal('12.3'))
 
         qs = Test.objects.values_list('a_decimal', flat=True).filter(
@@ -952,9 +954,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(a_decimal=Decimal('123.45'))
 
     def test_ipv4_address(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1', ip='127.0.0.1')
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test2', ip='192.168.0.1')
 
         qs = Test.objects.values_list('ip', flat=True).filter(
@@ -968,9 +970,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(ip='127.0.0.1')
 
     def test_ipv6_address(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
 
         qs = Test.objects.values_list('ip', flat=True).filter(
@@ -985,9 +987,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
 
     def test_duration(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1', duration=datetime.timedelta(30))
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test2', duration=datetime.timedelta(60))
 
         qs = Test.objects.values_list('duration', flat=True).filter(
@@ -1002,10 +1004,10 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(duration=datetime.timedelta(30))
 
     def test_uuid(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test1',
                                 uuid='1cc401b7-09f4-4520-b8d0-c267576d196b')
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
             Test.objects.create(name='test2',
                                 uuid='ebb3b6e1-1737-4321-93e3-4c35d61ff491')
 

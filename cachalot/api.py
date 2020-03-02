@@ -5,7 +5,10 @@ from __future__ import unicode_literals
 from django.apps import apps
 from django.conf import settings
 from django.db import connections
-from django.utils.six import string_types
+try:
+    from django.utils.six import string_types
+except ImportError:
+    from six import string_types
 
 from .cache import cachalot_caches
 from .settings import cachalot_settings
