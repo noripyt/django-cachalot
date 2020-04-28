@@ -122,7 +122,7 @@ def _find_subqueries_in_where(children):
                 yield rhs.query
             elif rhs_class is Subquery or rhs_class is Exists:
                 try:
-                    yield rhs.queryset.query
+                    yield rhs.query
                 except:
                     yield rhs.queryset.query
             elif rhs_class in UNCACHABLE_FUNCS:
