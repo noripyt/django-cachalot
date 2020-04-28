@@ -20,6 +20,11 @@ SUPPORTED_DATABASE_ENGINES = {
     # TODO: Remove when we drop Django 2.x support.
     'transaction_hooks.backends.postgresql_psycopg2',
     'transaction_hooks.backends.mysql',
+
+    # django-prometheus wrapped engines
+    'django_prometheus.db.backends.sqlite3',
+    'django_prometheus.db.backends.postgresql',
+    'django_prometheus.db.backends.mysql',
 }
 
 SUPPORTED_CACHE_BACKENDS = {
