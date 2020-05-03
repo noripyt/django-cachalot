@@ -67,7 +67,7 @@ Note 2: Technical comparison: https://django-cachalot.readthedocs.io/en/latest/i
 Discussion
 ----------
 
-Help? Technical chat? `It's here on Slack <https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI>`_.
+Help? Technical chat? `It's here on Slack <https://join.slack.com/t/cachalotdjango/shared_invite/zt-dd0tj27b-cIH6VlaSOjAWnTG~II5~qw>`_.
 
 Legacy chat: https://gitter.im/django-cachalot/Lobby
 
