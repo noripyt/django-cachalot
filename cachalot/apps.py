@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django import __version__ as django__version__, VERSION as django_version
 from django.apps import AppConfig
 from django.conf import settings
@@ -13,7 +11,7 @@ from .settings import (
 
 @register(Tags.compatibility)
 def check_django_version(app_configs, **kwargs):
-    if not (1, 11) <= django_version < (3, 1):
+    if not (2, 0) <= django_version < (3, 1):
         return [Error(
             'Django %s is not compatible with this version of django-cachalot.'
             % django__version__,

@@ -1,13 +1,10 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 from collections import defaultdict
 from datetime import datetime
 
 from debug_toolbar.panels import Panel
 from django.apps import apps
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils.timesince import timesince
 
 from .cache import cachalot_caches

@@ -1,7 +1,5 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 from collections import Iterable
+from functools import wraps
 from time import time
 
 from django.db.backends.utils import CursorWrapper
@@ -11,11 +9,6 @@ from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
 )
 from django.db.transaction import Atomic, get_connection
-
-try:
-    from django.utils.six import binary_type, wraps
-except ImportError:
-    from six import binary_type, wraps
 
 from .api import invalidate
 from .cache import cachalot_caches
@@ -129,7 +122,7 @@ def _patch_cursor():
             finally:
                 connection = cursor.db
                 if getattr(connection, 'raw', True):
-                    if isinstance(sql, binary_type):
+                    if isinstance(sql, bytes):
                         sql = sql.decode('utf-8')
                     sql = sql.lower()
                     if 'update' in sql or 'insert' in sql or 'delete' in sql \

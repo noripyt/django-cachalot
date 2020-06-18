@@ -4,15 +4,15 @@ Quick start
 Requirements
 ............
 
-- Django 1.11, 2.0-2.2, or 3.0
-- Python 2.7, 3.4-3.8
+- Django 2.0-2.2, or 3.0
+- Python 3.5-3.8
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwinz/django-redis>`_
-  - `memcached <https://docs.djangoproject.com/en/2.0/topics/cache/#memcached>`_
+  - `memcached <https://docs.djangoproject.com/en/dev/topics/cache/#memcached>`_
     (using either python-memcached or pylibmc)
-  - `filebased <https://docs.djangoproject.com/en/2.0/topics/cache/#filesystem-caching>`_
-  - `locmem <https://docs.djangoproject.com/en/2.0/topics/cache/#local-memory-caching>`_
+  - `filebased <https://docs.djangoproject.com/en/dev/topics/cache/#filesystem-caching>`_
+  - `locmem <https://docs.djangoproject.com/en/dev/topics/cache/#local-memory-caching>`_
     (but it’s not shared between processes, see :ref:`locmem limits <Locmem>`)
 
 - one of these databases:

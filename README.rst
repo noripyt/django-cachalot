@@ -1,5 +1,3 @@
-**New Maintainer**: `Andrew Chen Wang`_ is a new maintainer of this repo. Bordage is still the admin but will most likely be inactive.
-
 Django Cachalot
 ===============
 
@@ -27,11 +25,7 @@ Documentation: http://django-cachalot.readthedocs.io
 Quickstart
 ----------
 
-Cachalot officially supports Python 2.7, 3.4-3.8 and Django 1.11, 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
-
-Note 1: Python 3.4 with MySQL fails on tests. If your MySQL is configured correctly, then it may work.
-
-Note 2: Python 3.5 with Django 1.11 in tests prove to occasionally have performance issues.
+Cachalot officially supports Python 3.5-3.8 and Django 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
 
 Third-Party Cache Comparison
 ----------------------------
