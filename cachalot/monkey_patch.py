@@ -66,6 +66,9 @@ def _patch_compiler(original):
     @_unset_raw_connection
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
+        if compiler.query and getattr(compiler.query, 'cachalot_do_not_cache', False):
+            return execute_query_func()
+
         db_alias = compiler.using
         if db_alias not in cachalot_settings.CACHALOT_DATABASES \
                 or isinstance(compiler, WRITE_COMPILERS):

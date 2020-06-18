@@ -862,6 +862,32 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, UnmanagedModel)
         self.assert_query_cached(qs)
 
+    def test_per_query_do_not_cache_uncached_data(self):
+        """
+        Test that when a query is given the `cachalot_do_not_cache` attribute with True value,
+        the query will not be cached.
+        """
+        qs = Test.objects.all()
+        qs.query.cachalot_do_not_cache = True
+        with self.assertNumQueries(1):
+            data1 = list(qs.all())
+        with self.assertNumQueries(1):
+            # repeat run of the same query should trigger one more DB query
+            data2 = list(qs.all())
+        self.assertEqual(data1, data2)
+
+    def test_per_query_do_not_cache_cached_data(self):
+        """
+        Test that when a query is given the `cachalot_do_not_cache` attribute with True value,
+        the query will not be cached and a query will be performed even if the data is already
+        cached
+        """
+        qs = Test.objects.all()
+        self.assert_query_cached(qs)
+        qs.query.cachalot_do_not_cache = True
+        with self.assertNumQueries(1):
+            list(qs.all())
+
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
     def test_tuple(self):
