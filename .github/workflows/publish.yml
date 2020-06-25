@@ -15,6 +15,15 @@ jobs:
       with:
         python-version: 3.7
 
+    - name: Build a binary wheel and a source tarball
+      run: >-
+        python -m
+        pep517.build
+        --source
+        --binary
+        --out-dir dist/
+        .
+
     - name: Publish a Python distribution to PyPI
       uses: pypa/gh-action-pypi-publish@master
       with:
