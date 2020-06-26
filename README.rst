@@ -1,5 +1,3 @@
-**New Maintainer**: `Andrew Chen Wang`_ is a new maintainer of this repo. Bordage is still the admin but will most likely be inactive.
-
 Django Cachalot
 ===============
 
@@ -12,8 +10,8 @@ Documentation: http://django-cachalot.readthedocs.io
 .. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square&maxAge=3600
    :target: https://pypi.python.org/pypi/django-cachalot
 
-.. image:: http://img.shields.io/travis/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
-   :target: https://travis-ci.org/noripyt/django-cachalot
+.. image:: https://travis-ci.com/noripyt/django-cachalot.svg?branch=master
+   :target: https://travis-ci.com/noripyt/django-cachalot
 
 .. image:: http://img.shields.io/coveralls/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
    :target: https://coveralls.io/r/noripyt/django-cachalot?branch=master
@@ -27,11 +25,7 @@ Documentation: http://django-cachalot.readthedocs.io
 Quickstart
 ----------
 
-Cachalot officially supports Python 2.7, 3.4-3.8 and Django 1.11, 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
-
-Note 1: Python 3.4 with MySQL fails on tests. If your MySQL is configured correctly, then it may work.
-
-Note 2: Python 3.5 with Django 1.11 in tests prove to occasionally have performance issues.
+Cachalot officially supports Python 3.5-3.8 and Django 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
 
 Third-Party Cache Comparison
 ----------------------------
@@ -67,7 +61,7 @@ Note 2: Technical comparison: https://django-cachalot.readthedocs.io/en/latest/i
 Discussion
 ----------
 
-Help? Technical chat? `It's here on Slack <https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI>`_.
+Help? Technical chat? `It's here on Slack <https://join.slack.com/t/cachalotdjango/shared_invite/zt-dd0tj27b-cIH6VlaSOjAWnTG~II5~qw>`_.
 
 Legacy chat: https://gitter.im/django-cachalot/Lobby
 

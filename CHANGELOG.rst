@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.0
+-----
+
+- Drop support for Django 1.11 and Python 2.7
+
 2.2.0
 -----
 

@@ -21,6 +21,11 @@ SUPPORTED_DATABASE_ENGINES = {
     'transaction_hooks.backends.postgresql_psycopg2',
     'transaction_hooks.backends.mysql',
 
+    # django-prometheus wrapped engines
+    'django_prometheus.db.backends.sqlite3',
+    'django_prometheus.db.backends.postgresql',
+    'django_prometheus.db.backends.mysql',
+
     # django-tenants
     'django_tenants.postgresql_backend',
 }

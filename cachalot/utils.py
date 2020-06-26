@@ -1,6 +1,3 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 import datetime
 from decimal import Decimal
 from hashlib import sha1
@@ -13,10 +10,6 @@ from django.db.models import QuerySet, Subquery, Exists
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
-try:
-    from django.utils.six import text_type, binary_type, integer_types
-except ImportError:
-    from six import text_type, binary_type, integer_types
 
 from cachalot.tenants import tenant_handler
 from .settings import ITERABLES, cachalot_settings
@@ -32,10 +25,9 @@ class IsRawQuery(Exception):
 
 
 CACHABLE_PARAM_TYPES = {
-    bool, int, float, Decimal, bytearray, binary_type, text_type, type(None),
+    bool, int, float, Decimal, bytearray, bytes, str, type(None),
     datetime.date, datetime.time, datetime.datetime, datetime.timedelta, UUID,
 }
-CACHABLE_PARAM_TYPES.update(integer_types)  # Adds long for Python 2
 UNCACHABLE_FUNCS = {Now, TransactionNow}
 
 try:
@@ -80,7 +72,7 @@ def get_query_cache_key(compiler):
     sql, params = compiler.as_sql()
     check_parameter_types(params)
     cache_key = '%s:%s:%s' % (compiler.using, sql,
-                              [text_type(p) for p in params])
+                              [str(p) for p in params])
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
@@ -140,7 +132,10 @@ def _find_subqueries_in_where(children):
             elif rhs_class is QuerySet:
                 yield rhs.query
             elif rhs_class is Subquery or rhs_class is Exists:
-                yield rhs.queryset.query
+                try:
+                    yield rhs.query
+                except:
+                    yield rhs.queryset.query
             elif rhs_class in UNCACHABLE_FUNCS:
                 raise UncachableQuery
 

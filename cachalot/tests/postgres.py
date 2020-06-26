@@ -1,6 +1,3 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 from datetime import date, datetime
 from decimal import Decimal
 from unittest import skipUnless

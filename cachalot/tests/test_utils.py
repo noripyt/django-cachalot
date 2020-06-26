@@ -1,10 +1,6 @@
 from django import VERSION as DJANGO_VERSION
 from django.core.management.color import no_style
 from django.db import connection, transaction
-try:
-    from django.utils.six import string_types
-except ImportError:
-    from six import string_types
 
 from .models import PostgresModel
 from ..utils import _get_tables
@@ -35,7 +31,7 @@ class TestUtilsMixin:
             connection.cursor()
 
     def assert_tables(self, queryset, *tables):
-        tables = {table if isinstance(table, string_types)
+        tables = {table if isinstance(table, str)
                   else table._meta.db_table for table in tables}
         self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables)
 

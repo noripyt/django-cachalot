@@ -1,2 +1,1 @@
-Django>=1.11
-six>=1.13
+Django>=2

@@ -21,7 +21,7 @@ Caches your Django ORM queries and automatically invalidates them.
    :target: https://scrutinizer-ci.com/g/noripyt/django-cachalot/
 
 .. image:: https://img.shields.io/badge/cachalot-Chat%20on%20Slack-green?style=flat&logo=slack
-    :target: https://join.slack.com/t/cachalotdjango/shared_invite/enQtOTMyNzI0NTQzOTA3LWViYmYwMWY3MmU0OTZkYmNiMjBhN2NjNjc4OWVlZDNiMjMxN2Y3YzljYmNiYTY4ZTRjOGQxZDRiMTM0NWE3NGI
+    :target: https://join.slack.com/t/cachalotdjango/shared_invite/zt-dd0tj27b-cIH6VlaSOjAWnTG~II5~qw
 
 Usage
 .....
