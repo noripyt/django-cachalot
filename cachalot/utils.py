@@ -105,6 +105,8 @@ def _find_subqueries_in_where(children):
             raise IsRawQuery
         elif child_class is NothingNode:
             pass
+        elif child_class is Subquery or child_class is Exists:
+            pass
         else:
             rhs = child.rhs
             rhs_class = rhs.__class__
@@ -112,11 +114,6 @@ def _find_subqueries_in_where(children):
                 yield rhs
             elif rhs_class is QuerySet:
                 yield rhs.query
-            elif rhs_class is Subquery or rhs_class is Exists:
-                try:
-                    yield rhs.query
-                except:
-                    yield rhs.queryset.query
             elif rhs_class in UNCACHABLE_FUNCS:
                 raise UncachableQuery
 
