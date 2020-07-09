@@ -1,4 +1,13 @@
+os: linux
+dist: xenial
+
 language: python
+cache: pip
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
 
 services:
   - memcached
@@ -6,11 +15,6 @@ services:
   - mysql
   - postgresql
 
-python:
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.8"
 env:
   - DJANGO="2.0"
   - DJANGO="2.1"
@@ -27,8 +31,6 @@ matrix:
     - python: 3.8
       env: DJANGO=2.1
 
-cache: pip
-
 install: pip install tox tox-travis coveralls
 
 before_script:
@@ -39,10 +41,3 @@ before_script:
 script: tox
 
 after_success: coveralls
-
-notifications:
-  email:
-    recipients:
-      - acwangpython@gmail.com
-    on_success: change
-    on_failure: always

@@ -1,0 +1,6 @@
+# Requirements file for benchmark.py
+
+-r tests.txt
+
+pandas
+matplotlib

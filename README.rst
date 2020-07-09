@@ -27,6 +27,42 @@ Quickstart
 
 Cachalot officially supports Python 3.5-3.8 and Django 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
 
+Usage
+.....
+
+#. ``pip install django-cachalot``
+#. Add ``'cachalot',`` to your ``INSTALLED_APPS``
+#. If you use multiple servers with a common cache server,
+   :ref:`double check their clock synchronisation <https://django-cachalot.readthedocs.io/en/latest/limits.html#multiple-servers>`_
+#. If you modify data outside Django
+   – typically after restoring a SQL database –,
+   use the :ref:`manage.py command <https://django-cachalot.readthedocs.io/en/latest/quickstart.html#command>`_
+#. Be aware of :ref:`the few other limits <https://django-cachalot.readthedocs.io/en/latest/limits.html#limits>`_
+#. If you use
+   `django-debug-toolbar <https://github.com/jazzband/django-debug-toolbar>`_,
+   you can add ``'cachalot.panels.CachalotPanel',``
+   to your ``DEBUG_TOOLBAR_PANELS``
+#. Enjoy!
+
+Hacking
+-------
+
+To start developing, install the requirements
+and run the tests via tox.
+
+Make sure you have the following services:
+
+* Memcached
+* Redis
+* PostgreSQL
+* MySQL
+
+For setup:
+
+#. Install: ``pip install -r requirements/hacking.txt``
+#. For PostgreSQL: ``CREATE ROLE cachalot LOGIN SUPERUSER;``
+#. Run: ``tox --current-env`` to run the test suite on your current Python version.
+
 Third-Party Cache Comparison
 ----------------------------
 
