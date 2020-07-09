@@ -22,22 +22,33 @@ Documentation: http://django-cachalot.readthedocs.io
 .. image:: https://img.shields.io/badge/cachalot-Chat%20on%20Slack-green?style=flat&logo=slack
     :target: https://join.slack.com/t/cachalotdjango/shared_invite/zt-dd0tj27b-cIH6VlaSOjAWnTG~II5~qw
 
+----
+
+Table of Contents:
+
+- Quickstart
+- Usage
+- Hacking
+- Benchmark
+- Third-Party Cache Comparison
+- Discussion
+
 Quickstart
 ----------
 
 Cachalot officially supports Python 3.5-3.8 and Django 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
 
 Usage
-.....
+-----
 
 #. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. If you use multiple servers with a common cache server,
-   :ref:`double check their clock synchronisation <https://django-cachalot.readthedocs.io/en/latest/limits.html#multiple-servers>`_
+   `double check their clock synchronisation <https://django-cachalot.readthedocs.io/en/latest/limits.html#multiple-servers>`_
 #. If you modify data outside Django
    – typically after restoring a SQL database –,
-   use the :ref:`manage.py command <https://django-cachalot.readthedocs.io/en/latest/quickstart.html#command>`_
-#. Be aware of :ref:`the few other limits <https://django-cachalot.readthedocs.io/en/latest/limits.html#limits>`_
+   use the `manage.py command <https://django-cachalot.readthedocs.io/en/latest/quickstart.html#command>`_
+#. Be aware of `the few other limits <https://django-cachalot.readthedocs.io/en/latest/limits.html#limits>`_
 #. If you use
    `django-debug-toolbar <https://github.com/jazzband/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
@@ -62,6 +73,22 @@ For setup:
 #. Install: ``pip install -r requirements/hacking.txt``
 #. For PostgreSQL: ``CREATE ROLE cachalot LOGIN SUPERUSER;``
 #. Run: ``tox --current-env`` to run the test suite on your current Python version.
+
+Benchmark
+---------
+
+Currently, benchmarks are supported on Linux and Mac/Darwin.
+You will need a database called "cachalot" on MySQL and PostgreSQL.
+Additionally, on PostgreSQL, you will need to create a role
+called "cachalot." You can also run the benchmark, and it'll raise
+errors with specific instructions for how to fix it.
+
+#. Install: ``pip install -r requirements/benchmark.txt``
+#. Run: ``python benchmark.py``
+
+The output will be in benchmark/TODAY'S_DATE/
+
+TODO Create Docker-compose file to allow for easier running of data.
 
 Third-Party Cache Comparison
 ----------------------------

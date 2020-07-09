@@ -18,6 +18,17 @@ use unoptimised queries. Of course, they often lack useful indexes
 But what you may not know is that
 **the ORM currently generates totally unoptimised queries** [#]_.
 
+You can run the benchmarks yourself (officially supported on Linux
+and Mac). You will need a database called "cachalot" on MySQL and PostgreSQL.
+Additionally, on PostgreSQL, you will need to create a role
+called "cachalot." You can also run the benchmark, and it'll raise
+errors with specific instructions for how to fix it.
+
+#. Install: ``pip install -r requirements/benchmark.txt``
+#. Run: ``python benchmark.py``
+
+The output will be in benchmark/TODAY'S_DATE/
+
 Conditions
 ..........
 
