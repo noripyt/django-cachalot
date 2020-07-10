@@ -103,9 +103,7 @@ def _find_subqueries_in_where(children):
                 yield grand_child
         elif child_class is ExtraWhere:
             raise IsRawQuery
-        elif child_class is NothingNode:
-            pass
-        elif child_class is Subquery or child_class is Exists:
+        elif child_class in (NothingNode, Subquery, Exists):
             pass
         else:
             rhs = child.rhs
