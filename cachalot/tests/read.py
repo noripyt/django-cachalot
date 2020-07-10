@@ -18,6 +18,7 @@ from django.test import (
 from pytz import UTC
 
 from cachalot.cache import cachalot_caches
+from ..api import cachalot_disabled
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent, UnmanagedModel
@@ -861,6 +862,17 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = UnmanagedModel.objects.all()
         self.assert_tables(qs, UnmanagedModel)
         self.assert_query_cached(qs)
+
+    def test_query_cachalot_disabled_even_if_already_cached(self):
+        """
+        Test that when a query is given the `cachalot_disabled` context manager,
+        the query will not be cached and a query will be performed even if the
+        data is already cached
+        """
+        qs = Test.objects.all()
+        self.assert_query_cached(qs)
+        with cachalot_disabled() and self.assertNumQueries(1):
+            list(qs.all())
 
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):

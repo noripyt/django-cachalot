@@ -10,7 +10,7 @@ from django.db.models.sql.compiler import (
 )
 from django.db.transaction import Atomic, get_connection
 
-from .api import invalidate
+from .api import invalidate, LOCAL_STORAGE
 from .cache import cachalot_caches
 from .settings import cachalot_settings, ITERABLES
 from .utils import (
@@ -66,6 +66,10 @@ def _patch_compiler(original):
     @_unset_raw_connection
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
+        # Checks if utils/cachalot_disabled
+        if not getattr(LOCAL_STORAGE, "cachalot_enabled", True):
+            return execute_query_func()
+
         db_alias = compiler.using
         if db_alias not in cachalot_settings.CACHALOT_DATABASES \
                 or isinstance(compiler, WRITE_COMPILERS):
