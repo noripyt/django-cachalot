@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from django.apps import apps
 from django.conf import settings
 from django.db import connections
@@ -9,7 +11,15 @@ from .transaction import AtomicCache
 from .utils import _invalidate_tables
 
 
-__all__ = ('invalidate', 'get_last_invalidation')
+try:
+    from asgiref.local import Local
+    LOCAL_STORAGE = Local()
+except ImportError:
+    import threading
+    LOCAL_STORAGE = threading.local()
+
+
+__all__ = ('invalidate', 'get_last_invalidation', 'cachalot_disabled')
 
 
 def _cache_db_tables_iterator(tables, cache_alias, db_alias):
@@ -121,3 +131,36 @@ def get_last_invalidation(*tables_or_models, **kwargs):
             if current_last_invalidation > last_invalidation:
                 last_invalidation = current_last_invalidation
     return last_invalidation
+
+
+@contextmanager
+def cachalot_disabled(all_queries=False):
+    """
+    Context manager for temporarily disabling cachalot.
+    If you evaluate the same queryset a second time,
+    like normally for Django querysets, this will access
+    the variable that saved it in-memory.
+
+    For example:
+    with cachalot_disabled():
+        qs = Test.objects.filter(blah=blah)
+        # Does a single query to the db
+        list(qs)  # Evaluates queryset
+        # Because the qs was evaluated, it's
+        # saved in memory:
+        list(qs)  # this does 0 queries.
+        # This does 1 query to the db
+        list(Test.objects.filter(blah=blah))
+
+    If you evaluate the queryset outside the context manager, any duplicate
+    query will use the cached result unless an object creation happens in between
+    the original and duplicate query.
+
+    :arg all_queries: Any query, including already evaluated queries, are re-evaluated.
+    :type all_queries: bool
+    """
+    was_enabled = getattr(LOCAL_STORAGE, "cachalot_enabled", cachalot_settings.CACHALOT_ENABLED)
+    LOCAL_STORAGE.enabled = False
+    LOCAL_STORAGE.disable_on_all = all_queries
+    yield
+    LOCAL_STORAGE.enabled = was_enabled
