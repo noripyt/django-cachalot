@@ -863,14 +863,44 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, UnmanagedModel)
         self.assert_query_cached(qs)
 
+    def test_cachalot_disabled_multiple_queries_ignoring_in_mem_cache(self):
+        """
+        Test that when queries are given the `cachalot_disabled` context manager,
+        the queries will not be cached.
+        """
+        with cachalot_disabled(True):
+            qs = Test.objects.all()
+            with self.assertNumQueries(1):
+                data1 = list(qs.all())
+            Test.objects.create(
+                name='test3', owner=self.user,
+                date='1789-07-14', datetime='1789-07-14T16:43:27',
+                permission=self.t1__permission)
+            with self.assertNumQueries(1):
+                data2 = list(qs.all())
+            self.assertNotEqual(data1, data2)
+
     def test_query_cachalot_disabled_even_if_already_cached(self):
         """
         Test that when a query is given the `cachalot_disabled` context manager,
-        the query will not be cached and a query will be performed even if the
-        data is already cached
+        the query outside of the context manager will be cached. Any duplicated
+        query will use the original query's cached result.
         """
         qs = Test.objects.all()
         self.assert_query_cached(qs)
+        with cachalot_disabled() and self.assertNumQueries(0):
+            list(qs.all())
+
+    def test_duplicate_query_execute_anyways(self):
+        """After an object is created, a duplicate query should execute
+        rather than use the cached result.
+        """
+        qs = Test.objects.all()
+        self.assert_query_cached(qs)
+        Test.objects.create(
+            name='test3', owner=self.user,
+            date='1789-07-14', datetime='1789-07-14T16:43:27',
+            permission=self.t1__permission)
         with cachalot_disabled() and self.assertNumQueries(1):
             list(qs.all())
 
