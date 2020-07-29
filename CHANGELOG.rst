@@ -4,7 +4,14 @@ What’s new in django-cachalot?
 2.3.0
 -----
 
+- Added context manager for temporarily disabling cachalot using `cachalot_disabled()`
+- Fix for certain Subquery cases.
+
+2.2.2
+-----
+
 - Drop support for Django 1.11 and Python 2.7
+- Added fix for subqueries from Django 2.2
 
 2.2.0
 -----
