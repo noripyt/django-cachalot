@@ -11,7 +11,7 @@ from .settings import (
 
 @register(Tags.compatibility)
 def check_django_version(app_configs, **kwargs):
-    if not (2, 0) <= django_version < (3, 1):
+    if not (2, 0) <= django_version < (3, 2):
         return [Error(
             'Django %s is not compatible with this version of django-cachalot.'
             % django__version__,

@@ -1,11 +1,8 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 from time import time, sleep
 from unittest import skipIf
 
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core.cache import DEFAULT_CACHE_ALIAS, caches
 from django.core.management import call_command
 from django.db import connection, transaction, DEFAULT_DB_ALIAS
@@ -26,6 +23,10 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
         self.t1 = Test.objects.create(name='test1')
         self.cache_alias2 = next(alias for alias in settings.CACHES
                                  if alias != DEFAULT_CACHE_ALIAS)
+        # For cachalot_disabled test
+        self.user = User.objects.create_user('user')
+        self.t1__permission = (Permission.objects.order_by('?')
+                               .select_related('content_type')[0])
 
     def test_invalidate_tables(self):
         with self.assertNumQueries(1):
@@ -264,9 +265,51 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
                                    'cache': self.cache_alias2})
         self.assertEqual(content, 'better!')
 
+    def test_cachalot_disabled_multiple_queries_ignoring_in_mem_cache(self):
+        """
+        Test that when queries are given the `cachalot_disabled` context manager,
+        the queries will not be cached.
+        """
+        with cachalot_disabled(True):
+            qs = Test.objects.all()
+            with self.assertNumQueries(1):
+                data1 = list(qs.all())
+            Test.objects.create(
+                name='test3', owner=self.user,
+                date='1789-07-14', datetime='1789-07-14T16:43:27',
+                permission=self.t1__permission)
+            with self.assertNumQueries(1):
+                data2 = list(qs.all())
+            self.assertNotEqual(data1, data2)
+
+    def test_query_cachalot_disabled_even_if_already_cached(self):
+        """
+        Test that when a query is given the `cachalot_disabled` context manager,
+        the query outside of the context manager will be cached. Any duplicated
+        query will use the original query's cached result.
+        """
+        qs = Test.objects.all()
+        self.assert_query_cached(qs)
+        with cachalot_disabled() and self.assertNumQueries(0):
+            list(qs.all())
+
+    def test_duplicate_query_execute_anyways(self):
+        """After an object is created, a duplicate query should execute
+        rather than use the cached result.
+        """
+        qs = Test.objects.all()
+        self.assert_query_cached(qs)
+        Test.objects.create(
+            name='test3', owner=self.user,
+            date='1789-07-14', datetime='1789-07-14T16:43:27',
+            permission=self.t1__permission)
+        with cachalot_disabled() and self.assertNumQueries(1):
+            list(qs.all())
+
 
 class CommandTestCase(TransactionTestCase):
     multi_db = True
+    databases = "__all__"
 
     def setUp(self):
         self.db_alias2 = next(alias for alias in settings.DATABASES

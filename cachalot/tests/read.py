@@ -18,11 +18,20 @@ from django.test import (
 from pytz import UTC
 
 from cachalot.cache import cachalot_caches
-from ..api import cachalot_disabled
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin
+
+
+def is_field_available(name):
+    fields = []
+    try:
+        from django.db.models import JSONField
+        fields.append("JSONField")
+    except ImportError:
+        pass
+    return name in fields
 
 
 class ReadTestCase(TestUtilsMixin, TransactionTestCase):
@@ -862,47 +871,6 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = UnmanagedModel.objects.all()
         self.assert_tables(qs, UnmanagedModel)
         self.assert_query_cached(qs)
-
-    def test_cachalot_disabled_multiple_queries_ignoring_in_mem_cache(self):
-        """
-        Test that when queries are given the `cachalot_disabled` context manager,
-        the queries will not be cached.
-        """
-        with cachalot_disabled(True):
-            qs = Test.objects.all()
-            with self.assertNumQueries(1):
-                data1 = list(qs.all())
-            Test.objects.create(
-                name='test3', owner=self.user,
-                date='1789-07-14', datetime='1789-07-14T16:43:27',
-                permission=self.t1__permission)
-            with self.assertNumQueries(1):
-                data2 = list(qs.all())
-            self.assertNotEqual(data1, data2)
-
-    def test_query_cachalot_disabled_even_if_already_cached(self):
-        """
-        Test that when a query is given the `cachalot_disabled` context manager,
-        the query outside of the context manager will be cached. Any duplicated
-        query will use the original query's cached result.
-        """
-        qs = Test.objects.all()
-        self.assert_query_cached(qs)
-        with cachalot_disabled() and self.assertNumQueries(0):
-            list(qs.all())
-
-    def test_duplicate_query_execute_anyways(self):
-        """After an object is created, a duplicate query should execute
-        rather than use the cached result.
-        """
-        qs = Test.objects.all()
-        self.assert_query_cached(qs)
-        Test.objects.create(
-            name='test3', owner=self.user,
-            date='1789-07-14', datetime='1789-07-14T16:43:27',
-            permission=self.t1__permission)
-        with cachalot_disabled() and self.assertNumQueries(1):
-            list(qs.all())
 
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):

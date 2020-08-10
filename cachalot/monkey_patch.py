@@ -2,8 +2,8 @@ from collections.abc import Iterable
 from functools import wraps
 from time import time
 
+from django.core.exceptions import EmptyResultSet
 from django.db.backends.utils import CursorWrapper
-from django.db.models.query import EmptyResultSet
 from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,

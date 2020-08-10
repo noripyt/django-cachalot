@@ -30,17 +30,22 @@ CACHABLE_PARAM_TYPES = {
 UNCACHABLE_FUNCS = {Now, TransactionNow}
 
 try:
+    # TODO Drop after Dj30 drop
+    from django.contrib.postgres.fields.jsonb import JsonAdapter
+    CACHABLE_PARAM_TYPES.update((JsonAdapter,))
+except ImportError:
+    pass
+
+try:
     from psycopg2 import Binary
     from psycopg2.extras import (
         NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json)
-    from django.contrib.postgres.fields.jsonb import JsonAdapter
-
 except ImportError:
     pass
 else:
     CACHABLE_PARAM_TYPES.update((
         Binary, NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet,
-        Json, JsonAdapter))
+        Json,))
 
 
 def check_parameter_types(params):

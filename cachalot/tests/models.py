@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField,
-    IntegerRangeField, JSONField, FloatRangeField, DateRangeField,
+    IntegerRangeField, DateRangeField,
     DateTimeRangeField)
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
@@ -29,6 +29,12 @@ class Test(Model):
     duration = DurationField(null=True, blank=True)
     uuid = UUIDField(null=True, blank=True)
 
+    try:
+        from django.db.models import JSONField
+        json = JSONField(null=True, blank=True)
+    except ImportError:
+        pass
+
     class Meta:
         ordering = ('name',)
 
@@ -47,11 +53,24 @@ class PostgresModel(Model):
                            null=True, blank=True)
 
     hstore = HStoreField(null=True, blank=True)
-
-    json = JSONField(null=True, blank=True)
+    try:
+        from django.contrib.postgres.fields import JSONField
+        json = JSONField(null=True, blank=True)
+    except ImportError:
+        pass
 
     int_range = IntegerRangeField(null=True, blank=True)
-    float_range = FloatRangeField(null=True, blank=True)
+    try:
+        from django.contrib.postgres.fields import FloatRangeField
+        float_range = FloatRangeField(null=True, blank=True)
+    except ImportError:
+        pass
+
+    try:
+        from django.contrib.postgres.fields import DecimalRangeField
+        decimal_range = DecimalRangeField(null=True, blank=True)
+    except ImportError:
+        pass
     date_range = DateRangeField(null=True, blank=True)
     datetime_range = DateTimeRangeField(null=True, blank=True)
 
