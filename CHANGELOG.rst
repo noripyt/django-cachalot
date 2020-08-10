@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.1
+-----
+
+- Added support for Django 3.1, including the new, native JSONField
+
 2.3.0
 -----
 

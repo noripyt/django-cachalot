@@ -67,7 +67,8 @@ There are three main third party caches: cachalot, cache-machine, and cache-ops.
 TL;DR Use cachalot for cold or modified <50 times per seconds (Most people should stick with only cachalot since you
 most likely won't need to scale to the point of needing cache-machine added to the bowl). If you're an enterprise that
 already has huge statistics, then mixing cold caches for cachalot and your hot caches with cache-machine is the best
-mix.
+mix. However, when performing joins with select_related and prefetch_related, you can
+get a nearly 100x speed up for your initial deployment.
 
 Recall, cachalot caches THE ENTIRE TABLE. That's where its inefficiency stems from: if you keep updating the records,
 then the cachalot constantly invalidates the table and re-caches. Luckily caching is very efficient, it's just the cache

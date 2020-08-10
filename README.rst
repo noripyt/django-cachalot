@@ -10,6 +10,9 @@ Documentation: http://django-cachalot.readthedocs.io
 .. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square&maxAge=3600
    :target: https://pypi.python.org/pypi/django-cachalot
 
+.. image:: https://img.shields.io/pypi/pyversions/django-cachalot
+    :target: https://django-cachalot.readthedocs.io/en/latest/
+
 .. image:: https://travis-ci.com/noripyt/django-cachalot.svg?branch=master
    :target: https://travis-ci.com/noripyt/django-cachalot
 
@@ -36,7 +39,7 @@ Table of Contents:
 Quickstart
 ----------
 
-Cachalot officially supports Python 3.5-3.8 and Django 2.0-2.2, 3.0 with the databases PostgreSQL, SQLite, and MySQL.
+Cachalot officially supports Python 3.5-3.8 and Django 2.0-2.2, 3.0-3.1 with the databases PostgreSQL, SQLite, and MySQL.
 
 Usage
 -----
@@ -73,6 +76,7 @@ For setup:
 #. Install: ``pip install -r requirements/hacking.txt``
 #. For PostgreSQL: ``CREATE ROLE cachalot LOGIN SUPERUSER;``
 #. Run: ``tox --current-env`` to run the test suite on your current Python version.
+#. You can also run specific databases and Django versions: ``tox -e py38-django3.1-postgresql-redis``
 
 Benchmark
 ---------
@@ -98,7 +102,8 @@ There are three main third party caches: cachalot, cache-machine, and cache-ops.
 TL;DR Use cachalot for cold or modified <50 times per seconds (Most people should stick with only cachalot since you
 most likely won't need to scale to the point of needing cache-machine added to the bowl). If you're an enterprise that
 already has huge statistics, then mixing cold caches for cachalot and your hot caches with cache-machine is the best
-mix.
+mix. However, when performing joins with ``select_related`` and ``prefetch_related``, you can
+get a nearly 100x speed up for your initial deployment.
 
 Recall, cachalot caches THE ENTIRE TABLE. That's where its inefficiency stems from: if you keep updating the records,
 then the cachalot constantly invalidates the table and re-caches. Luckily caching is very efficient, it's just the cache

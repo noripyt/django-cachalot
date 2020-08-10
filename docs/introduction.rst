@@ -13,7 +13,8 @@ That’s because every possible SQL query on the project ends up being cached.
 
 Django-cachalot is especially efficient in the Django administration website
 since it’s unfortunately badly optimised (use foreign keys in ``list_editable``
-if you need to be convinced).
+if you need to be convinced). One of the best suited is ``select_related`` and
+``prefetch_related`` operations.
 
 However, it’s not suited for projects where there is **a high number
 of modifications per second** on each table, like a social network with
