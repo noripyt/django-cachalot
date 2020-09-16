@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.2
+-----
+
+- Cast memoryview objects to bytes to be able to pickle them (#163)
+
 2.3.1
 -----
 
