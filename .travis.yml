@@ -8,6 +8,7 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
+  - "3.9"
 
 services:
   - memcached
@@ -32,6 +33,10 @@ matrix:
     - python: 3.8
       env: DJANGO=2.0
     - python: 3.8
+      env: DJANGO=2.1
+    - python: 3.9
+      env: DJANGO=2.0
+    - python: 3.9
       env: DJANGO=2.1
 
 install: pip install tox tox-travis coveralls
