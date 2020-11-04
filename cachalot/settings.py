@@ -8,6 +8,7 @@ SUPPORTED_DATABASE_ENGINES = {
     'django.db.backends.mysql',
     # TODO: Remove when we drop Django 2.x support.
     'django.db.backends.postgresql_psycopg2',
+    'django_db_geventpool.backends.postgresql_psycopg2',
 
     # GeoDjango
     'django.contrib.gis.db.backends.spatialite',
