@@ -142,15 +142,18 @@ def cachalot_disabled(all_queries=False):
     the variable that saved it in-memory.
 
     For example:
-    with cachalot_disabled():
-        qs = Test.objects.filter(blah=blah)
-        # Does a single query to the db
-        list(qs)  # Evaluates queryset
-        # Because the qs was evaluated, it's
-        # saved in memory:
-        list(qs)  # this does 0 queries.
-        # This does 1 query to the db
-        list(Test.objects.filter(blah=blah))
+
+    .. code-block:: python
+
+        with cachalot_disabled():
+            qs = Test.objects.filter(blah=blah)
+            # Does a single query to the db
+            list(qs)  # Evaluates queryset
+            # Because the qs was evaluated, it's
+            # saved in memory:
+            list(qs)  # this does 0 queries.
+            # This does 1 query to the db
+            list(Test.objects.filter(blah=blah))
 
     If you evaluate the queryset outside the context manager, any duplicate
     query will use the cached result unless an object creation happens in between

@@ -7,7 +7,7 @@ High rate of database modifications
 ...................................
 
 Do not use django-cachalot if your project has more than 50 database
-modifications per second on most of its tables. There will be no problem,
+modifications per minute on most of its tables. There will be no problem,
 but django-cachalot will become inefficient and will end up slowing
 your project instead of speeding it.
 Read :ref:`the introduction <Introduction>` for more details.

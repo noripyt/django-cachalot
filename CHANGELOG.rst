@@ -1,6 +1,15 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.3
+-----
+
+- Remove deprecated signal argument (#165)
+- Add Python 3.9 support
+- Use Discord instead since Slack doesn't save messages,
+  @Andrew-Chen-Wang is not on there very much, and Discord
+  has a phenomenal search functionality (with ES).
+
 2.3.2
 -----
 
@@ -28,7 +37,9 @@ What’s new in django-cachalot?
 
 - Adds Django 2.2 and 3.0 support.
 - Dropped official support for Python 3.4
-    - It won't run properly with Travis CI tests on MySQL.
+
+  - It won't run properly with Travis CI tests on MySQL.
+
 - All Travis CI tests are fully functional.
 
 2.1.0

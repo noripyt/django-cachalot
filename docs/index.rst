@@ -20,8 +20,8 @@ Caches your Django ORM queries and automatically invalidates them.
 .. image:: http://img.shields.io/scrutinizer/g/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
    :target: https://scrutinizer-ci.com/g/noripyt/django-cachalot/
 
-.. image:: https://img.shields.io/badge/cachalot-Chat%20on%20Slack-green?style=flat&logo=slack
-    :target: https://join.slack.com/t/cachalotdjango/shared_invite/zt-dd0tj27b-cIH6VlaSOjAWnTG~II5~qw
+.. image:: https://img.shields.io/discord/773656139207802881
+    :target: https://discord.gg/WFGFBk8rSU
 
 Usage
 .....
@@ -64,7 +64,7 @@ In-depth opinion (from new maintainer):
 
 There are three main third party caches: cachalot, cache-machine, and cache-ops. Which do you use? We suggest a mix:
 
-TL;DR Use cachalot for cold or modified <50 times per seconds (Most people should stick with only cachalot since you
+TL;DR Use cachalot for cold or modified <50 times per minutes (Most people should stick with only cachalot since you
 most likely won't need to scale to the point of needing cache-machine added to the bowl). If you're an enterprise that
 already has huge statistics, then mixing cold caches for cachalot and your hot caches with cache-machine is the best
 mix. However, when performing joins with select_related and prefetch_related, you can
@@ -78,7 +78,7 @@ Cachalot is more-or-less intended for cold caches or "just-right" conditions. If
 Django (also authored but work-in-progress by `Andrew Chen Wang <https://github.com/Andrew-Chen-Wang>`_),
 then the caching will work better since sharding the cold/accessed-the-least records aren't invalidated as much.
 
-Cachalot is good when there are <50 modifications per second on a hot cached table. This is mostly due to cache invalidation. It's the same with any cache,
+Cachalot is good when there are <50 modifications per minute on a hot cached table. This is mostly due to cache invalidation. It's the same with any cache,
 which is why we suggest you use cache-machine for hot caches. Cache-machine caches individual objects, taking up more in the memory store but
 invalidates those individual objects instead of the entire table like cachalot.
 

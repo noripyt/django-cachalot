@@ -5,7 +5,7 @@ Requirements
 ............
 
 - Django 2.0-2.2, 3.0-3.1
-- Python 3.5-3.8
+- Python 3.5-3.9
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwinz/django-redis>`_

@@ -17,8 +17,8 @@ if you need to be convinced). One of the best suited is ``select_related`` and
 ``prefetch_related`` operations.
 
 However, it’s not suited for projects where there is **a high number
-of modifications per second** on each table, like a social network with
-more than a 50 messages per second. Django-cachalot may still give a small
+of modifications per minute** on each table, like a social network with
+more than a 50 messages per minute. Django-cachalot may still give a small
 speedup in such cases, but it may also slow things a bit
 (in the worst case scenario, a 20% slowdown,
 according to :ref:`the benchmark <Benchmark>`).
