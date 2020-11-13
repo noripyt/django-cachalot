@@ -34,6 +34,12 @@ SUPPORTED_CACHE_BACKENDS = {
     'django_redis.cache.RedisCache',
     'django.core.cache.backends.memcached.MemcachedCache',
     'django.core.cache.backends.memcached.PyLibMCCache',
+
+    # django-prometheus wrapped backends
+    'django_prometheus.cache.backends.locmem.LocMemCache',
+    'django_prometheus.cache.backends.filebased.FileBasedCache',
+    'django_prometheus.cache.backends.memcached.MemcachedCache',
+    'django_prometheus.cache.backends.redis.RedisCache',
 }
 
 SUPPORTED_ONLY = 'supported_only'
