@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.4
+-----
+
+- Fix bug with externally invalidated cache keys (#120)
+
 2.3.3
 -----
 
