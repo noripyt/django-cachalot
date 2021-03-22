@@ -1,6 +1,3 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
 import os
 
 
@@ -13,16 +10,19 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'cachalot',
         'USER': 'cachalot',
-        'PASSWORD': 'cachalot',
+        'HOST': 'localhost',
     },
     'mysql': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cachalot',
         'USER': 'root',
+        'HOST': 'localhost',
     },
 }
 if 'MYSQL_PASSWORD' in os.environ:
     DATABASES['mysql']['PASSWORD'] = os.environ['MYSQL_PASSWORD']
+if 'POSTGRES_PASSWORD' in os.environ:
+    DATABASES['postgresql']['PASSWORD'] = os.environ['POSTGRES_PASSWORD']
 for alias in DATABASES:
     if 'TEST' not in DATABASES[alias]:
         test_db_name = 'test_' + DATABASES[alias]['NAME']
