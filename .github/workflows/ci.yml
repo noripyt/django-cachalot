@@ -15,17 +15,17 @@ jobs:
         python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
         django-version: [2.0, 2.1, 2.2, 3.0, 3.1]
         exclude:
-          - python: 3.5
+          - python-version: 3.5
             django-version: 3.0
-          - python: 3.5
+          - python-version: 3.5
             django-version: 3.1
-          - python: 3.8
+          - python-version: 3.8
             django-version: 2.0
-          - python: 3.8
+          - python-version: 3.8
             django-version: 2.1
-          - python: 3.9
+          - python-version: 3.9
             django-version: 2.0
-          - python: 3.9
+          - python-version: 3.9
             django-version: 2.1
 
     services:
