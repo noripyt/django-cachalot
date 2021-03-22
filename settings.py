@@ -13,6 +13,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'cachalot',
         'USER': 'cachalot',
+        'PASSWORD': 'cachalot',
     },
     'mysql': {
         'ENGINE': 'django.db.backends.mysql',
