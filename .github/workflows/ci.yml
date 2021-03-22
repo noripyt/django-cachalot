@@ -70,6 +70,6 @@ jobs:
         DJANGO: ${{ matrix.django-version }}
     - name: Coverage (Coveralls)
       if: ${{ success() }}
-      run: coveralls
+      run: coveralls --service=github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
