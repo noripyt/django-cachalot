@@ -10,13 +10,13 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'cachalot',
         'USER': 'cachalot',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
     },
     'mysql': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cachalot',
         'USER': 'root',
-        'HOST': 'localhost',
+        'HOST': '127.0.0.1',
     },
 }
 if 'MYSQL_PASSWORD' in os.environ:
