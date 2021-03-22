@@ -22,7 +22,7 @@ DATABASES = {
 if 'MYSQL_PASSWORD' in os.environ:
     DATABASES['mysql']['PASSWORD'] = os.environ['MYSQL_PASSWORD']
 if 'POSTGRES_PASSWORD' in os.environ:
-    DATABASES['postgresql']['PASSWORD'] = os.environ.get('POSTGRES_PASSWORD', 'password')
+    DATABASES['postgresql']['PASSWORD'] = os.environ['POSTGRES_PASSWORD']
 for alias in DATABASES:
     if 'TEST' not in DATABASES[alias]:
         test_db_name = 'test_' + DATABASES[alias]['NAME']

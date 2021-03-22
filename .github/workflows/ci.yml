@@ -66,6 +66,8 @@ jobs:
     - name: Tox Test
       run: tox
       env:
+        TOX_TESTENV_PASSENV: POSTGRES_PASSWORD
+        POSTGRES_PASSWORD: password
         DJANGO: ${{ matrix.django-version }}
     - name: Coverage (Coveralls)
       if: ${{ success() }}
