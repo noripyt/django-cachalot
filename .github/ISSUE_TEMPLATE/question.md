@@ -1,6 +1,6 @@
 ---
 name: Question
-about: Ask a generic/specific question here or on the Slack chat
+about: Ask a generic/specific question here or on the Discord chat
 ---
 
 ## Question

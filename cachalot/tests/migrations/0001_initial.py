@@ -1,10 +1,51 @@
 from django.conf import settings
 from django.contrib.postgres.fields import (
-    ArrayField, HStoreField, IntegerRangeField, JSONField, FloatRangeField,
+    ArrayField, HStoreField, IntegerRangeField,
     DateRangeField, DateTimeRangeField)
 from django.contrib.postgres.operations import (
     HStoreExtension, UnaccentExtension)
 from django.db import models, migrations
+
+
+def extra_regular_available_fields():
+    fields = []
+    try:
+        # TODO Add to module import when Dj40 dropped
+        from django import VERSION as DJANGO_VERSION
+        from django.contrib.postgres.fields import JSONField
+        if float(".".join(map(str, DJANGO_VERSION[:2]))) > 3.0:
+            fields.append(('json', JSONField(null=True, blank=True)))
+    except ImportError:
+        pass
+
+    return fields
+
+
+def extra_postgres_available_fields():
+    fields = []
+    try:
+        # TODO Remove when Dj31 support is dropped
+        from django.contrib.postgres.fields import FloatRangeField
+        fields.append(('float_range', FloatRangeField(null=True, blank=True)))
+    except ImportError:
+        pass
+
+    try:
+        # TODO Add to module import when Dj31 is dropped
+        from django.contrib.postgres.fields import DecimalRangeField
+        fields.append(('decimal_range', DecimalRangeField(null=True, blank=True)))
+    except ImportError:
+        pass
+
+    # Future proofing with Django 40 deprecation
+    try:
+        # TODO Remove when Dj40 support is dropped
+        from django.contrib.postgres.fields import JSONField
+        fields.append(('json', JSONField(null=True, blank=True)))
+    except ImportError:
+        pass
+
+    return fields
 
 
 class Migration(migrations.Migration):
@@ -31,7 +72,7 @@ class Migration(migrations.Migration):
                 ('ip', models.GenericIPAddressField(null=True, blank=True)),
                 ('duration', models.DurationField(null=True, blank=True)),
                 ('uuid', models.UUIDField(null=True, blank=True)),
-            ],
+            ] + extra_regular_available_fields(),
             options={
                 'ordering': ('name',),
             },
@@ -63,12 +104,10 @@ class Migration(migrations.Migration):
                     models.IntegerField(null=True, blank=True), size=3,
                     null=True, blank=True)),
                 ('hstore', HStoreField(null=True, blank=True)),
-                ('json', JSONField(null=True, blank=True)),
                 ('int_range', IntegerRangeField(null=True, blank=True)),
-                ('float_range', FloatRangeField(null=True, blank=True)),
                 ('date_range', DateRangeField(null=True, blank=True)),
                 ('datetime_range', DateTimeRangeField(null=True, blank=True)),
-            ],
+            ] + extra_postgres_available_fields(),
         ),
         migrations.RunSQL('CREATE TABLE cachalot_unmanagedmodel '
                           '(id SERIAL PRIMARY KEY, name VARCHAR(50));'),

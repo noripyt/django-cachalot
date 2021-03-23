@@ -1,4 +1,14 @@
+os: linux
+dist: xenial
+
 language: python
+cache: pip
+python:
+  - "3.5"
+  - "3.6"
+  - "3.7"
+  - "3.8"
+  - "3.9"
 
 services:
   - memcached
@@ -6,28 +16,28 @@ services:
   - mysql
   - postgresql
 
-python:
-  - "3.5"
-  - "3.6"
-  - "3.7"
-  - "3.8"
 env:
   - DJANGO="2.0"
   - DJANGO="2.1"
   - DJANGO="2.2"
   - DJANGO="3.0"
+  - DJANGO="3.1"
 
 matrix:
   exclude:
     - python: 3.5
       env: DJANGO=3.0
+    - python: 3.5
+      env: DJANGO=3.1
 
     - python: 3.8
       env: DJANGO=2.0
     - python: 3.8
       env: DJANGO=2.1
-
-cache: pip
+    - python: 3.9
+      env: DJANGO=2.0
+    - python: 3.9
+      env: DJANGO=2.1
 
 install: pip install tox tox-travis coveralls
 
@@ -39,10 +49,3 @@ before_script:
 script: tox
 
 after_success: coveralls
-
-notifications:
-  email:
-    recipients:
-      - acwangpython@gmail.com
-    on_success: change
-    on_failure: always

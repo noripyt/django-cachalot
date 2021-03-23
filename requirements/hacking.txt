@@ -1,0 +1,8 @@
+# Requirements file for testing and
+# contributing to Django cachalot
+
+-r tests.txt
+
+tox
+tox-current-env
+coverage

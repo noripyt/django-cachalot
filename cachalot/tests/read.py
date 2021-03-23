@@ -24,6 +24,16 @@ from .models import Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin
 
 
+def is_field_available(name):
+    fields = []
+    try:
+        from django.db.models import JSONField
+        fields.append("JSONField")
+    except ImportError:
+        pass
+    return name in fields
+
+
 class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     """
     Tests if every SQL request that only reads data is cached.

@@ -1,17 +1,51 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.4
+-----
+
+- Fix bug with externally invalidated cache keys (#120)
+- Omit test files in coverage
+
+2.3.3
+-----
+
+- Remove deprecated signal argument (#165)
+- Add Python 3.9 support
+- Use Discord instead since Slack doesn't save messages,
+  @Andrew-Chen-Wang is not on there very much, and Discord
+  has a phenomenal search functionality (with ES).
+
+2.3.2
+-----
+
+- Cast memoryview objects to bytes to be able to pickle them (#163)
+
+2.3.1
+-----
+
+- Added support for Django 3.1, including the new, native JSONField
+
 2.3.0
 -----
 
+- Added context manager for temporarily disabling cachalot using `cachalot_disabled()`
+- Fix for certain Subquery cases.
+
+2.2.2
+-----
+
 - Drop support for Django 1.11 and Python 2.7
+- Added fix for subqueries from Django 2.2
 
 2.2.0
 -----
 
 - Adds Django 2.2 and 3.0 support.
 - Dropped official support for Python 3.4
-    - It won't run properly with Travis CI tests on MySQL.
+
+  - It won't run properly with Travis CI tests on MySQL.
+
 - All Travis CI tests are fully functional.
 
 2.1.0

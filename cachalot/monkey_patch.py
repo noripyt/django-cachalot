@@ -1,16 +1,16 @@
-from collections import Iterable
+from collections.abc import Iterable
 from functools import wraps
 from time import time
 
+from django.core.exceptions import EmptyResultSet
 from django.db.backends.utils import CursorWrapper
-from django.db.models.query import EmptyResultSet
 from django.db.models.signals import post_migrate
 from django.db.models.sql.compiler import (
     SQLCompiler, SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler,
 )
 from django.db.transaction import Atomic, get_connection
 
-from .api import invalidate
+from .api import invalidate, LOCAL_STORAGE
 from .cache import cachalot_caches
 from .settings import cachalot_settings, ITERABLES
 from .utils import (
@@ -34,20 +34,24 @@ def _unset_raw_connection(original):
 
 def _get_result_or_execute_query(execute_query_func, cache,
                                  cache_key, table_cache_keys):
-    data = cache.get_many(table_cache_keys + [cache_key])
+    try:
+        data = cache.get_many(table_cache_keys + [cache_key])
+    except KeyError:
+        data = None
 
     new_table_cache_keys = set(table_cache_keys)
-    new_table_cache_keys.difference_update(data)
+    if data:
+        new_table_cache_keys.difference_update(data)
 
-    if not new_table_cache_keys:
-        try:
-            timestamp, result = data.pop(cache_key)
-            if timestamp >= max(data.values()):
-                return result
-        except (KeyError, TypeError, ValueError):
-            # In case `cache_key` is not in `data` or contains bad data,
-            # we simply run the query and cache again the results.
-            pass
+        if not new_table_cache_keys:
+            try:
+                timestamp, result = data.pop(cache_key)
+                if timestamp >= max(data.values()):
+                    return result
+            except (KeyError, TypeError, ValueError):
+                # In case `cache_key` is not in `data` or contains bad data,
+                # we simply run the query and cache again the results.
+                pass
 
     result = execute_query_func()
     if result.__class__ not in ITERABLES and isinstance(result, Iterable):
@@ -66,6 +70,10 @@ def _patch_compiler(original):
     @_unset_raw_connection
     def inner(compiler, *args, **kwargs):
         execute_query_func = lambda: original(compiler, *args, **kwargs)
+        # Checks if utils/cachalot_disabled
+        if not getattr(LOCAL_STORAGE, "cachalot_enabled", True):
+            return execute_query_func()
+
         db_alias = compiler.using
         if db_alias not in cachalot_settings.CACHALOT_DATABASES \
                 or isinstance(compiler, WRITE_COMPILERS):

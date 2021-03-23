@@ -17,8 +17,10 @@ class TestUtilsMixin:
     #       https://code.djangoproject.com/ticket/29494
     def tearDown(self):
         if connection.vendor == 'postgresql':
-            flush_sql_list = connection.ops.sql_flush(
-                no_style(), (PostgresModel._meta.db_table,), ())
+            flush_args = [no_style(), (PostgresModel._meta.db_table,),]
+            if float(".".join(map(str, DJANGO_VERSION[:2]))) < 3.1:
+                flush_args.append(())
+            flush_sql_list = connection.ops.sql_flush(*flush_args)
             with transaction.atomic():
                 for sql in flush_sql_list:
                     with connection.cursor() as cursor:
@@ -73,15 +75,14 @@ class TestUtilsMixin:
 
         :return: bool is Django 2.1 or below and is SQLite the DB
         """
-        django_version = DJANGO_VERSION
         if not self.is_sqlite:
             # Immediately know if SQLite
             return False
-        if django_version[0] < 2:
+        if DJANGO_VERSION[0] < 2:
             # Takes Django 0 and 1 out of the picture
             return True
         else:
-            if django_version[0] == 2 and django_version[1] < 2:
+            if DJANGO_VERSION[0] == 2 and DJANGO_VERSION[1] < 2:
                 # Takes Django 2.0-2.1 out
                 return True
             return False

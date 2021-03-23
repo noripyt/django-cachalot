@@ -16,6 +16,29 @@ from .test_utils import TestUtilsMixin
 
 # FIXME: Add tests for aggregations.
 
+def is_pg_field_available(name):
+    fields = []
+    try:
+        from django.contrib.postgres.fields import FloatRangeField
+        fields.append("FloatRangeField")
+    except ImportError:
+        pass
+
+    try:
+        from django.contrib.postgres.fields import DecimalRangeField
+        fields.append("DecimalRangeField")
+    except ImportError:
+        pass
+
+    try:
+        from django import VERSION
+        from django.contrib.postgres.fields import JSONField
+        if VERSION[0] < 4:
+            fields.append("JSONField")
+    except ImportError:
+        pass
+    return name in fields
+
 
 @skipUnless(connection.vendor == 'postgresql',
             'This test is only for PostgreSQL')
@@ -24,17 +47,25 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
     def setUp(self):
         self.obj1 = PostgresModel(
             int_array=[1, 2, 3],
-            json={'a': 1, 'b': 2},
             hstore={'a': 'b', 'c': None},
-            int_range=[1900, 2000], float_range=[-1e3, 9.87654321],
+            int_range=[1900, 2000],
             date_range=['1678-03-04', '1741-07-28'],
-            datetime_range=[datetime(1989, 1, 30, 12, 20,
-                                     tzinfo=timezone('Europe/Paris')), None])
-        self.obj1.save()
+            datetime_range=[
+                datetime(1989, 1, 30, 12, 20,
+                         tzinfo=timezone('Europe/Paris')), None
+            ]
+        )
 
         self.obj2 = PostgresModel(
             int_array=[4, None, 6],
-            json=[
+            hstore={'a': '1', 'b': '2'},
+            int_range=[1989, None],
+            date_range=['1989-01-30', None],
+            datetime_range=[None, None])
+
+        if is_pg_field_available("JSONField"):
+            self.obj1.json = {'a': 1, 'b': 2}
+            self.obj2.json = [
                 'something',
                 {
                     'a': 1,
@@ -49,11 +80,15 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
                         },
                     },
                 },
-            ],
-            hstore={'a': '1', 'b': '2'},
-            int_range=[1989, None], float_range=[0.0, None],
-            date_range=['1989-01-30', None],
-            datetime_range=[None, None])
+            ]
+        if is_pg_field_available("FloatRangeField"):
+            self.obj1.float_range = [-1e3, 9.87654321]
+            self.obj2.float_range = [0.0, None]
+        if is_pg_field_available("DecimalRangeField"):
+            self.obj1.decimal_range = [-1e3, 9.87654321]
+            self.obj2.decimal_range = [0.0, None]
+
+        self.obj1.save()
         self.obj2.save()
 
     def test_unaccent(self):
@@ -163,6 +198,8 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, PostgresModel)
         self.assert_query_cached(qs, [{'a': '1', 'b': '2'}])
 
+    @skipUnless(is_pg_field_available("JSONField"),
+                "JSONField was removed in Dj 4.0")
     def test_json(self):
         with self.assertNumQueries(1):
             data1 = [o.json for o in PostgresModel.objects.all()]
@@ -222,6 +259,8 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, PostgresModel)
         self.assert_query_cached(qs, [self.obj1.json])
 
+    @skipUnless(is_pg_field_available("JSONField"),
+                "JSONField was removed in Dj 4.0")
     def test_mutable_result_change(self):
         """
         Checks that changing a mutable returned by a query has no effect
@@ -346,12 +385,24 @@ class PostgresReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, PostgresModel)
         self.assert_query_cached(qs, [NumericRange(empty=True)])
 
+    @skipUnless(is_pg_field_available("FloatRangeField"),
+                "FloatRangeField was removed in Dj 3.1")
     def test_float_range(self):
         qs = PostgresModel.objects.values_list('float_range', flat=True)
         self.assert_tables(qs, PostgresModel)
         # For a strange reason, probably a misconception in psycopg2
         # or a bad name in django.contrib.postgres (less probable),
         # FloatRange returns decimals instead of floats.
+        # Note from ACW: crisis averted, renamed to DecimalRangeField
+        self.assert_query_cached(qs, [
+            NumericRange(Decimal('-1000.0'), Decimal('9.87654321')),
+            NumericRange(Decimal('0.0'))])
+
+    @skipUnless(is_pg_field_available("DecimalRangeField"),
+                "DecimalRangeField was added in Dj 2.2")
+    def test_decimal_range(self):
+        qs = PostgresModel.objects.values_list('decimal_range', flat=True)
+        self.assert_tables(qs, PostgresModel)
         self.assert_query_cached(qs, [
             NumericRange(Decimal('-1000.0'), Decimal('9.87654321')),
             NumericRange(Decimal('0.0'))])
