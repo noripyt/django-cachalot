@@ -1,4 +1,4 @@
-VERSION = (2, 3, 3)
+VERSION = (2, 3, 4)
 __version__ = '.'.join(map(str, VERSION))
 
-default_app_config = 'cachalot.apps.CachalotConfig'
+default_app_config = "cachalot.apps.CachalotConfig"

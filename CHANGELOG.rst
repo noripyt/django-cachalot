@@ -5,6 +5,7 @@ What’s new in django-cachalot?
 -----
 
 - Fix bug with externally invalidated cache keys (#120)
+- Omit test files in coverage
 
 2.3.3
 -----

@@ -139,9 +139,7 @@ def cachalot_disabled(all_queries=False):
     Context manager for temporarily disabling cachalot.
     If you evaluate the same queryset a second time,
     like normally for Django querysets, this will access
-    the variable that saved it in-memory.
-
-    For example:
+    the variable that saved it in-memory. For example:
 
     .. code-block:: python
 
