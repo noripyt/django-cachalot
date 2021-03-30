@@ -161,7 +161,7 @@ def cachalot_disabled(all_queries=False):
     :type all_queries: bool
     """
     was_enabled = getattr(LOCAL_STORAGE, "cachalot_enabled", cachalot_settings.CACHALOT_ENABLED)
-    LOCAL_STORAGE.enabled = False
+    LOCAL_STORAGE.cachalot_enabled = False
     LOCAL_STORAGE.disable_on_all = all_queries
     yield
-    LOCAL_STORAGE.enabled = was_enabled
+    LOCAL_STORAGE.cachalot_enabled = was_enabled
