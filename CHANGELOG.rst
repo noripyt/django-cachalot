@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.5
+-----
+
+- Fix cachalot_disabled (#174)
+
 2.3.4
 -----
 
