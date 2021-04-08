@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.3.6
+-----
+
+- Remove enforced system check for Django version (#175)
+
 2.3.5
 -----
 
