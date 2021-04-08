@@ -39,7 +39,7 @@ Table of Contents:
 Quickstart
 ----------
 
-Cachalot officially supports Python 3.5-3.9 and Django 2.0-2.2, 3.0-3.1 with the databases PostgreSQL, SQLite, and MySQL.
+Cachalot officially supports Python 3.6-3.9 and Django 2.2, 3.0, 3.1 and 3.2 with the databases PostgreSQL, SQLite, and MySQL.
 
 Usage
 -----
