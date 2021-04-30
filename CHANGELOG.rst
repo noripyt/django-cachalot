@@ -4,7 +4,10 @@ What’s new in django-cachalot?
 2.4.0
 -----
 
+- Add support for Django 3.2 (#181)
 - Remove enforced system check for Django version (#175)
+- Drop support for Django 2.0-2.1 and Python 3.5 (#181)
+- Add support for Pymemcache for Django 3.2+ (#181)
 
 2.3.5
 -----
@@ -291,6 +294,7 @@ Fixed:
         pk__in=User.objects.filter(
             pk__in=User.objects.filter(
                 user_permissions__in=Permission.objects.all())))
+
 - Avoids setting useless cache keys by using table names instead of
   Django-generated table alias
 

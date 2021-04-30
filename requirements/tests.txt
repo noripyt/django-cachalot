@@ -6,6 +6,7 @@ psycopg2-binary
 mysqlclient
 django-redis
 python-memcached
+pymemcache
 pylibmc
 
 pytz

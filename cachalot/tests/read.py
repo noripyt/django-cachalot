@@ -490,8 +490,6 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
 
-    @skipIf(django_version < (2, 0),
-            '`FilteredRelation` was introduced in Django 2.0.')
     def test_filtered_relation(self):
         from django.db.models import FilteredRelation
 
@@ -628,8 +626,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                                      ['test1', 'test2'])
 
     def test_having(self):
-        qs = (User.objects.annotate(n=Count('user_permissions'))
-              .filter(n__gte=1))
+        qs = (User.objects.annotate(n=Count('user_permissions')).filter(n__gte=1))
         self.assert_tables(qs, User, User.user_permissions.through, Permission)
         self.assert_query_cached(qs, [self.user])
 
@@ -688,13 +685,11 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             self.assertEqual(TestChild.objects.get(), t_child)
 
-    @skipIf(django_version < (2, 1),
-            '`QuerySet.explain()` was introduced in Django 2.1.')
     def test_explain(self):
         explain_kwargs = {}
         if self.is_sqlite:
-            expected = (r'0 0 0 SCAN TABLE cachalot_test\n'
-                        r'0 0 0 USE TEMP B-TREE FOR ORDER BY')
+            expected = (r'\d+ 0 0 SCAN TABLE cachalot_test\n'
+                        r'\d+ 0 0 USE TEMP B-TREE FOR ORDER BY')
         elif self.is_mysql:
             expected = (
                 r'1 SIMPLE cachalot_test '
@@ -711,8 +706,8 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 r'  Sort Key: name\n'
                 r'  Sort Method: quicksort  Memory: \d+kB\n'
                 r'  ->  Seq Scan on cachalot_test %s\n'
-                r'Planning time: [\d\.]+ ms\n'
-                r'Execution time: [\d\.]+ ms$') % (operation_detail,
+                r'Planning Time: [\d\.]+ ms\n'
+                r'Execution Time: [\d\.]+ ms$') % (operation_detail,
                                                    operation_detail)
         with self.assertNumQueries(
                 2 if self.is_mysql and django_version[0] < 3
@@ -924,9 +919,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs, after=1 if self.is_sqlite else 0)
 
     def test_float(self):
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1', a_float=0.123456789)
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test2', a_float=12345.6789)
         with self.assertNumQueries(1):
             data1 = list(Test.objects.values_list('a_float', flat=True).filter(
@@ -945,9 +940,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(a_float=0.123456789)
 
     def test_decimal(self):
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1', a_decimal=Decimal('123.45'))
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1', a_decimal=Decimal('12.3'))
 
         qs = Test.objects.values_list('a_decimal', flat=True).filter(
@@ -961,9 +956,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(a_decimal=Decimal('123.45'))
 
     def test_ipv4_address(self):
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1', ip='127.0.0.1')
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test2', ip='192.168.0.1')
 
         qs = Test.objects.values_list('ip', flat=True).filter(
@@ -977,9 +972,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(ip='127.0.0.1')
 
     def test_ipv6_address(self):
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
 
         qs = Test.objects.values_list('ip', flat=True).filter(
@@ -994,9 +989,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
 
     def test_duration(self):
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1', duration=datetime.timedelta(30))
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test2', duration=datetime.timedelta(60))
 
         qs = Test.objects.values_list('duration', flat=True).filter(
@@ -1011,10 +1006,10 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(duration=datetime.timedelta(30))
 
     def test_uuid(self):
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test1',
                                 uuid='1cc401b7-09f4-4520-b8d0-c267576d196b')
-        with self.assertNumQueries(2 if self.is_dj_21_below_and_is_sqlite() else 1):
+        with self.assertNumQueries(1):
             Test.objects.create(name='test2',
                                 uuid='ebb3b6e1-1737-4321-93e3-4c35d61ff491')
 

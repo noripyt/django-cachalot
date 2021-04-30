@@ -147,8 +147,7 @@ def _patch_cursor():
 
     if cachalot_settings.CACHALOT_INVALIDATE_RAW:
         CursorWrapper.execute = _patch_cursor_execute(CursorWrapper.execute)
-        CursorWrapper.executemany = \
-            _patch_cursor_execute(CursorWrapper.executemany)
+        CursorWrapper.executemany = _patch_cursor_execute(CursorWrapper.executemany)
 
 
 def _unpatch_cursor():

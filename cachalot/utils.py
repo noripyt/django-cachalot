@@ -96,8 +96,11 @@ def get_table_cache_key(db_alias, table):
 
 
 def _get_tables_from_sql(connection, lowercased_sql):
-    return {t for t in connection.introspection.django_table_names()
-            if t in lowercased_sql}
+    try:
+        return {t for t in connection.introspection.django_table_names()
+                if t in lowercased_sql}
+    except TypeError:
+        return {}  # Can happen if lowercased_sql is not iterable
 
 
 def _find_subqueries_in_where(children):
@@ -168,8 +171,7 @@ def _get_tables(db_alias, query):
             tables.update(_get_tables(db_alias, subquery))
         # Gets tables in HAVING subqueries.
         if isinstance(query, AggregateQuery):
-            tables.update(
-                _get_tables_from_sql(connections[db_alias], query.subquery))
+            tables.update(_get_tables_from_sql(connections[db_alias], query.subquery))
         # Gets tables in combined queries
         # using `.union`, `.intersection`, or `difference`.
         if query.combined_queries:
