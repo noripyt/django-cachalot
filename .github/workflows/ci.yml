@@ -74,8 +74,8 @@ jobs:
       env:
         TOX_TESTENV_PASSENV: POSTGRES_PASSWORD
         POSTGRES_PASSWORD: password
-        PYTHON_VER: ${{ matrix.python-version }}
-        DJANGO: ${{ matrix.django-version }}
+        PYTHON_VER: "${{ matrix.python-version }}"
+        DJANGO: "${{ matrix.django-version }}"
     - name: Coverage (Coveralls)
       if: ${{ success() }}
       run: coveralls --service=github
