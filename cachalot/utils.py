@@ -97,7 +97,7 @@ def get_table_cache_key(db_alias, table):
 
 def _get_tables_from_sql(connection, lowercased_sql):
     return {t for t in connection.introspection.django_table_names()
-            if t in lowercased_sql}
+            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES if t in lowercased_sql}
 
 
 def _find_subqueries_in_where(children):

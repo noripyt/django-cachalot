@@ -52,6 +52,7 @@ class Settings(object):
     CACHALOT_INVALIDATE_RAW = True
     CACHALOT_ONLY_CACHABLE_TABLES = ()
     CACHALOT_UNCACHABLE_TABLES = ('django_migrations',)
+    CACHALOT_ADDITIONAL_TABLES = ()
     CACHALOT_QUERY_KEYGEN = 'cachalot.utils.get_query_cache_key'
     CACHALOT_TABLE_KEYGEN = 'cachalot.utils.get_table_cache_key'
 
@@ -109,6 +110,11 @@ def convert(value):
 @Settings.add_converter('CACHALOT_UNCACHABLE_TABLES')
 def convert(value):
     return frozenset(value)
+
+
+@Settings.add_converter('CACHALOT_ADDITIONAL_TABLES')
+def convert(value):
+    return list(value)
 
 
 @Settings.add_converter('CACHALOT_QUERY_KEYGEN')
