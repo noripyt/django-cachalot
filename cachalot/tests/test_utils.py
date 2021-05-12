@@ -11,6 +11,7 @@ class TestUtilsMixin:
         self.is_sqlite = connection.vendor == 'sqlite'
         self.is_mysql = connection.vendor == 'mysql'
         self.is_postgresql = connection.vendor == 'postgresql'
+        self.django_version = DJANGO_VERSION
         self.force_reopen_connection()
 
     # TODO: Remove this workaround when this issue is fixed:

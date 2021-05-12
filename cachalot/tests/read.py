@@ -691,9 +691,15 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             expected = (r'\d+ 0 0 SCAN TABLE cachalot_test\n'
                         r'\d+ 0 0 USE TEMP B-TREE FOR ORDER BY')
         elif self.is_mysql:
-            expected = (
-                r'1 SIMPLE cachalot_test '
-                r'(?:None )?ALL None None None None 2 100\.0 Using filesort')
+            if self.django_version < (3, 1):
+                expected = (
+                    r'1 SIMPLE cachalot_test '
+                    r'(?:None )?ALL None None None None 2 100\.0 Using filesort')
+            else:
+                expected = (
+                    r'-> Sort row IDs: cachalot_test.`name`  \(cost=[\d\.]+ rows=\d\)\n    '
+                    r'-> Table scan on cachalot_test  \(cost=[\d\.]+ rows=\d\)\n'
+                )
         else:
             explain_kwargs.update(
                 analyze=True,
