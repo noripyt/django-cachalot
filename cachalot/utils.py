@@ -103,6 +103,18 @@ def _get_tables_from_sql(connection, lowercased_sql):
         return {}  # Can happen if lowercased_sql is not iterable
 
 
+def _find_rhs_lhs_subquery(side):
+    h_class = side.__class__
+    if h_class is Query:
+        return side
+    elif h_class is QuerySet:
+        return side.query
+    elif h_class in (Subquery, Exists):  # Subquery allows QuerySet & Query
+        return side.query.query if side.query.__class__ is QuerySet else side.query
+    elif h_class in UNCACHABLE_FUNCS:
+        raise UncachableQuery
+
+
 def _find_subqueries_in_where(children):
     for child in children:
         child_class = child.__class__
@@ -111,17 +123,15 @@ def _find_subqueries_in_where(children):
                 yield grand_child
         elif child_class is ExtraWhere:
             raise IsRawQuery
-        elif child_class in (NothingNode, Subquery, Exists):
+        elif child_class is NothingNode:
             pass
         else:
-            rhs = child.rhs
-            rhs_class = rhs.__class__
-            if rhs_class is Query:
+            rhs = _find_rhs_lhs_subquery(child.rhs)
+            if rhs is not None:
                 yield rhs
-            elif rhs_class is QuerySet:
-                yield rhs.query
-            elif rhs_class in UNCACHABLE_FUNCS:
-                raise UncachableQuery
+            lhs = _find_rhs_lhs_subquery(child.lhs)
+            if lhs is not None:
+                yield lhs
 
 
 def is_cachable(table):
@@ -161,11 +171,7 @@ def _get_tables(db_alias, query):
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if isinstance(annotation, Subquery):
-                # Django 2.2+ removed queryset in favor of simply using query
-                try:
-                    tables.update(_get_tables(db_alias, annotation.queryset.query))
-                except AttributeError:
-                    tables.update(_get_tables(db_alias, annotation.query))
+                tables.update(_get_tables(db_alias, annotation.query))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))
