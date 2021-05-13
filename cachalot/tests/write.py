@@ -161,8 +161,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, [t1.name])
 
         with self.assertNumQueries(2 if self.is_sqlite else 1):
-            Test.objects.bulk_create([Test(name='test%s' % i)
-                                      for i in range(2, 11)])
+            Test.objects.bulk_create([Test(name=f'test{i}') for i in range(2, 11)])
         with self.assertNumQueries(1):
             self.assertEqual(Test.objects.count(), 10)
         with self.assertNumQueries(2 if self.is_sqlite else 1):

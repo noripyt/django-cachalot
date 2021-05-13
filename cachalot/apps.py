@@ -15,10 +15,8 @@ def check_cache_compatibility(app_configs, **kwargs):
     cache_backend = cache['BACKEND']
     if cache_backend not in SUPPORTED_CACHE_BACKENDS:
         return [Warning(
-            'Cache backend %r is not supported by django-cachalot.'
-            % cache_backend,
-            hint='Switch to a supported cache backend '
-                 'like Redis or Memcached.',
+            f'Cache backend {cache_backend} is not supported by django-cachalot.',
+            hint='Switch to a supported cache backend like Redis or Memcached.',
             id='cachalot.W001')]
     return []
 
@@ -27,14 +25,12 @@ def check_cache_compatibility(app_configs, **kwargs):
 def check_databases_compatibility(app_configs, **kwargs):
     errors = []
     databases = settings.DATABASES
-    original_enabled_databases = getattr(settings, 'CACHALOT_DATABASES',
-                                         SUPPORTED_ONLY)
+    original_enabled_databases = getattr(settings, 'CACHALOT_DATABASES', SUPPORTED_ONLY)
     enabled_databases = cachalot_settings.CACHALOT_DATABASES
     if original_enabled_databases == SUPPORTED_ONLY:
         if not cachalot_settings.CACHALOT_DATABASES:
             errors.append(Warning(
-                'None of the configured databases are supported '
-                'by django-cachalot.',
+                'None of the configured databases are supported by django-cachalot.',
                 hint='Use a supported database, or remove django-cachalot, or '
                      'put at least one database alias in `CACHALOT_DATABASES` '
                      'to force django-cachalot to use it.',
@@ -46,15 +42,15 @@ def check_databases_compatibility(app_configs, **kwargs):
                 engine = databases[db_alias]['ENGINE']
                 if engine not in SUPPORTED_DATABASE_ENGINES:
                     errors.append(Warning(
-                        'Database engine %r is not supported '
-                        'by django-cachalot.' % engine,
+                        f'Database engine {engine} is not supported '
+                        'by django-cachalot.',
                         hint='Switch to a supported database engine.',
-                        id='cachalot.W003'
+                        id='cachalot.W003',
                     ))
             else:
                 errors.append(Error(
-                    'Database alias %r from `CACHALOT_DATABASES` '
-                    'is not defined in `DATABASES`.' % db_alias,
+                    f'Database alias {db_alias} from `CACHALOT_DATABASES` '
+                    'is not defined in `DATABASES`.',
                     hint='Change `CACHALOT_DATABASES` to be compliant with'
                          '`CACHALOT_DATABASES`',
                     id='cachalot.E001',
@@ -69,8 +65,8 @@ def check_databases_compatibility(app_configs, **kwargs):
             ))
     else:
         errors.append(Error(
-            "`CACHALOT_DATABASES` must be either %r or a list, tuple, "
-            "frozenset or set of database aliases." % SUPPORTED_ONLY,
+            f"`CACHALOT_DATABASES` must be either {SUPPORTED_ONLY} or a list, tuple, "
+            "frozenset or set of database aliases.",
             hint='Remove `CACHALOT_DATABASES` or change it.',
             id='cachalot.E002',
         ))

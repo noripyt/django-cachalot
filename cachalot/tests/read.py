@@ -697,24 +697,22 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                     r'(?:None )?ALL None None None None 2 100\.0 Using filesort')
             else:
                 expected = (
-                    r'-> Sort row IDs: cachalot_test.`name`  \(cost=[\d\.]+ rows=\d\)\n    '
-                    r'-> Table scan on cachalot_test  \(cost=[\d\.]+ rows=\d\)\n'
+                    r'-> Sort row IDs: cachalot_test.`name`  \(cost=[\d\.]+ rows=\d\)\n'
+                    r'    -> Table scan on cachalot_test  \(cost=[\d\.]+ rows=\d\)\n'
                 )
         else:
             explain_kwargs.update(
                 analyze=True,
                 costs=False,
             )
-            operation_detail = (r'\(actual time=[\d\.]+..[\d\.]+\ '
-                                r'rows=\d+ loops=\d+\)')
+            operation_detail = r'\(actual time=[\d\.]+..[\d\.]+\ rows=\d+ loops=\d+\)'
             expected = (
-                r'^Sort %s\n'
+                rf'^Sort {operation_detail}\n'
                 r'  Sort Key: name\n'
                 r'  Sort Method: quicksort  Memory: \d+kB\n'
-                r'  ->  Seq Scan on cachalot_test %s\n'
+                rf'  ->  Seq Scan on cachalot_test {operation_detail}\n'
                 r'Planning Time: [\d\.]+ ms\n'
-                r'Execution Time: [\d\.]+ ms$') % (operation_detail,
-                                                   operation_detail)
+                r'Execution Time: [\d\.]+ ms$')
         with self.assertNumQueries(
                 2 if self.is_mysql and django_version[0] < 3
                 else 1):
@@ -729,7 +727,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         Tests if ``Model.objects.raw`` queries are not cached.
         """
 
-        sql = 'SELECT * FROM %s;' % Test._meta.db_table
+        sql = f'SELECT * FROM {Test._meta.db_table};'
 
         with self.assertNumQueries(1):
             data1 = list(Test.objects.raw(sql))
@@ -752,13 +750,10 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         """
         Tests if queries executed from a DB cursor are not cached.
         """
-
-        attname_column_list = [f.get_attname_column()
-                               for f in Test._meta.fields]
+        attname_column_list = [f.get_attname_column() for f in Test._meta.fields]
         attnames = [t[0] for t in attname_column_list]
         columns = [t[1] for t in attname_column_list]
-        sql = "SELECT CAST('é' AS CHAR), %s FROM %s;" % (', '.join(columns),
-                                                         Test._meta.db_table)
+        sql = f"SELECT CAST('é' AS CHAR), {', '.join(columns)} FROM {Test._meta.db_table};"
 
         with self.assertNumQueries(1):
             with connection.cursor() as cursor:
@@ -780,9 +775,8 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                                for f in Test._meta.fields]
         attnames = [t[0] for t in attname_column_list]
         columns = [t[1] for t in attname_column_list]
-        sql = "SELECT CAST('é' AS CHAR), %s FROM %s;" % (', '.join(columns),
-                                                         Test._meta.db_table)
-        sql = sql.encode('utf-8')
+        sql = f"SELECT CAST('é' AS CHAR), {', '.join(columns)} " \
+              f"FROM {Test._meta.db_table};".encode('utf-8')
 
         with self.assertNumQueries(1):
             with connection.cursor() as cursor:
@@ -855,18 +849,18 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         """
         table_name = 'Clémentine'
         if self.is_postgresql:
-            table_name = '"%s"' % table_name
+            table_name = f'"{table_name}"'
         with connection.cursor() as cursor:
-            cursor.execute('CREATE TABLE %s (taste VARCHAR(20));' % table_name)
+            cursor.execute(f'CREATE TABLE {table_name} (taste VARCHAR(20));')
         qs = Test.objects.extra(tables=['Clémentine'],
-                                select={'taste': '%s.taste' % table_name})
+                                select={'taste': f'{table_name}.taste'})
         # Here the table `Clémentine` is not detected because it is not
         # registered by Django, and we only check for registered tables
         # to avoid creating an extra SQL query fetching table names.
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs)
         with connection.cursor() as cursor:
-            cursor.execute('DROP TABLE %s;' % table_name)
+            cursor.execute(f'DROP TABLE {table_name};')
 
     def test_unmanaged_model(self):
         qs = UnmanagedModel.objects.all()

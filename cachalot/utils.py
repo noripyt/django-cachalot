@@ -75,8 +75,7 @@ def get_query_cache_key(compiler):
     """
     sql, params = compiler.as_sql()
     check_parameter_types(params)
-    cache_key = '%s:%s:%s' % (compiler.using, sql,
-                              [str(p) for p in params])
+    cache_key = f'{compiler.using}:{sql}:{[str(p) for p in params]}'
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
@@ -91,7 +90,7 @@ def get_table_cache_key(db_alias, table):
     :return: A cache key
     :rtype: int
     """
-    cache_key = '%s:%s' % (db_alias, table)
+    cache_key = f'{db_alias}:{table}'
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 

@@ -45,7 +45,7 @@ def _get_tables(tables_or_models):
                else table_or_model._meta.db_table)
 
 
-def invalidate(*tables_or_models, **kwargs):
+def invalidate(*tables_or_models, cache_alias=None, db_alias=None) -> None:
     """
     Clears what was cached by django-cachalot implying one or more SQL tables
     or models from ``tables_or_models``.
@@ -68,13 +68,6 @@ def invalidate(*tables_or_models, **kwargs):
     :returns: Nothing
     :rtype: NoneType
     """
-    # TODO: Replace with positional arguments when we drop Python 2 support.
-    cache_alias = kwargs.pop('cache_alias', None)
-    db_alias = kwargs.pop('db_alias', None)
-    for k in kwargs:
-        raise TypeError(
-            "invalidate() got an unexpected keyword argument '%s'" % k)
-
     send_signal = False
     invalidated = set()
     for cache_alias, db_alias, tables in _cache_db_tables_iterator(
@@ -90,7 +83,7 @@ def invalidate(*tables_or_models, **kwargs):
             post_invalidation.send(table, db_alias=db_alias)
 
 
-def get_last_invalidation(*tables_or_models, **kwargs):
+def get_last_invalidation(*tables_or_models, cache_alias=None, db_alias=None):
     """
     Returns the timestamp of the most recent invalidation of the given
     ``tables_or_models``.  If ``tables_or_models`` is not specified,
@@ -112,13 +105,6 @@ def get_last_invalidation(*tables_or_models, **kwargs):
     :returns: The timestamp of the most recent invalidation
     :rtype: float
     """
-    # TODO: Replace with positional arguments when we drop Python 2 support.
-    cache_alias = kwargs.pop('cache_alias', None)
-    db_alias = kwargs.pop('db_alias', None)
-    for k in kwargs:
-        raise TypeError("get_last_invalidation() got an unexpected "
-                        "keyword argument '%s'" % k)
-
     last_invalidation = 0.0
     for cache_alias, db_alias, tables in _cache_db_tables_iterator(
             list(_get_tables(tables_or_models)), cache_alias, db_alias):
@@ -160,7 +146,9 @@ def cachalot_disabled(all_queries=False):
     :arg all_queries: Any query, including already evaluated queries, are re-evaluated.
     :type all_queries: bool
     """
-    was_enabled = getattr(LOCAL_STORAGE, "cachalot_enabled", cachalot_settings.CACHALOT_ENABLED)
+    was_enabled = getattr(
+        LOCAL_STORAGE, "cachalot_enabled", cachalot_settings.CACHALOT_ENABLED
+    )
     LOCAL_STORAGE.cachalot_enabled = False
     LOCAL_STORAGE.disable_on_all = all_queries
     yield

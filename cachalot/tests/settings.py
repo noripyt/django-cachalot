@@ -125,8 +125,7 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         with self.settings(CACHALOT_INVALIDATE_RAW=False):
             with self.assertNumQueries(1):
                 with connection.cursor() as cursor:
-                    cursor.execute("UPDATE %s SET name = 'new name';"
-                                   % Test._meta.db_table)
+                    cursor.execute(f"UPDATE {Test._meta.db_table} SET name = 'new name';")
         with self.assertNumQueries(0):
             list(Test.objects.all())
 

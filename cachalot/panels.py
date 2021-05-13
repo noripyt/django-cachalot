@@ -49,8 +49,7 @@ class CachalotPanel(Panel):
             model_cache_keys = {
                 get_table_cache_key(db_alias, model._meta.db_table): model
                 for model in models}
-            for cache_key, timestamp in cache.get_many(
-                    model_cache_keys.keys()).items():
+            for cache_key, timestamp in cache.get_many(model_cache_keys.keys()).items():
                 invalidation = datetime.fromtimestamp(timestamp)
                 model = model_cache_keys[cache_key]
                 data[db_alias].append(
@@ -64,6 +63,5 @@ class CachalotPanel(Panel):
     @property
     def nav_subtitle(self):
         if self.enabled and self.last_invalidation is not None:
-            return (_('Last invalidation: %s')
-                    % timesince(self.last_invalidation))
+            return _('Last invalidation: %s') % timesince(self.last_invalidation)
         return ''

@@ -22,8 +22,7 @@ class DebugToolbarTestCase(LiveServerTestCase):
         UUID(store_id)
         render_panel_url = toolbar.attrs['data-render-panel-url']
         panel_id = soup.find(title='Cachalot')['class'][0]
-        panel_url = ('%s?store_id=%s&panel_id=%s'
-                     % (render_panel_url, store_id, panel_id))
+        panel_url = f'{render_panel_url}?store_id={store_id}&panel_id={panel_id}'
 
         #
         # Rendering panel

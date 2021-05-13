@@ -12,9 +12,7 @@ class CachalotExtension(Extension):
 
     def __init__(self, environment):
         super(CachalotExtension, self).__init__(environment)
-
-        self.environment.globals.update(
-            get_last_invalidation=get_last_invalidation)
+        self.environment.globals.update(get_last_invalidation=get_last_invalidation)
 
     def parse_args(self, parser):
         args = []
@@ -23,14 +21,11 @@ class CachalotExtension(Extension):
         stream = parser.stream
 
         while stream.current.type != 'block_end':
-            if stream.current.type == 'name' \
-                    and stream.look().type == 'assign':
+            if stream.current.type == 'name' and stream.look().type == 'assign':
                 key = stream.current.value
                 if key not in self.allowed_kwargs:
-                    parser.fail(
-                        "'%s' is not a valid keyword argument "
-                        "for {%% cache %%}" % key,
-                        stream.current.lineno)
+                    parser.fail(f"'{key}' is not a valid keyword argument "
+                                "for {%% cache %%}", stream.current.lineno)
                 stream.skip(2)
                 value = parser.parse_expression()
                 kwargs.append(Keyword(key, value, lineno=value.lineno))
@@ -49,7 +44,7 @@ class CachalotExtension(Extension):
         lineno = next(parser.stream).lineno
         args, kwargs = self.parse_args(parser)
         default_cache_key = (None if parser.filename is None
-                             else '%s:%d' % (parser.filename, lineno))
+                             else f'{parser.filename}:{lineno}')
         kwargs.append(Keyword('default_cache_key', Const(default_cache_key),
                               lineno=lineno))
         body = parser.parse_statements(['name:end' + tag], drop_needle=True)

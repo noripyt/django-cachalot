@@ -34,9 +34,9 @@ class Command(BaseCommand):
                 model_name = label.split('.')[-1]
                 models.append(apps.get_model(app_label, model_name))
 
-        cache_str = '' if cache_alias is None else "on cache '%s'" % cache_alias
-        db_str = '' if db_alias is None else "for database '%s'" % db_alias
-        keys_str = 'keys for %s models' % len(models) if labels else 'all keys'
+        cache_str = '' if cache_alias is None else f"on cache '{cache_alias}'"
+        db_str = '' if db_alias is None else f"for database '{db_alias}'"
+        keys_str = f'keys for {len(models)} models' if labels else 'all keys'
 
         if verbosity > 0:
             self.stdout.write(' '.join(filter(bool, ['Invalidating', keys_str,
