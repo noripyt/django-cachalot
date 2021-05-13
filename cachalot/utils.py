@@ -96,11 +96,8 @@ def get_table_cache_key(db_alias, table):
 
 
 def _get_tables_from_sql(connection, lowercased_sql):
-    try:
-        return {t for t in connection.introspection.django_table_names()
-                if t in lowercased_sql}
-    except TypeError:
-        return {}  # Can happen if lowercased_sql is not iterable
+    return {t for t in connection.introspection.django_table_names()
+            if t in lowercased_sql}
 
 
 def _find_rhs_lhs_subquery(side):
@@ -113,7 +110,10 @@ def _find_rhs_lhs_subquery(side):
         try:
             return side.query.query if side.query.__class__ is QuerySet else side.query
         except AttributeError:  # TODO Remove try/except closure after drop Django 2.2
-            return None
+            try:
+                return side.queryset.query
+            except AttributeError:
+                return None
     elif h_class in UNCACHABLE_FUNCS:
         raise UncachableQuery
 
@@ -174,13 +174,19 @@ def _get_tables(db_alias, query):
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if isinstance(annotation, Subquery):
-                tables.update(_get_tables(db_alias, annotation.query))
+                if hasattr(annotation, "queryset"):
+                    tables.update(_get_tables(db_alias, annotation.queryset.query))
+                else:
+                    tables.update(_get_tables(db_alias, annotation.query))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))
         # Gets tables in HAVING subqueries.
         if isinstance(query, AggregateQuery):
-            tables.update(_get_tables_from_sql(connections[db_alias], query.subquery))
+            try:
+                tables.update(_get_tables_from_sql(connections[db_alias], query.subquery))
+            except TypeError:  # For Django 3.2+
+                tables.update(_get_tables(db_alias, query.inner_query))
         # Gets tables in combined queries
         # using `.union`, `.intersection`, or `difference`.
         if query.combined_queries:
