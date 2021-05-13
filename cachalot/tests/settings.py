@@ -11,7 +11,7 @@ from django.test.utils import override_settings
 
 from ..api import invalidate
 from ..settings import SUPPORTED_ONLY, SUPPORTED_DATABASE_ENGINES
-from .models import Test, TestParent, TestChild
+from .models import Test, TestParent, TestChild, UnmanagedModel
 from .test_utils import TestUtilsMixin
 
 
@@ -171,6 +171,14 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             self.assert_query_cached(Test.objects.all(), after=1)
             self.assert_query_cached(TestParent.objects.all())
             self.assert_query_cached(User.objects.all(), after=1)
+
+    def test_uncachable_unmanaged_table(self):
+        qs = UnmanagedModel.objects.all()
+        with self.settings(
+            CACHALOT_UNCACHABLE_TABLES=("cachalot_unmanagedmodel",),
+            CACHALOT_ADDITIONAL_TABLES=("cachalot_unmanagedmodel",)
+        ):
+            self.assert_query_cached(qs, after=1)
 
     def test_cache_compatibility(self):
         compatible_cache = {

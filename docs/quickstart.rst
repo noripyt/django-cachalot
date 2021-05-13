@@ -144,6 +144,16 @@ Settings
   some issues, especially during tests.
   Run ``./manage.py invalidate_cachalot`` after changing this setting.
 
+``CACHALOT_ADDITIONAL_TABLES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``list()``
+:Description:
+  Sequence of SQL table names that are not included in your Django
+  apps such as unmanaged models. Cachalot caches models that Django
+  does not manage, so if you want to ignore/not-cache those models,
+  then add them here.
+
 ``CACHALOT_QUERY_KEYGEN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -9,6 +9,7 @@ What’s new in django-cachalot?
 - Drop support for Django 2.0-2.1 and Python 3.5 (#181)
 - Add support for Pymemcache for Django 3.2+ (#181)
 - Reverts #157 with proper fix. (#181)
+- Add ``CACHALOT_ADDITIONAL_TABLES`` setting for unmanaged models (#183)
 
 2.3.5
 -----
