@@ -1,5 +1,7 @@
 import os
 
+from django import VERSION as __DJ_V
+
 
 DATABASES = {
     'sqlite3': {
@@ -29,10 +31,8 @@ for alias in DATABASES:
         DATABASES[alias]['TEST'] = {'NAME': test_db_name}
 
 DATABASES['default'] = DATABASES.pop(os.environ.get('DB_ENGINE', 'sqlite3'))
-
-
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 DATABASE_ROUTERS = ['cachalot.tests.db_router.PostgresRouter']
-
 
 CACHES = {
     'redis': {
@@ -46,7 +46,9 @@ CACHES = {
         },
     },
     'memcached': {
-        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'BACKEND': 'django.core.cache.backends.memcached.'
+                   + ('PyMemcacheCache' if __DJ_V[0] > 2
+                      and (__DJ_V[1] > 1 or __DJ_V[0] > 3) else 'MemcachedCache'),
         'LOCATION': '127.0.0.1:11211',
     },
     'locmem': {
@@ -86,7 +88,6 @@ if DEFAULT_CACHE_ALIAS == 'memcached' and 'pylibmc' in CACHES:
 elif DEFAULT_CACHE_ALIAS == 'pylibmc':
     del CACHES['memcached']
 
-
 INSTALLED_APPS = [
     'cachalot',
     'django.contrib.auth',
@@ -94,11 +95,9 @@ INSTALLED_APPS = [
     'django.contrib.postgres',  # Enables the unaccent lookup.
 ]
 
-
 MIGRATION_MODULES = {
     'cachalot': 'cachalot.tests.migrations',
 }
-
 
 TEMPLATES = [
     {
@@ -117,16 +116,12 @@ TEMPLATES = [
     }
 ]
 
-
 MIDDLEWARE = []
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 SECRET_KEY = 'it’s not important in tests but we have to set it'
 
-
-USE_TZ = False  # Time zones are not supported by MySQL,
-                # we only enable it in tests when needed.
+USE_TZ = False  # Time zones are not supported by MySQL, we only enable it in tests when needed.
 TIME_ZONE = 'UTC'
-
 
 CACHALOT_ENABLED = True
 

@@ -34,6 +34,7 @@ SUPPORTED_CACHE_BACKENDS = {
     'django_redis.cache.RedisCache',
     'django.core.cache.backends.memcached.MemcachedCache',
     'django.core.cache.backends.memcached.PyLibMCCache',
+    'django.core.cache.backends.memcached.PyMemcacheCache',
 }
 
 SUPPORTED_ONLY = 'supported_only'
