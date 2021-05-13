@@ -110,7 +110,10 @@ def _find_rhs_lhs_subquery(side):
     elif h_class is QuerySet:
         return side.query
     elif h_class in (Subquery, Exists):  # Subquery allows QuerySet & Query
-        return side.query.query if side.query.__class__ is QuerySet else side.query
+        try:
+            return side.query.query if side.query.__class__ is QuerySet else side.query
+        except AttributeError:  # TODO Remove try/except closure after drop Django 2.2
+            return None
     elif h_class in UNCACHABLE_FUNCS:
         raise UncachableQuery
 

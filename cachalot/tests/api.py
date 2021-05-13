@@ -137,9 +137,8 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
         self.assertEqual(same_timestamp, timestamp)
 
         timestamp = get_last_invalidation('cachalot_testparent')
-        self.assertNotAlmostEqual(timestamp, time(), delta=delta)
-        timestamp = get_last_invalidation('cachalot_testparent',
-                                          'cachalot_test')
+        self.assertNotAlmostEqual(timestamp, time(), delta=0.1)
+        timestamp = get_last_invalidation('cachalot_testparent', 'cachalot_test')
         self.assertAlmostEqual(timestamp, time(), delta=delta)
 
     def test_get_last_invalidation_template_tag(self):
