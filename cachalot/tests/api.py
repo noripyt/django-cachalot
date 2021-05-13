@@ -1,3 +1,4 @@
+import os
 from time import time, sleep
 from unittest import skipIf
 
@@ -122,13 +123,14 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
     def test_get_last_invalidation(self):
         invalidate()
         timestamp = get_last_invalidation()
-        self.assertAlmostEqual(timestamp, time(), delta=0.1)
+        delta = 0.15 if os.environ.get("CACHE_BACKEND") == "filebased" else 0.1
+        self.assertAlmostEqual(timestamp, time(), delta=delta)
 
         sleep(0.1)
 
         invalidate('cachalot_test')
         timestamp = get_last_invalidation('cachalot_test')
-        self.assertAlmostEqual(timestamp, time(), delta=0.1)
+        self.assertAlmostEqual(timestamp, time(), delta=delta)
         same_timestamp = get_last_invalidation('cachalot.Test')
         self.assertEqual(same_timestamp, timestamp)
         same_timestamp = get_last_invalidation(Test)
@@ -136,9 +138,8 @@ class APITestCase(TestUtilsMixin, TransactionTestCase):
 
         timestamp = get_last_invalidation('cachalot_testparent')
         self.assertNotAlmostEqual(timestamp, time(), delta=0.1)
-        timestamp = get_last_invalidation('cachalot_testparent',
-                                          'cachalot_test')
-        self.assertAlmostEqual(timestamp, time(), delta=0.1)
+        timestamp = get_last_invalidation('cachalot_testparent', 'cachalot_test')
+        self.assertAlmostEqual(timestamp, time(), delta=delta)
 
     def test_get_last_invalidation_template_tag(self):
         # Without arguments

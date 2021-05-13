@@ -13,8 +13,8 @@ Documentation: http://django-cachalot.readthedocs.io
 .. image:: https://img.shields.io/pypi/pyversions/django-cachalot
     :target: https://django-cachalot.readthedocs.io/en/latest/
 
-.. image:: https://travis-ci.com/noripyt/django-cachalot.svg?branch=master
-   :target: https://travis-ci.com/noripyt/django-cachalot
+.. image:: https://github.com/noripyt/django-cachalot/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/noripyt/django-cachalot/actions/workflows/ci.yml
 
 .. image:: http://img.shields.io/coveralls/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
    :target: https://coveralls.io/r/noripyt/django-cachalot?branch=master
@@ -39,7 +39,9 @@ Table of Contents:
 Quickstart
 ----------
 
-Cachalot officially supports Python 3.5-3.9 and Django 2.0-2.2, 3.0-3.1 with the databases PostgreSQL, SQLite, and MySQL.
+Cachalot officially supports Python 3.6-3.9 and Django 2.2 and 3.0-3.2 with the databases PostgreSQL, SQLite, and MySQL.
+
+No upper limit is imposed by cachalot. When Django's async ORM or cache is rolled out, there may be huge changes and breakages due to cachalot monkey-patching.
 
 Usage
 -----

@@ -1,5 +1,4 @@
 import copyreg
-from django import __version__ as django__version__, VERSION as django_version
 from django.apps import AppConfig
 from django.conf import settings
 from django.core.checks import register, Tags, Warning, Error
@@ -8,18 +7,6 @@ from cachalot.utils import ITERABLES
 from .settings import (
     cachalot_settings, SUPPORTED_CACHE_BACKENDS, SUPPORTED_DATABASE_ENGINES,
     SUPPORTED_ONLY)
-
-
-@register(Tags.compatibility)
-def check_django_version(app_configs, **kwargs):
-    if not (2, 0) <= django_version < (3, 2):
-        return [Error(
-            'Django %s is not compatible with this version of django-cachalot.'
-            % django__version__,
-            hint='Refer to the django-cachalot documentation to find '
-                 'which versions are compatible.',
-            id='cachalot.E003')]
-    return []
 
 
 @register(Tags.caches, Tags.compatibility)
