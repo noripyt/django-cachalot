@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+2.4.1
+-----
+
+- Fix Django requirement constraint to include 3.2.X not just 3.2
+- (Internal) Deleted obsolete travis-matrix.py file
+
 2.4.0
 -----
 
