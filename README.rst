@@ -41,8 +41,7 @@ Quickstart
 
 Cachalot officially supports Python 3.6-3.9 and Django 2.2 and 3.0-3.2 with the databases PostgreSQL, SQLite, and MySQL.
 
-No upper limit is imposed by cachalot. However, if you use a Django version that is not officially supported,
-you may end up battling mounting errors/exceptions and cache misses. Please stay within compatibility.
+Note: an upper limit on Django version is set for your safety. Please do not ignore it.
 
 Usage
 -----
