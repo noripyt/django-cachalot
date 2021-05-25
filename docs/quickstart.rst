@@ -117,6 +117,8 @@ Settings
   SQL queries – read :ref:`raw queries limits <Raw SQL queries>` for more info.
 
 
+.. _CACHALOT_ONLY_CACHABLE_TABLES:
+
 ``CACHALOT_ONLY_CACHABLE_TABLES``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -124,11 +126,22 @@ Settings
 :Description:
   Sequence of SQL table names that will be the only ones django-cachalot
   will cache. Only queries with a subset of these tables will be cached.
-  The sequence being empty (as it is by default) doesn’t mean that no table
+  The sequence being empty (as it is by default) does not mean that no table
   can be cached: it disables this setting, so any table can be cached.
   :ref:`CACHALOT_UNCACHABLE_TABLES` has more weight than this:
   if you add a table to both settings, it will never be cached.
   Run ``./manage.py invalidate_cachalot`` after changing this setting.
+
+``CACHALOT_ONLY_CACHABLE_APPS``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``frozenset()``
+:Description:
+  Sequence of Django apps whose associated models will be appended to
+  :ref:`CACHALOT_ONLY_CACHABLE_TABLES`. The rules between
+  :ref:`CACHALOT_UNCACHABLE_TABLES` and :ref:`CACHALOT_ONLY_CACHABLE_TABLES` still
+  apply as this setting only appends the given Django apps' tables on initial
+  Django setup.
 
 
 .. _CACHALOT_UNCACHABLE_TABLES:
@@ -143,6 +156,17 @@ Settings
   Always keep ``'django_migrations'`` in it, otherwise you may face
   some issues, especially during tests.
   Run ``./manage.py invalidate_cachalot`` after changing this setting.
+
+``CACHALOT_UNCACHABLE_APPS``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``frozenset()``
+:Description:
+  Sequence of Django apps whose associated models will be appended to
+  :ref:`CACHALOT_UNCACHABLE_TABLES`. The rules between
+  :ref:`CACHALOT_UNCACHABLE_TABLES` and :ref:`CACHALOT_ONLY_CACHABLE_TABLES` still
+  apply as this setting only appends the given Django apps' tables on initial
+  Django setup.
 
 ``CACHALOT_ADDITIONAL_TABLES``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
