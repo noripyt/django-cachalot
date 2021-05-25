@@ -4,8 +4,8 @@ Quick start
 Requirements
 ............
 
-- Django 2.0-2.2, 3.0-3.1
-- Python 3.5-3.9
+- Django 2.2, 3.1-3.2
+- Python 3.6-3.9
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwinz/django-redis>`_
@@ -67,7 +67,7 @@ Settings
      change this setting, you end up on a cache that may contain stale data.
 
 .. |CACHES| replace:: ``CACHES``
-.. _CACHES: https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-CACHES
+.. _CACHES: https://docs.djangoproject.com/en/dev/ref/settings/#caches
 
 ``CACHALOT_DATABASES``
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -80,7 +80,7 @@ Settings
   engines.
 
 .. |DATABASES| replace:: ``DATABASES``
-.. _DATABASES: https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-DATABASES
+.. _DATABASES: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
 ``CACHALOT_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~
@@ -225,7 +225,7 @@ Examples:
 Template utils
 ..............
 
-`Caching template fragments <https://docs.djangoproject.com/en/2.0/topics/cache/#template-fragment-caching>`_
+`Caching template fragments <https://docs.djangoproject.com/en/dev/topics/cache/#template-fragment-caching>`_
 can be extremely powerful to speedup a Django application.  However, it often
 means you have to adapt your models to get a relevant cache key, typically
 by adding a timestamp that refers to the last modification of the object.
