@@ -13,25 +13,13 @@ SUPPORTED_DATABASE_ENGINES = {
     'django.contrib.gis.db.backends.spatialite',
     'django.contrib.gis.db.backends.postgis',
     'django.contrib.gis.db.backends.mysql',
-
-    # django-transaction-hooks
-    'transaction_hooks.backends.sqlite3',
-    'transaction_hooks.backends.postgis',
-    # TODO: Remove when we drop Django 2.x support.
-    'transaction_hooks.backends.postgresql_psycopg2',
-    'transaction_hooks.backends.mysql',
-
-    # django-prometheus wrapped engines
-    'django_prometheus.db.backends.sqlite3',
-    'django_prometheus.db.backends.postgresql',
-    'django_prometheus.db.backends.mysql',
 }
 
 SUPPORTED_CACHE_BACKENDS = {
     'django.core.cache.backends.dummy.DummyCache',
     'django.core.cache.backends.locmem.LocMemCache',
     'django.core.cache.backends.filebased.FileBasedCache',
-    'django_redis.cache.RedisCache',
+    'django_redis.cache.RedisCache',  # Even though it's not from Django, we do test it
     'django.core.cache.backends.memcached.MemcachedCache',
     'django.core.cache.backends.memcached.PyLibMCCache',
     'django.core.cache.backends.memcached.PyMemcacheCache',
@@ -41,13 +29,15 @@ SUPPORTED_ONLY = 'supported_only'
 ITERABLES = {tuple, list, frozenset, set}
 
 
-class Settings(object):
+class Settings:
     patched = False
     converters = {}
 
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
     CACHALOT_DATABASES = 'supported_only'
+    CACHALOT_SUPPORTED_DATABASE_ENGINES = {}
+    CACHALOT_SUPPORTED_CACHE_BACKENDS = {}
     CACHALOT_TIMEOUT = None
     CACHALOT_CACHE_RANDOM = False
     CACHALOT_INVALIDATE_RAW = True
@@ -76,6 +66,13 @@ class Settings(object):
             if converter is not None:
                 value = converter(value)
             setattr(self, name, value)
+
+        SUPPORTED_DATABASE_ENGINES.update(
+            getattr(settings, "CACHALOT_SUPPORTED_DATABASE_ENGINES", {})
+        )
+        SUPPORTED_CACHE_BACKENDS.update(
+            getattr(settings, "CACHALOT_SUPPORTED_CACHE_BACKENDS", {})
+        )
 
         if not self.patched:
             from .monkey_patch import patch

@@ -10,7 +10,8 @@ from django.test import TransactionTestCase
 from django.test.utils import override_settings
 
 from ..api import invalidate
-from ..settings import SUPPORTED_ONLY, SUPPORTED_DATABASE_ENGINES
+from ..settings import (
+    SUPPORTED_ONLY, SUPPORTED_DATABASE_ENGINES, SUPPORTED_CACHE_BACKENDS)
 from .models import Test, TestParent, TestChild, UnmanagedModel
 from .test_utils import TestUtilsMixin
 
@@ -209,6 +210,16 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             errors = run_checks(tags=[Tags.compatibility])
             self.assertListEqual(errors, [warning001])
 
+    __DUMMY_CACHE = "django.core.cache.backends.dummy.DummyCache"
+
+    @override_settings(CACHALOT_SUPPORTED_CACHE_BACKENDS={__DUMMY_CACHE})
+    def test_cache_supported_append(self):
+        compatible_cache = {'BACKEND': self.__DUMMY_CACHE}
+        SUPPORTED_CACHE_BACKENDS.remove(self.__DUMMY_CACHE)
+        with self.settings(CACHES={'default': compatible_cache}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [])
+
     def test_database_compatibility(self):
         compatible_database = {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -288,3 +299,17 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         with self.settings(CACHALOT_DATABASES='invalid value'):
             errors = run_checks(tags=[Tags.compatibility])
             self.assertListEqual(errors, [error002])
+
+    __SQLITE_ENGINE = "django.db.backends.sqlite3"
+
+    @override_settings(CACHALOT_SUPPORTED_DATABASE_ENGINES={__SQLITE_ENGINE})
+    def test_database_supported_append(self):
+        compatible_database = {
+            'ENGINE': self.__SQLITE_ENGINE,
+            'NAME': 'non_existent_db.engine',
+        }
+        SUPPORTED_DATABASE_ENGINES.remove(self.__SQLITE_ENGINE)
+        with self.settings(DATABASES={'default': compatible_database},
+                           CACHALOT_DATABASES=["default"]):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [])

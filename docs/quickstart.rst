@@ -82,6 +82,34 @@ Settings
 .. |DATABASES| replace:: ``DATABASES``
 .. _DATABASES: https://docs.djangoproject.com/en/2.0/ref/settings/#std:setting-DATABASES
 
+``CACHALOT_SUPPORTED_DATABASE_ENGINES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``{}``
+:Description:
+  Sequence of (string) database engines to add to the currently supported set.
+  This does not override the supported set, only appends.
+
+  .. warning::
+     Use at your own risk. Before just adding your engine, test it via a PR, fork,
+     or in your current Django project via our test suite. The GitHub action shows
+     how to add a Docker image to properly utilize the test suite. Not all Django
+     database engines are included such as MariaDB and Oracle. Check the supported ones
+     out in the settings.py file.
+
+``CACHALOT_SUPPORTED_CACHE_BACKENDS``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``{}``
+:Description:
+  Sequence of (string) cache backends to add to the currently supported set.
+  This does not override the supported set, only appends.
+
+  .. warning::
+     Use at your own risk. Before just adding your engine, test it via a PR, fork,
+     or in your current Django project via our test suite. The GitHub action shows
+     how to add a Docker image to properly utilize the test suite.
+
 ``CACHALOT_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~
 

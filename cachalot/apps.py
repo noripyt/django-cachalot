@@ -17,8 +17,7 @@ def check_cache_compatibility(app_configs, **kwargs):
         return [Warning(
             'Cache backend %r is not supported by django-cachalot.'
             % cache_backend,
-            hint='Switch to a supported cache backend '
-                 'like Redis or Memcached.',
+            hint='Switch to a supported cache backend like Redis or Memcached.',
             id='cachalot.W001')]
     return []
 
@@ -27,8 +26,7 @@ def check_cache_compatibility(app_configs, **kwargs):
 def check_databases_compatibility(app_configs, **kwargs):
     errors = []
     databases = settings.DATABASES
-    original_enabled_databases = getattr(settings, 'CACHALOT_DATABASES',
-                                         SUPPORTED_ONLY)
+    original_enabled_databases = getattr(settings, 'CACHALOT_DATABASES', SUPPORTED_ONLY)
     enabled_databases = cachalot_settings.CACHALOT_DATABASES
     if original_enabled_databases == SUPPORTED_ONLY:
         if not cachalot_settings.CACHALOT_DATABASES:
