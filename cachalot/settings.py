@@ -1,3 +1,6 @@
+from itertools import chain
+
+from django.apps import apps
 from django.conf import settings
 from django.utils.module_loading import import_string
 
@@ -52,7 +55,9 @@ class Settings(object):
     CACHALOT_CACHE_RANDOM = False
     CACHALOT_INVALIDATE_RAW = True
     CACHALOT_ONLY_CACHABLE_TABLES = ()
+    CACHALOT_ONLY_CACHABLE_APPS = ()
     CACHALOT_UNCACHABLE_TABLES = ('django_migrations',)
+    CACHALOT_UNCACHABLE_APPS = ()
     CACHALOT_ADDITIONAL_TABLES = ()
     CACHALOT_QUERY_KEYGEN = 'cachalot.utils.get_query_cache_key'
     CACHALOT_TABLE_KEYGEN = 'cachalot.utils.get_table_cache_key'
@@ -103,14 +108,24 @@ def convert(value):
     return value
 
 
+def convert_tables(value, setting_app_name):
+    dj_apps = getattr(settings, setting_app_name, ())
+    if dj_apps:
+        dj_apps = tuple(model._meta.db_table for model in chain.from_iterable(
+            apps.all_models[_app].values() for _app in dj_apps
+        ))  # Use [] lookup to make sure app is loaded (via INSTALLED_APP's order)
+        return frozenset(tuple(value) + dj_apps)
+    return frozenset(value)
+
+
 @Settings.add_converter('CACHALOT_ONLY_CACHABLE_TABLES')
 def convert(value):
-    return frozenset(value)
+    return convert_tables(value, 'CACHALOT_ONLY_CACHABLE_APPS')
 
 
 @Settings.add_converter('CACHALOT_UNCACHABLE_TABLES')
 def convert(value):
-    return frozenset(value)
+    return convert_tables(value, 'CACHALOT_UNCACHABLE_APPS')
 
 
 @Settings.add_converter('CACHALOT_ADDITIONAL_TABLES')

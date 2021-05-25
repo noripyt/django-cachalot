@@ -152,6 +152,21 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             # table, it’s cachable.
             self.assert_query_cached(TestChild.objects.values('public'))
 
+    @override_settings(CACHALOT_ONLY_CACHABLE_APPS=('cachalot',))
+    def test_only_cachable_apps(self):
+        self.assert_query_cached(Test.objects.all())
+        self.assert_query_cached(TestParent.objects.all())
+        self.assert_query_cached(Test.objects.select_related('owner'), after=1)
+
+    # Must use override_settings to get the correct effect. Using the cm doesn't
+    # reload settings on cachalot's side
+    @override_settings(CACHALOT_ONLY_CACHABLE_TABLES=('cachalot_test', 'auth_user'),
+                       CACHALOT_ONLY_CACHABLE_APPS=('cachalot',))
+    def test_only_cachable_apps_set_combo(self):
+        self.assert_query_cached(Test.objects.all())
+        self.assert_query_cached(TestParent.objects.all())
+        self.assert_query_cached(Test.objects.select_related('owner'))
+
     def test_uncachable_tables(self):
         qs = Test.objects.all()
 
@@ -162,6 +177,17 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
 
         with self.settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
             self.assert_query_cached(qs, after=1)
+
+    @override_settings(CACHALOT_UNCACHABLE_APPS=('cachalot',))
+    def test_uncachable_apps(self):
+        self.assert_query_cached(Test.objects.all(), after=1)
+        self.assert_query_cached(TestParent.objects.all(), after=1)
+
+    @override_settings(CACHALOT_UNCACHABLE_TABLES=('cachalot_test',),
+                       CACHALOT_UNCACHABLE_APPS=('cachalot',))
+    def test_uncachable_apps_set_combo(self):
+        self.assert_query_cached(Test.objects.all(), after=1)
+        self.assert_query_cached(TestParent.objects.all(), after=1)
 
     def test_only_cachable_and_uncachable_table(self):
         with self.settings(

@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+2.4.2
+-----
+
+- Add convenience settings `CACHALOT_ONLY_CACHABLE_APPS`
+  and `CACHALOT_UNCACHABLE_APPS`
+
 2.4.1
 -----
 
