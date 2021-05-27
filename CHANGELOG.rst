@@ -5,7 +5,9 @@ What’s new in django-cachalot?
 -----
 
 - Add convenience settings `CACHALOT_ONLY_CACHABLE_APPS`
-  and `CACHALOT_UNCACHABLE_APPS`
+  and `CACHALOT_UNCACHABLE_APPS` (#187)
+- Drop support for Django 3.0 (#189)
+- (Internal) Added Django main-branch CI on cron job
 
 2.4.1
 -----
