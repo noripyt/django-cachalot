@@ -1,10 +1,9 @@
-name: CI
+name: Django Main Testing CI
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -13,7 +12,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ['3.6', '3.7', '3.8', '3.9']
-        django-version: ['2.2', '3.1', '3.2']
 
     services:
       redis:
@@ -73,10 +71,4 @@ jobs:
       env:
         TOX_TESTENV_PASSENV: POSTGRES_PASSWORD
         POSTGRES_PASSWORD: password
-        PYTHON_VER: ${{ matrix.python-version }}
-        DJANGO: ${{ matrix.django-version }}
-    - name: Coverage (Coveralls)
-      if: ${{ success() }}
-      run: coveralls --service=github
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        DJANGO: 'main'
