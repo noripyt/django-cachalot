@@ -8,6 +8,7 @@ What’s new in django-cachalot?
   and `CACHALOT_UNCACHABLE_APPS` (#187)
 - Drop support for Django 3.0 (#189)
 - (Internal) Added Django main-branch CI on cron job
+- (Internal) Removed duplicate code (#190)
 
 2.4.1
 -----
