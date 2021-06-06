@@ -118,24 +118,6 @@ def _find_rhs_lhs_subquery(side):
         raise UncachableQuery
 
 
-def _find_rhs_lhs_subquery(side):
-    h_class = side.__class__
-    if h_class is Query:
-        return side
-    elif h_class is QuerySet:
-        return side.query
-    elif h_class in (Subquery, Exists):  # Subquery allows QuerySet & Query
-        try:
-            return side.query.query if side.query.__class__ is QuerySet else side.query
-        except AttributeError:  # TODO Remove try/except closure after drop Django 2.2
-            try:
-                return side.queryset.query
-            except AttributeError:
-                return None
-    elif h_class in UNCACHABLE_FUNCS:
-        raise UncachableQuery
-
-
 def _find_subqueries_in_where(children):
     for child in children:
         child_class = child.__class__
