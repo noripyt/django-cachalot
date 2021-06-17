@@ -186,7 +186,7 @@ def _get_tables(db_alias, query):
             try:
                 tables.update(_get_tables_from_sql(connections[db_alias], query.subquery))
             except TypeError:  # For Django 3.2+
-                tables.update(_get_tables(db_alias, query.inner_query))
+                tables.update(_get_tables_from_sql(connections[db_alias], query.inner_query))
         # Gets tables in combined queries
         # using `.union`, `.intersection`, or `difference`.
         if query.combined_queries:
