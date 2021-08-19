@@ -7,7 +7,7 @@ from uuid import UUID
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
 from django.db.models import Exists, QuerySet, Subquery
-from django.db.models.expressions import BaseExpression
+from django.db.models.expressions import BaseExpression, RawSQL
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
@@ -205,6 +205,9 @@ def _get_tables(db_alias, query):
             for element in flatten(annotation):
                 if isinstance(element, Subquery):
                     __update_annotated_subquery(element)
+                elif isinstance(element, RawSQL):
+                    sql = repr(element).lower()
+                    tables.update(_get_tables_from_sql(connections[db_alias], sql))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))

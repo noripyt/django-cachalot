@@ -405,6 +405,14 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    def test_annotate_raw(self):
+        qs = User.objects.annotate(
+            perm_id=RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                           (self.t1__permission.pk,))
+        )
+        self.assert_tables(qs, User, Permission)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
     def test_only(self):
         with self.assertNumQueries(1):
             t1 = Test.objects.only('name').first()
