@@ -6,7 +6,8 @@ from uuid import UUID
 
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
-from django.db.models import Case, Exists, QuerySet, Subquery
+from django.db.models import Exists, QuerySet, Subquery
+from django.db.models.expressions import BaseExpression
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
@@ -178,7 +179,7 @@ def _get_tables(db_alias, query):
             else:
                 tables.update(_get_tables(db_alias, _annotation.query))
 
-        def flatten(expression):
+        def flatten(expression: BaseExpression):
             """
             Recursively yield this expression and all subexpressions, in
             depth-first order.
