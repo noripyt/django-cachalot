@@ -180,16 +180,11 @@ def _get_tables(db_alias, query):
 
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
-            if isinstance(annotation, Case):
-                for case in annotation.cases:
-                    for subquery in _find_subqueries_in_where(case.condition.children):
-                        tables.update(_get_tables(db_alias, subquery))
-                if isinstance(annotation.default, Subquery):
-                    __update_annotated_subquery(annotation.default)
-            elif isinstance(annotation, Subquery):
-                __update_annotated_subquery(annotation)
-            elif type(annotation) in UNCACHABLE_FUNCS:
+            if type(annotation) in UNCACHABLE_FUNCS:
                 raise UncachableQuery
+            for element in annotation.flatten():
+                if isinstance(element, Subquery):
+                    __update_annotated_subquery(element)
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))

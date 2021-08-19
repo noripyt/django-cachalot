@@ -372,12 +372,23 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
-    def test_annotate_case_with_when(self):
+    def test_annotate_case_with_when_and_query_in_default(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(
             first_test=Case(
                 When(Q(pk=1), then=Value('noname')),
                 default=Subquery(tests[:1])
+            )
+        )
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
+    def test_annotate_case_with_when(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(
+            first_test=Case(
+                When(Q(pk=1), then=Subquery(tests[:1])),
+                default=Value('noname')
             )
         )
         self.assert_tables(qs, User, Test)
