@@ -178,6 +178,8 @@ def _get_tables(db_alias, query):
                     tables.update(_get_tables(db_alias, annotation.queryset.query))
                 else:
                     tables.update(_get_tables(db_alias, annotation.query))
+            elif type(annotation) in UNCACHABLE_FUNCS:
+                raise UncachableQuery
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))

@@ -873,6 +873,11 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, UnmanagedModel)
         self.assert_query_cached(qs)
 
+    def test_now_annotate(self):
+        """Check that queries with a Now() annotation are not cached #193"""
+        qs = Test.objects.annotate(now=Now())
+        self.assert_query_cached(qs, after=1)
+        
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
     def test_tuple(self):
