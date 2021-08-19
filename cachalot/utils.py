@@ -191,10 +191,7 @@ def _get_tables(db_alias, query):
             for expr in element.get_source_expressions():
                 if expr:
                     if hasattr(expr, 'flatten'):
-                        try:
-                            yield from flatten(expr)
-                        except AttributeError:
-                            yield expr
+                        yield from flatten(expr)
                     else:
                         yield expr
 
