@@ -11,7 +11,7 @@ from django.db import (
     OperationalError)
 from django.db.models import Case, Count, Q, Value, When
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
-from django.db.models.functions import Now
+from django.db.models.functions import Coalesce, Now
 from django.db.transaction import TransactionManagementError
 from django.test import TransactionTestCase, skipUnlessDBFeature, override_settings
 from pytz import UTC
@@ -389,6 +389,17 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             first_test=Case(
                 When(Q(pk=1), then=Subquery(tests[:1])),
                 default=Value('noname')
+            )
+        )
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
+    def test_annotate_coalesce(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(
+            name=Coalesce(
+                Subquery(tests[:1]),
+                Value('notest')
             )
         )
         self.assert_tables(qs, User, Test)
