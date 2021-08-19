@@ -178,11 +178,30 @@ def _get_tables(db_alias, query):
             else:
                 tables.update(_get_tables(db_alias, _annotation.query))
 
+        def flatten(expression):
+            """
+            Recursively yield this expression and all subexpressions, in
+            depth-first order.
+
+            Taken from Django 3.2 as the previous Django versions don’t check
+            for existence of flatten.
+            """
+            yield expression
+            for expr in element.get_source_expressions():
+                if expr:
+                    if hasattr(expr, 'flatten'):
+                        try:
+                            yield from flatten(expr)
+                        except AttributeError:
+                            yield expr
+                    else:
+                        yield expr
+
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
             if type(annotation) in UNCACHABLE_FUNCS:
                 raise UncachableQuery
-            for element in annotation.flatten():
+            for element in flatten(annotation):
                 if isinstance(element, Subquery):
                     __update_annotated_subquery(element)
         # Gets tables in WHERE subqueries.
