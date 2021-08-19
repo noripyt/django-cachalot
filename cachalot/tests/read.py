@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import (
     connection, transaction, DEFAULT_DB_ALIAS, ProgrammingError,
     OperationalError)
-from django.db.models import Count, Q
+from django.db.models import Case, Count, Q, Value, When
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
 from django.db.transaction import TransactionManagementError
@@ -373,6 +373,20 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    def test_annotate_subquery_with_case(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(
+            first_test=Case(
+                When(
+                    Q(pk=1),
+                    then=Value('noname')
+                ),
+                default=Subquery(tests[:1])
+            )
+        )
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+        
     def test_only(self):
         with self.assertNumQueries(1):
             t1 = Test.objects.only('name').first()
