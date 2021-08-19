@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+2.4.3
+-----
+
+- Fix annotated Now being cached (#195)
+- Fix conditional annotated expressions not being cached (#196)
+
 2.4.2
 -----
 
