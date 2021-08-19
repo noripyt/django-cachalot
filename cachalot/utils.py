@@ -186,8 +186,10 @@ def _get_tables(db_alias, query):
                         tables.update(_get_tables(db_alias, subquery))
                 if isinstance(annotation.default, Subquery):
                     __update_annotated_subquery(annotation.default)
-            if isinstance(annotation, Subquery):
+            elif isinstance(annotation, Subquery):
                 __update_annotated_subquery(annotation)
+            elif type(annotation) in UNCACHABLE_FUNCS:
+                raise UncachableQuery
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))
