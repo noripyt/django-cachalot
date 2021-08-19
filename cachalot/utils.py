@@ -6,7 +6,7 @@ from uuid import UUID
 
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
-from django.db.models import QuerySet, Subquery, Exists
+from django.db.models import Case, Exists, QuerySet, Subquery
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
@@ -171,13 +171,23 @@ def _get_tables(db_alias, query):
         # Gets all tables already found by the ORM.
         tables = set(query.table_map)
         tables.add(query.get_meta().db_table)
+
+        def __update_annotated_subquery(_annotation: Subquery):
+            if hasattr(_annotation, "queryset"):
+                tables.update(_get_tables(db_alias, _annotation.queryset.query))
+            else:
+                tables.update(_get_tables(db_alias, _annotation.query))
+
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
-            if isinstance(annotation, Subquery):
-                if hasattr(annotation, "queryset"):
-                    tables.update(_get_tables(db_alias, annotation.queryset.query))
-                else:
-                    tables.update(_get_tables(db_alias, annotation.query))
+            if isinstance(annotation, Case):
+                for case in annotation.cases:
+                    for subquery in _find_subqueries_in_where(case.condition.children):
+                        tables.update(_get_tables(db_alias, subquery))
+                if isinstance(annotation.default, Subquery):
+                    __update_annotated_subquery(annotation.default)
+            elif isinstance(annotation, Subquery):
+                __update_annotated_subquery(annotation)
             elif type(annotation) in UNCACHABLE_FUNCS:
                 raise UncachableQuery
         # Gets tables in WHERE subqueries.

@@ -9,12 +9,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import (
     connection, transaction, DEFAULT_DB_ALIAS, ProgrammingError,
     OperationalError)
-from django.db.models import Count, Q
+from django.db.models import Case, Count, Q, Value, When
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Now
 from django.db.transaction import TransactionManagementError
-from django.test import (
-    TransactionTestCase, skipUnlessDBFeature, override_settings)
+from django.test import TransactionTestCase, skipUnlessDBFeature, override_settings
 from pytz import UTC
 
 from cachalot.cache import cachalot_caches
@@ -370,6 +369,17 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     def test_annotate_subquery(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(first_test=Subquery(tests[:1]))
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
+    def test_annotate_case_with_when(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(
+            first_test=Case(
+                When(Q(pk=1), then=Value('noname')),
+                default=Subquery(tests[:1])
+            )
+        )
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
@@ -1041,8 +1051,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         Checks that queries with a Now() parameter are not cached.
         """
         obj = Test.objects.create(datetime='1992-07-02T12:00:00')
-        qs = Test.objects.filter(
-            datetime__lte=Now())
+        qs = Test.objects.filter(datetime__lte=Now())
         with self.assertNumQueries(1):
             obj1 = qs.get()
         with self.assertNumQueries(1):
