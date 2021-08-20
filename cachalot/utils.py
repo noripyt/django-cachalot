@@ -203,7 +203,7 @@ def _get_tables(db_alias, query):
                 if isinstance(element, Subquery):
                     __update_annotated_subquery(element)
                 elif isinstance(element, RawSQL):
-                    sql = repr(element).lower()
+                    sql = element.as_sql(None, None)[0].lower()
                     tables.update(_get_tables_from_sql(connections[db_alias], sql))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
