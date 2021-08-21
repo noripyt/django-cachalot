@@ -11,7 +11,7 @@ from django.db import (
     OperationalError)
 from django.db.models import Case, Count, Q, Value, When
 from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
-from django.db.models.functions import Now
+from django.db.models.functions import Coalesce, Now
 from django.db.transaction import TransactionManagementError
 from django.test import TransactionTestCase, skipUnlessDBFeature, override_settings
 from pytz import UTC
@@ -180,6 +180,11 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = Test.objects.order_by('owner__username')
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t2, self.t1])
+
+    def test_order_by_field_of_another_table_with_expression(self):
+        qs = Test.objects.order_by(Coalesce('name', 'owner__username'))
+        self.assert_tables(qs, Test, User)
+        self.assert_query_cached(qs, [self.t1, self.t2])
 
     @skipIf(connection.vendor == 'mysql',
             'MySQL does not support limit/offset on a subquery. '

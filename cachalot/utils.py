@@ -95,9 +95,15 @@ def get_table_cache_key(db_alias, table):
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
-def _get_tables_from_sql(connection, lowercased_sql):
+def _get_tables_from_sql(connection, lowercased_sql, check_for_quotation_marks=False):
+    def get_table_name(name):
+        """
+        Prevent that cachalot_test is returned when the query contains cachalot_testparent.
+        """
+        return f'"{name}"' if check_for_quotation_marks else name
+
     return {t for t in connection.introspection.django_table_names()
-            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES if t in lowercased_sql}
+            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES if get_table_name(t) in lowercased_sql}
 
 
 def _find_rhs_lhs_subquery(side):
@@ -207,6 +213,16 @@ def _get_tables(db_alias, query):
     except IsRawQuery:
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         tables = _get_tables_from_sql(connections[db_alias], sql)
+
+    # Proof of concept
+    # Additional SQL check in conservative mode
+    CONSERVATIVE_MODE = True
+    if CONSERVATIVE_MODE:
+        final_check_tables = _get_tables_from_sql(connections[db_alias], str(query), check_for_quotation_marks=True)
+        if not tables.issuperset(final_check_tables):
+            print(str(query))
+            print('There is a difference!', tables, final_check_tables)
+            tables.update(final_check_tables)
 
     if not are_all_cachable(tables):
         raise UncachableQuery
