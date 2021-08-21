@@ -174,7 +174,7 @@ def _flatten(expression: "BaseExpression"):
     for existence of flatten.
     """
     yield expression
-    for expr in element.get_source_expressions():
+    for expr in expression.get_source_expressions():
         if expr:
             if hasattr(expr, 'flatten'):
                 yield from _flatten(expr)
