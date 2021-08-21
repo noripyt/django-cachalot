@@ -199,14 +199,14 @@ def _get_tables(db_alias, query):
         for annotation in query.annotations.values():
             if type(annotation) in UNCACHABLE_FUNCS:
                 raise UncachableQuery
-            for element in _flatten(annotation):
-                if isinstance(element, Subquery):
-                    if hasattr(element, "queryset"):
-                        tables.update(_get_tables(db_alias, element.queryset.query))
+            for expression in _flatten(annotation):
+                if isinstance(expression, Subquery):
+                    if hasattr(expression, "queryset"):
+                        tables.update(_get_tables(db_alias, expression.queryset.query))
                     else:
-                        tables.update(_get_tables(db_alias, element.query))
-                elif isinstance(element, RawSQL):
-                    sql = element.as_sql(None, None)[0].lower()
+                        tables.update(_get_tables(db_alias, expression.query))
+                elif isinstance(expression, RawSQL):
+                    sql = expression.as_sql(None, None)[0].lower()
                     tables.update(_get_tables_from_sql(connections[db_alias], sql))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
