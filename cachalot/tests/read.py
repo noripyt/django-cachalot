@@ -176,6 +176,11 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1, compare_results=False)
 
+    def test_order_by_field_of_another_table(self):
+        qs = Test.objects.order_by('owner__username')
+        self.assert_tables(qs, Test, User)
+        self.assert_query_cached(qs, [self.t2, self.t1])
+
     @skipIf(connection.vendor == 'mysql',
             'MySQL does not support limit/offset on a subquery. '
             'Since Django only applies ordering in subqueries when they are '
