@@ -98,7 +98,9 @@ def get_table_cache_key(db_alias, table):
 def _get_tables_from_sql(connection, lowercased_sql, check_for_quotation_marks=False):
     def get_table_name(name):
         """
-        Prevent that cachalot_test is returned when the query contains cachalot_testparent.
+        When quotation mark check is enabled, put quotation marks around table name.
+        Use case:
+        Prevent that 'cachalot_test' is returned when the query contains 'cachalot_testparent'.
         """
         return f'"{name}"' if check_for_quotation_marks else name
 
@@ -215,14 +217,21 @@ def _get_tables(db_alias, query):
         tables = _get_tables_from_sql(connections[db_alias], sql)
 
     # Proof of concept
-    # Additional SQL check in conservative mode
-    CONSERVATIVE_MODE = True
-    if CONSERVATIVE_MODE:
+    # Additional SQL check in redundancy mode which acts as safety net.
+    CACHALOT_REDUNDANCY_MODE: bool = True
+    if CACHALOT_REDUNDANCY_MODE:
         final_check_tables = _get_tables_from_sql(connections[db_alias], str(query), check_for_quotation_marks=True)
         if not tables.issuperset(final_check_tables):
             print(str(query))
-            print('There is a difference!', tables, final_check_tables)
+            print('The SQL check returned additional tables:')
+            print(f'- Regular checks: {tables}')
+            print(f'- SQL check: {final_check_tables}')
             tables.update(final_check_tables)
+        if not final_check_tables.issuperset(tables):
+            print(str(query))
+            print('The regular check returned additional tables:')
+            print(f'- Regular checks: {tables}')
+            print(f'- SQL check: {final_check_tables}')
 
     if not are_all_cachable(tables):
         raise UncachableQuery
