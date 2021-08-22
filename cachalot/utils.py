@@ -95,17 +95,24 @@ def get_table_cache_key(db_alias, table):
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
-def _get_tables_from_sql(connection, lowercased_sql, check_for_quotation_marks=False):
-    def get_table_name(name):
-        """
-        When quotation mark check is enabled, put quotation marks around table name.
-        Use case:
-        Prevent that 'cachalot_test' is returned when the query contains 'cachalot_testparent'.
-        """
-        return f'"{name}"' if check_for_quotation_marks else name
+def _get_tables_from_sql(connection, lowercased_sql,
+                         enable_quote=False):
+    """Returns names of involved tables after analyzing the final SQL query."""
+    return {table for table in connection.introspection.django_table_names()
+            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES
+            if _quote_table_name(table, connection, enable_quote) in lowercased_sql}
 
-    return {t for t in connection.introspection.django_table_names()
-            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES if get_table_name(t) in lowercased_sql}
+
+def _quote_table_name(table_name, connection, enable_quote):
+    """
+    Returns quoted table name.
+
+    Put database-specific quotation marks around the table name
+    to preven that tables with substrings of the table are considered.
+    E.g. cachalot_testparent must not return cachalot_test.
+    """
+    return f'{connection.ops.quote_name(table_name)}' \
+        if enable_quote else table_name
 
 
 def _find_rhs_lhs_subquery(side):
@@ -216,22 +223,11 @@ def _get_tables(db_alias, query):
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         tables = _get_tables_from_sql(connections[db_alias], sql)
 
-    # Proof of concept
-    # Additional SQL check in redundancy mode which acts as safety net.
-    CACHALOT_REDUNDANCY_MODE: bool = True
-    if CACHALOT_REDUNDANCY_MODE:
-        final_check_tables = _get_tables_from_sql(connections[db_alias], str(query), check_for_quotation_marks=True)
-        if not tables.issuperset(final_check_tables):
-            print(str(query))
-            print('The SQL check returned additional tables:')
-            print(f'- Regular checks: {tables}')
-            print(f'- SQL check: {final_check_tables}')
-            tables.update(final_check_tables)
-        if not final_check_tables.issuperset(tables):
-            print(str(query))
-            print('The regular check returned additional tables:')
-            print(f'- Regular checks: {tables}')
-            print(f'- SQL check: {final_check_tables}')
+    # Additional check of the final SQL.
+    # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
+    # as not all expressions are handled yet. This final check acts as safety net.
+    final_check_tables = _get_tables_from_sql(connections[db_alias], str(query), enable_quote=True)
+    tables.update(final_check_tables)
 
     if not are_all_cachable(tables):
         raise UncachableQuery

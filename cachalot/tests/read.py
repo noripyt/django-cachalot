@@ -304,7 +304,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             Permission.objects.create(
                 name='Can cuddle', content_type=ct, codename='cuddle'))
         qs = u.user_permissions.values_list('codename', flat=True)
-        self.assert_tables(qs, User, User.user_permissions.through, Permission)
+        self.assert_tables(qs, User, User.user_permissions.through, Permission, ContentType)
         self.assert_query_cached(qs, ['cuddle', 'discuss', 'touch'])
 
     def test_subquery(self):
@@ -338,13 +338,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     def test_custom_subquery(self):
         tests = Test.objects.filter(permission=OuterRef('pk')).values('name')
         qs = Permission.objects.annotate(first_permission=Subquery(tests[:1]))
-        self.assert_tables(qs, Permission, Test)
+        self.assert_tables(qs, Permission, Test, ContentType)
         self.assert_query_cached(qs, list(Permission.objects.all()))
 
     def test_custom_subquery_exists(self):
         tests = Test.objects.filter(permission=OuterRef('pk'))
         qs = Permission.objects.annotate(has_tests=Exists(tests))
-        self.assert_tables(qs, Permission, Test)
+        self.assert_tables(qs, Permission, Test, ContentType)
         self.assert_query_cached(qs, list(Permission.objects.all()))
 
     def test_raw_subquery(self):
@@ -516,17 +516,22 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = TestChild.objects.annotate(
             filtered_permissions=FilteredRelation(
                 'permissions', condition=Q(permissions__pk__gt=1)))
-        self.assert_tables(qs, TestChild)
+        # Resulting query:
+        # SELECT "cachalot_testparent"."id", "cachalot_testparent"."name",
+        # "cachalot_testchild"."testparent_ptr_id", "cachalot_testchild"."public"
+        # FROM "cachalot_testchild" INNER JOIN "cachalot_testparent" ON
+        # ("cachalot_testchild"."testparent_ptr_id" = "cachalot_testparent"."id")
+        self.assert_tables(qs, TestParent, TestChild)
         self.assert_query_cached(qs)
 
         values_qs = qs.values('filtered_permissions')
         self.assert_tables(
-            values_qs, TestChild, TestChild.permissions.through, Permission)
+            values_qs, TestParent, TestChild, TestChild.permissions.through, Permission)
         self.assert_query_cached(values_qs)
 
         filtered_qs = qs.filter(filtered_permissions__pk__gt=2)
         self.assert_tables(
-            values_qs, TestChild, TestChild.permissions.through, Permission)
+            values_qs, TestParent, TestChild, TestChild.permissions.through, Permission)
         self.assert_query_cached(filtered_qs)
 
     @skipUnlessDBFeature('supports_select_union')
@@ -897,7 +902,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         """Check that queries with a Now() annotation are not cached #193"""
         qs = Test.objects.annotate(now=Now())
         self.assert_query_cached(qs, after=1)
-        
+
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
     def test_tuple(self):
