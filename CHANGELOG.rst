@@ -6,6 +6,9 @@ What’s new in django-cachalot?
 
 - Fix annotated Now being cached (#195)
 - Fix conditional annotated expressions not being cached (#196)
+- Simplify annotation handling by using the flatten method (#197)
+- Fix Django 3.2 default_app_config deprecation (#198)
+- (Internal) Pinned psycopg2 to <2.9 due to Django 2.2 incompatibility
 
 2.4.2
 -----
