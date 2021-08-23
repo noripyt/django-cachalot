@@ -605,7 +605,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = qs.union(sub_qs)
         tables = {Test, Permission}
         # Sqlite does not do an ORDER BY django_content_type
-        if connection.vendor != 'sqlite':
+        if not self.is_sqlite:
             tables.add(ContentType)
         self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
@@ -639,7 +639,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             sub_qs = sub_qs.order_by()
         qs = qs.intersection(sub_qs)
         tables = {Test, Permission}
-        if connection.vendor != 'sqlite':
+        if not self.is_sqlite:
             tables.add(ContentType)
         self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
@@ -663,7 +663,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             sub_qs = sub_qs.order_by()
         qs = qs.difference(sub_qs)
         tables = {Test, Permission}
-        if connection.vendor != 'sqlite':
+        if not self.is_sqlite:
             tables.add(ContentType)
         self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
