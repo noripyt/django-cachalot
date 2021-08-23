@@ -382,7 +382,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
-    def test_annotate_case_with_when(self):
+    def test_annotate_case_with_when_and_query_in_default(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(
             first_test=Case(
@@ -391,6 +391,36 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             )
         )
         self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
+    def test_annotate_case_with_when(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(
+            first_test=Case(
+                When(Q(pk=1), then=Subquery(tests[:1])),
+                default=Value('noname')
+            )
+        )
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
+    def test_annotate_coalesce(self):
+        tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
+        qs = User.objects.annotate(
+            name=Coalesce(
+                Subquery(tests[:1]),
+                Value('notest')
+            )
+        )
+        self.assert_tables(qs, User, Test)
+        self.assert_query_cached(qs, [self.user, self.admin])
+
+    def test_annotate_raw(self):
+        qs = User.objects.annotate(
+            perm_id=RawSQL('SELECT id FROM auth_permission WHERE id = %s',
+                           (self.t1__permission.pk,))
+        )
+        self.assert_tables(qs, User, Permission)
         self.assert_query_cached(qs, [self.user, self.admin])
 
     def test_only(self):

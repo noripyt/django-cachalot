@@ -2,17 +2,23 @@ import datetime
 from decimal import Decimal
 from hashlib import sha1
 from time import time
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connections
-from django.db.models import Case, Exists, QuerySet, Subquery
+from django.db.models import Exists, QuerySet, Subquery
+from django.db.models.expressions import RawSQL
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
 
 from .settings import ITERABLES, cachalot_settings
 from .transaction import AtomicCache
+
+
+if TYPE_CHECKING:
+    from django.db.models.expressions import BaseExpression 
 
 
 class UncachableQuery(Exception):
@@ -174,6 +180,23 @@ def filter_cachable(tables):
     return tables
 
 
+def _flatten(expression: "BaseExpression"):
+    """
+    Recursively yield this expression and all subexpressions, in
+    depth-first order.
+
+    Taken from Django 3.2 as the previous Django versions don’t check
+    for existence of flatten.
+    """
+    yield expression
+    for expr in expression.get_source_expressions():
+        if expr:
+            if hasattr(expr, 'flatten'):
+                yield from _flatten(expr)
+            else:
+                yield expr
+
+
 def _get_tables(db_alias, query):
     if query.select_for_update or (
             not cachalot_settings.CACHALOT_CACHE_RANDOM
@@ -187,24 +210,19 @@ def _get_tables(db_alias, query):
         tables = set(query.table_map)
         tables.add(query.get_meta().db_table)
 
-        def __update_annotated_subquery(_annotation: Subquery):
-            if hasattr(_annotation, "queryset"):
-                tables.update(_get_tables(db_alias, _annotation.queryset.query))
-            else:
-                tables.update(_get_tables(db_alias, _annotation.query))
-
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
-            if isinstance(annotation, Case):
-                for case in annotation.cases:
-                    for subquery in _find_subqueries_in_where(case.condition.children):
-                        tables.update(_get_tables(db_alias, subquery))
-                if isinstance(annotation.default, Subquery):
-                    __update_annotated_subquery(annotation.default)
-            elif isinstance(annotation, Subquery):
-                __update_annotated_subquery(annotation)
-            elif type(annotation) in UNCACHABLE_FUNCS:
+            if type(annotation) in UNCACHABLE_FUNCS:
                 raise UncachableQuery
+            for expression in _flatten(annotation):
+                if isinstance(expression, Subquery):
+                    if hasattr(expression, "queryset"):
+                        tables.update(_get_tables(db_alias, expression.queryset.query))
+                    else:
+                        tables.update(_get_tables(db_alias, expression.query))
+                elif isinstance(expression, RawSQL):
+                    sql = expression.as_sql(None, None)[0].lower()
+                    tables.update(_get_tables_from_sql(connections[db_alias], sql))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))
