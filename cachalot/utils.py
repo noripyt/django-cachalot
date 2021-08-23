@@ -216,8 +216,10 @@ def _get_tables(db_alias, query):
                 raise UncachableQuery
             for expression in _flatten(annotation):
                 if isinstance(expression, Subquery):
-                    if hasattr(expression, "queryset"):
+                    # Django 2.2 only: no query, only queryset
+                    if not hasattr(expression, "query"):
                         tables.update(_get_tables(db_alias, expression.queryset.query))
+                    # Django 3+
                     else:
                         tables.update(_get_tables(db_alias, expression.query))
                 elif isinstance(expression, RawSQL):
