@@ -222,12 +222,12 @@ def _get_tables(db_alias, query):
     except IsRawQuery:
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         tables = _get_tables_from_sql(connections[db_alias], sql)
-
-    # Additional check of the final SQL.
-    # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
-    # as not all expressions are handled yet. This final check acts as safety net.
-    final_check_tables = _get_tables_from_sql(connections[db_alias], str(query), enable_quote=True)
-    tables.update(final_check_tables)
+    else:
+        # Additional check of the final SQL.
+        # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
+        # as not all expressions are handled yet. This final check acts as safety net.
+        final_check_tables = _get_tables_from_sql(connections[db_alias], str(query).lower(), enable_quote=True)
+        tables.update(final_check_tables)
 
     if not are_all_cachable(tables):
         raise UncachableQuery

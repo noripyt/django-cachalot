@@ -510,6 +510,18 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
 
+    def test_test_parent(self):
+        child = TestChild.objects.create(name='child')
+        qs = TestChild.objects.filter(name='child')
+        self.assert_query_cached(qs)
+
+        parent = TestParent.objects.all().first()
+        parent.name = 'another name'
+        parent.save()
+
+        child = TestChild.objects.all().first()
+        self.assertEqual(child.name, 'another name')
+
     def test_filtered_relation(self):
         from django.db.models import FilteredRelation
 

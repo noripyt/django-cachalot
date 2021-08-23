@@ -36,7 +36,7 @@ class TestUtilsMixin:
     def assert_tables(self, queryset, *tables):
         tables = {table if isinstance(table, str)
                   else table._meta.db_table for table in tables}
-        self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables)
+        self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables, str(queryset.query))
 
     def assert_query_cached(self, queryset, result=None, result_type=None,
                             compare_results=True, before=1, after=0):
