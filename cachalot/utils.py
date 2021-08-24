@@ -101,15 +101,14 @@ def get_table_cache_key(db_alias, table):
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
-def _get_tables_from_sql(connection, lowercased_sql,
-                         enable_quote=False):
+def _get_tables_from_sql(connection, lowercased_sql, enable_quote: bool = False):
     """Returns names of involved tables after analyzing the final SQL query."""
-    return {table for table in connection.introspection.django_table_names()
-            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES
+    return {table for table in (connection.introspection.django_table_names()
+            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES)
             if _quote_table_name(table, connection, enable_quote) in lowercased_sql}
 
 
-def _quote_table_name(table_name, connection, enable_quote):
+def _quote_table_name(table_name, connection, enable_quote: bool):
     """
     Returns quoted table name.
 
@@ -180,7 +179,7 @@ def filter_cachable(tables):
     return tables
 
 
-def _flatten(expression: "BaseExpression"):
+def _flatten(expression: 'BaseExpression'):
     """
     Recursively yield this expression and all subexpressions, in
     depth-first order.
@@ -206,6 +205,7 @@ def _get_tables(db_alias, query):
     try:
         if query.extra_select:
             raise IsRawQuery
+
         # Gets all tables already found by the ORM.
         tables = set(query.table_map)
         tables.add(query.get_meta().db_table)
@@ -217,7 +217,7 @@ def _get_tables(db_alias, query):
             for expression in _flatten(annotation):
                 if isinstance(expression, Subquery):
                     # Django 2.2 only: no query, only queryset
-                    if not hasattr(expression, "query"):
+                    if not hasattr(expression, 'query'):
                         tables.update(_get_tables(db_alias, expression.queryset.query))
                     # Django 3+
                     else:
@@ -246,7 +246,8 @@ def _get_tables(db_alias, query):
         # Additional check of the final SQL.
         # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
         # as not all expressions are handled yet. This final check acts as safety net.
-        final_check_tables = _get_tables_from_sql(connections[db_alias], str(query).lower(), enable_quote=True)
+        sql = query.get_compiler(db_alias).as_sql()[0].lower()
+        final_check_tables = _get_tables_from_sql(connections[db_alias], sql, enable_quote=True)
         tables.update(final_check_tables)
 
     if not are_all_cachable(tables):
