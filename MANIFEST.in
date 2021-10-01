@@ -1,2 +1,2 @@
-include README.rst LICENSE CHANGELOG.rst requirements.txt
+include README.rst LICENSE CHANGELOG.rst requirements.txt tox.ini
 recursive-include cachalot *.json *.html
