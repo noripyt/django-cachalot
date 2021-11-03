@@ -5,6 +5,7 @@ What’s new in django-cachalot?
 -----
 
 - Handle queryset implementations without lhs/rhs attribute (#204)
+- Add Python 3.10 support (#206)
 - (Internal) Omit additional unnecessary code in coverage
 
 2.4.3
