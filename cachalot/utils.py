@@ -83,7 +83,8 @@ def get_query_cache_key(compiler):
     check_parameter_types(params)
     cache_key = '%s:%s:%s' % (compiler.using, sql,
                               [str(p) for p in params])
-    # Set attribute on compiler
+    # Set attribute on compiler for later access
+    # to the generated SQL. This prevents another as_sql() call!
     compiler.__cachalot_generated_sql = sql.lower()
 
     return sha1(cache_key.encode('utf-8')).hexdigest()
