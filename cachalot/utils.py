@@ -83,6 +83,9 @@ def get_query_cache_key(compiler):
     check_parameter_types(params)
     cache_key = '%s:%s:%s' % (compiler.using, sql,
                               [str(p) for p in params])
+    # Set attribute on compiler
+    compiler.__cachalot_generated_sql = sql.lower()
+
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
@@ -196,7 +199,7 @@ def _flatten(expression: 'BaseExpression'):
                 yield expr
 
 
-def _get_tables(db_alias, query):
+def _get_tables(db_alias, query, compiler=False):
     if query.select_for_update or (
             not cachalot_settings.CACHALOT_CACHE_RANDOM
             and '?' in query.order_by):
@@ -246,7 +249,11 @@ def _get_tables(db_alias, query):
         # Additional check of the final SQL.
         # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
         # as not all expressions are handled yet. This final check acts as safety net.
-        sql = query.get_compiler(db_alias).as_sql()[0].lower()
+        if compiler:
+            # Access generated SQL stored when caching the query!
+            sql = compiler.__cachalot_generated_sql
+        else:
+            sql = query.get_compiler(db_alias).as_sql()[0].lower()
         final_check_tables = _get_tables_from_sql(connections[db_alias], sql, enable_quote=True)
         tables.update(final_check_tables)
 
@@ -259,7 +266,7 @@ def _get_table_cache_keys(compiler):
     db_alias = compiler.using
     get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
     return [get_table_cache_key(db_alias, t)
-            for t in _get_tables(db_alias, compiler.query)]
+            for t in _get_tables(db_alias, compiler.query, compiler)]
 
 
 def _invalidate_tables(cache, db_alias, tables):
