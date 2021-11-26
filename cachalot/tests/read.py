@@ -22,6 +22,8 @@ from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin
 
+from .tests_decorators import all_final_sql_checks, with_final_sql_check, no_final_sql_check
+
 
 def is_field_available(name):
     fields = []
@@ -176,11 +178,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1, compare_results=False)
 
+    @all_final_sql_checks
     def test_order_by_field_of_another_table(self):
         qs = Test.objects.order_by('owner__username')
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
+    @all_final_sql_checks
     def test_order_by_field_of_another_table_with_expression(self):
         qs = Test.objects.order_by(Coalesce('name', 'owner__username'))
         self.assert_tables(qs, Test, User)
@@ -293,7 +297,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.user.pk, self.admin.pk])
 
-    def test_many_to_many(self):
+    def _test_many_to_many(self):
         u = User.objects.create_user('test_user')
         ct = ContentType.objects.get_for_model(User)
         u.user_permissions.add(
@@ -303,8 +307,18 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 name='Can touch', content_type=ct, codename='touch'),
             Permission.objects.create(
                 name='Can cuddle', content_type=ct, codename='cuddle'))
-        qs = u.user_permissions.values_list('codename', flat=True)
+        return u.user_permissions.values_list('codename', flat=True)
+
+    @with_final_sql_check
+    def test_many_to_many_when_sql_check(self):
+        qs = self._test_many_to_many()
         self.assert_tables(qs, User, User.user_permissions.through, Permission, ContentType)
+        self.assert_query_cached(qs, ['cuddle', 'discuss', 'touch'])
+
+    @no_final_sql_check
+    def test_many_to_many_when_no_sql_check(self):
+        qs = self._test_many_to_many()
+        self.assert_tables(qs, User, User.user_permissions.through, Permission)
         self.assert_query_cached(qs, ['cuddle', 'discuss', 'touch'])
 
     def test_subquery(self):
@@ -335,10 +349,18 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                            TestChild.permissions.through, Permission)
         self.assert_query_cached(qs, [])
 
-    def test_custom_subquery(self):
+    @with_final_sql_check
+    def test_custom_subquery_with_check(self):
         tests = Test.objects.filter(permission=OuterRef('pk')).values('name')
         qs = Permission.objects.annotate(first_permission=Subquery(tests[:1]))
         self.assert_tables(qs, Permission, Test, ContentType)
+        self.assert_query_cached(qs, list(Permission.objects.all()))
+
+    @no_final_sql_check
+    def test_custom_subquery_no_check(self):
+        tests = Test.objects.filter(permission=OuterRef('pk')).values('name')
+        qs = Permission.objects.annotate(first_permission=Subquery(tests[:1]))
+        self.assert_tables(qs, Permission, Test)
         self.assert_query_cached(qs, list(Permission.objects.all()))
 
     def test_custom_subquery_exists(self):
