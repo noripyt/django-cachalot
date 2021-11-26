@@ -37,12 +37,9 @@ class TestUtilsMixin:
             connection.cursor()
 
     def assert_tables(self, queryset, *tables):
-        from ..utils import cachalot_settings
         tables = {table if isinstance(table, str)
                   else table._meta.db_table for table in tables}
-        for final_sql_check in (True, False):
-            with patch.object(cachalot_settings, 'CACHALOT_FINAL_SQL_CHECK', final_sql_check):
-                self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables, str(queryset.query))
+        self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables, str(queryset.query))
 
     def assert_query_cached(self, queryset, result=None, result_type=None,
                             compare_results=True, before=1, after=0):
