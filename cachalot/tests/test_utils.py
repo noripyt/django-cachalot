@@ -1,3 +1,5 @@
+from unittest.mock import patch, PropertyMock
+
 from django import VERSION as DJANGO_VERSION
 from django.core.management.color import no_style
 from django.db import connection, transaction
@@ -35,10 +37,11 @@ class TestUtilsMixin:
             connection.cursor()
 
     def assert_tables(self, queryset, *tables):
+        from ..utils import cachalot_settings
         tables = {table if isinstance(table, str)
                   else table._meta.db_table for table in tables}
         for setting in (True, False):
-            with override_settings(CACHALOT_FINAL_SQL_CHECK=setting):
+            with patch.object(cachalot_settings, 'CACHALOT_FINAL_SQL_CHECK', setting):
                 self.assertSetEqual(_get_tables(queryset.db, queryset.query), tables, str(queryset.query))
 
     def assert_query_cached(self, queryset, result=None, result_type=None,
