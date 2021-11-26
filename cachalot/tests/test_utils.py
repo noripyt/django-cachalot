@@ -1,9 +1,6 @@
-from unittest.mock import patch, PropertyMock
-
 from django import VERSION as DJANGO_VERSION
 from django.core.management.color import no_style
 from django.db import connection, transaction
-from django.test.utils import override_settings
 
 from ..utils import _get_tables
 from .models import PostgresModel

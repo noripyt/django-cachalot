@@ -15,10 +15,10 @@ def all_final_sql_checks(func):
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        for i, sql_check in enumerate((True, False)):
-            with self.subTest(msg=f'CACHALOT_FINAL_SQL_CHECK = {sql_check}'):
+        for final_sql_check in (True, False):
+            with self.subTest(msg=f'CACHALOT_FINAL_SQL_CHECK = {final_sql_check}'):
                 with override_settings(
-                        CACHALOT_FINAL_SQL_CHECK=sql_check
+                        CACHALOT_FINAL_SQL_CHECK=final_sql_check
                 ):
                     func(self, *args, **kwargs)
             cache.clear()
