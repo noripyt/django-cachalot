@@ -1,17 +1,19 @@
 from time import sleep
 from unittest import skipIf
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.cache import DEFAULT_CACHE_ALIAS
-from django.core.checks import run_checks, Tags, Warning, Error
+from django.core.checks import Error, Tags, Warning, run_checks
 from django.db import connection
 from django.test import TransactionTestCase
 from django.test.utils import override_settings
 
 from ..api import invalidate
-from ..settings import SUPPORTED_ONLY, SUPPORTED_DATABASE_ENGINES
-from .models import Test, TestParent, TestChild, UnmanagedModel
+from ..settings import SUPPORTED_DATABASE_ENGINES, SUPPORTED_ONLY
+from ..utils import _get_tables
+from .models import Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin
 
 
@@ -314,3 +316,29 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         with self.settings(CACHALOT_DATABASES='invalid value'):
             errors = run_checks(tags=[Tags.compatibility])
             self.assertListEqual(errors, [error002])
+
+    def call_get_tables(self):
+        qs = Test.objects.all()
+        compiler_mock = MagicMock()
+        compiler_mock.__cachalot_generated_sql = ''
+        tables = _get_tables(qs.db, qs.query, compiler_mock)
+        self.assertTrue(tables)
+        return tables
+
+    @override_settings(CACHALOT_FINAL_SQL_CHECK=True)
+    @patch('cachalot.utils._get_tables_from_sql')
+    def test_cachalot_final_sql_check_when_true(self, _get_tables_from_sql):
+        _get_tables_from_sql.return_value = {'patched'}
+        tables = self.call_get_tables()
+        _get_tables_from_sql.assert_called_once()
+        self.assertIn('patched', tables)
+
+
+    @override_settings(CACHALOT_FINAL_SQL_CHECK=False)
+    @patch('cachalot.utils._get_tables_from_sql')
+    def test_cachalot_final_sql_check_when_false(self, _get_tables_from_sql):
+        _get_tables_from_sql.return_value = {'patched'}
+        tables = self.call_get_tables()
+        _get_tables_from_sql.assert_not_called()
+        self.assertNotIn('patched', tables)
+
