@@ -668,9 +668,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, TestChild)
         self._filtered_relation_common_asserts(qs)
 
-    @all_final_sql_checks
-    @skipUnlessDBFeature('supports_select_union')
-    def test_union(self):
+    def _test_union(self, check: bool):
         qs = (
             Test.objects.filter(pk__lt=5)
             | Test.objects.filter(permission__name__contains='a')
@@ -701,15 +699,23 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         qs = qs.union(sub_qs)
         tables = {Test, Permission}
         # Sqlite does not do an ORDER BY django_content_type
-        if not self.is_sqlite:
+        if not self.is_sqlite and check:
             tables.add(ContentType)
         self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
-    @all_final_sql_checks
-    @skipUnlessDBFeature('supports_select_intersection')
-    def test_intersection(self):
+    @with_final_sql_check
+    @skipUnlessDBFeature('supports_select_union')
+    def test_union_with_sql_check(self):
+        self._test_union(check=True)
+
+    @no_final_sql_check
+    @skipUnlessDBFeature('supports_select_union')
+    def test_union_with_sql_check(self):
+        self._test_union(check=False)
+
+    def _test_intersection(self, check: bool):
         qs = (Test.objects.filter(pk__lt=5)
               & Test.objects.filter(permission__name__contains='a'))
         self.assert_tables(qs, Test, Permission)
@@ -736,15 +742,23 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             sub_qs = sub_qs.order_by()
         qs = qs.intersection(sub_qs)
         tables = {Test, Permission}
-        if not self.is_sqlite:
+        if not self.is_sqlite and check:
             tables.add(ContentType)
         self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
-    @all_final_sql_checks
-    @skipUnlessDBFeature('supports_select_difference')
-    def test_difference(self):
+    @with_final_sql_check
+    @skipUnlessDBFeature('supports_select_intersection')
+    def test_intersection_with_check(self):
+        self._test_intersection(check=True)
+
+    @no_final_sql_check
+    @skipUnlessDBFeature('supports_select_intersection')
+    def test_intersection_with_check(self):
+        self._test_intersection(check=False)
+
+    def _test_difference(self, check: bool):
         qs = Test.objects.filter(pk__lt=5)
         sub_qs = Test.objects.filter(permission__name__contains='a')
         if self.is_sqlite:
@@ -761,11 +775,21 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             sub_qs = sub_qs.order_by()
         qs = qs.difference(sub_qs)
         tables = {Test, Permission}
-        if not self.is_sqlite:
+        if not self.is_sqlite and check:
             tables.add(ContentType)
         self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
+
+    @with_final_sql_check
+    @skipUnlessDBFeature('supports_select_difference')
+    def test_difference_with_check(self):
+        self._test_difference(check=True)
+
+    @no_final_sql_check
+    @skipUnlessDBFeature('supports_select_difference')
+    def test_difference_with_check(self):
+        self._test_difference(check=False)
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_select_for_update(self):
