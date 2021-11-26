@@ -1,5 +1,7 @@
 import logging
 from functools import wraps
+
+from django.core.cache import cache
 from django.test.utils import override_settings
 
 logger = logging.getLogger(__name__)
@@ -10,12 +12,16 @@ def all_final_sql_checks(func):
     Runs test as two sub-tests:
     one with CACHALOT_FINAL_SQL_CHECK setting True, one with False
     """
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         for i, sql_check in enumerate((True, False)):
             with self.subTest(msg=f'CACHALOT_FINAL_SQL_CHECK = {sql_check}'):
-                with override_settings(CACHALOT_FINAL_SQL_CHECK=sql_check):
+                with override_settings(
+                        CACHALOT_FINAL_SQL_CHECK=sql_check
+                ):
                     func(self, *args, **kwargs)
+            cache.clear()
 
     return wrapper
 
