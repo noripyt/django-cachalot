@@ -2,8 +2,8 @@ from django import VERSION as DJANGO_VERSION
 from django.core.management.color import no_style
 from django.db import connection, transaction
 
-from .models import PostgresModel
 from ..utils import _get_tables
+from .models import PostgresModel
 
 
 class TestUtilsMixin:

@@ -250,13 +250,14 @@ def _get_tables(db_alias, query, compiler=False):
         # Additional check of the final SQL.
         # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
         # as not all expressions are handled yet. This final check acts as safety net.
-        if compiler:
-            # Access generated SQL stored when caching the query!
-            sql = compiler.__cachalot_generated_sql
-        else:
-            sql = query.get_compiler(db_alias).as_sql()[0].lower()
-        final_check_tables = _get_tables_from_sql(connections[db_alias], sql, enable_quote=True)
-        tables.update(final_check_tables)
+        if cachalot_settings.CACHALOT_FINAL_SQL_CHECK:
+            if compiler:
+                # Access generated SQL stored when caching the query!
+                sql = compiler.__cachalot_generated_sql
+            else:
+                sql = query.get_compiler(db_alias).as_sql()[0].lower()
+            final_check_tables = _get_tables_from_sql(connections[db_alias], sql, enable_quote=True)
+            tables.update(final_check_tables)
 
     if not are_all_cachable(tables):
         raise UncachableQuery
