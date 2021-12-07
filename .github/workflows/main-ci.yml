@@ -15,7 +15,7 @@ jobs:
 
     services:
       redis:
-        image: redis:6.0
+        image: redis:6
         ports:
           - 6379:6379
       postgres:
@@ -64,7 +64,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install -y libmemcached-dev zlib1g-dev
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip wheel
         python -m pip install tox tox-gh-actions coveralls
     - name: Tox Test
       run: tox

@@ -12,8 +12,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
-        django-version: ['2.2', '3.1', '3.2']
+        python-version: ['3.7', '3.8', '3.9', '3.10']
+        django-version: ['2.2', '3.2', '4.0']
+        exclude:
+          - python-version: '3.10'
+            django-version: '2.2'
+          - python-version: '3.7'
+            django-version: '4.0'
 
     services:
       redis:
@@ -66,7 +71,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get install -y libmemcached-dev zlib1g-dev
-        python -m pip install --upgrade pip
+        python -m pip install --upgrade pip wheel
         python -m pip install tox tox-gh-actions coveralls
     - name: Tox Test
       run: tox
