@@ -557,7 +557,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs)
 
         with self.assertRaisesMessage(
-                TypeError,
+                AssertionError if django_version[0] < 4 else TypeError,
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() | Permission.objects.all()
 
