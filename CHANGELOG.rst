@@ -1,6 +1,11 @@
 What’s new in django-cachalot?
 ==============================
 
+2.4.5
+-----
+
+- Dropped Python 3.6 and Django 3.1 support. Added Django 4.0 support (#208)
+
 2.4.4
 -----
 
