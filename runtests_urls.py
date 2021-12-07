@@ -1,5 +1,5 @@
 import debug_toolbar
-from django.urls import url, include
+from django.urls import re_path, include
 from django.http import HttpResponse
 
 
@@ -8,6 +8,6 @@ def empty_page(request):
 
 
 urlpatterns = [
-    url(r'^$', empty_page),
-    url(r'^__debug__/', include(debug_toolbar.urls)),
+    re_path(r'^$', empty_page),
+    re_path(r'^__debug__/', include(debug_toolbar.urls)),
 ]
