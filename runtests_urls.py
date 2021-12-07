@@ -1,5 +1,5 @@
 import debug_toolbar
-from django.conf.urls import url, include
+from django.urls import url, include
 from django.http import HttpResponse
 
 
