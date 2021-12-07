@@ -557,7 +557,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs)
 
         with self.assertRaisesMessage(
-                AssertionError,
+                TypeError,
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() | Permission.objects.all()
 
