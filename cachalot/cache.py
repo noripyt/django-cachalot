@@ -2,8 +2,9 @@ from collections import defaultdict
 from threading import local
 
 from django.core.cache import caches
-from django.db import DEFAULT_DB_ALIAS
+from django.db import DEFAULT_DB_ALIAS, connection
 
+from cachalot.tenants import tenant_handler
 from .settings import cachalot_settings
 from .signals import post_invalidation
 from .transaction import AtomicCache
@@ -54,3 +55,26 @@ class CacheHandler(local):
 
 
 cachalot_caches = CacheHandler()
+
+
+def make_key(key, key_prefix, version):
+    """
+    Tenant-aware function to generate a cache key.
+
+    Constructs the key used by all other methods. Prepends the tenant
+    `schema_name` and `key_prefix' in multi-tenant deployments.
+
+    Must be configured via the KEY_FUNCTION setting.
+    """
+    if key in tenant_handler.public_schema_keys:
+        return '%s:%s:%s:%s' % (tenant_handler.public_schema_name, key_prefix, version, key)
+    return '%s:%s:%s:%s' % (connection.schema_name, key_prefix, version, key)
+
+
+def reverse_key(key):
+    """
+    Tenant-aware function to reverse a cache key.
+
+    Must be configured via REVERSE_KEY_FUNCTION setting for multi-tenant deployments.
+    """
+    return key.split(':', 3)[3]

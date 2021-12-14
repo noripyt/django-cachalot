@@ -313,14 +313,16 @@ class CommandTestCase(TransactionTestCase):
     databases = "__all__"
 
     def setUp(self):
-        self.db_alias2 = next(alias for alias in settings.DATABASES
-                              if alias != DEFAULT_DB_ALIAS)
+        if len(settings.DATABASES) > 1:
+            self.db_alias2 = next(alias for alias in settings.DATABASES
+                                  if alias != DEFAULT_DB_ALIAS)
+
+            self.t2 = Test.objects.using(self.db_alias2).create(name='test2')
 
         self.cache_alias2 = next(alias for alias in settings.CACHES
                                  if alias != DEFAULT_CACHE_ALIAS)
 
         self.t1 = Test.objects.create(name='test1')
-        self.t2 = Test.objects.using(self.db_alias2).create(name='test2')
         self.u = User.objects.create_user('test')
 
     def test_invalidate_cachalot(self):

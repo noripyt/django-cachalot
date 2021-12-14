@@ -54,6 +54,7 @@ Below the tree is an in-depth opinion from the new maintainer:
    limits
    api
    benchmark
+   multi-tenant
    todo
    reporting
    how

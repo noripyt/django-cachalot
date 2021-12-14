@@ -28,6 +28,9 @@ SUPPORTED_DATABASE_ENGINES = {
     'django_prometheus.db.backends.sqlite3',
     'django_prometheus.db.backends.postgresql',
     'django_prometheus.db.backends.mysql',
+
+    # django-tenants
+    'django_tenants.postgresql_backend',
 }
 
 SUPPORTED_CACHE_BACKENDS = {

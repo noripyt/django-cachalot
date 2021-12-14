@@ -7,6 +7,7 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from django.utils.timesince import timesince
 
+from cachalot.tenants import tenant_handler
 from .cache import cachalot_caches
 from .settings import cachalot_settings
 
@@ -43,6 +44,7 @@ class CachalotPanel(Panel):
     def collect_invalidations(self):
         models = apps.get_models()
         data = defaultdict(list)
+        multi_tenant_dbs = []
         cache = cachalot_caches.get_cache()
         for db_alias in settings.DATABASES:
             get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
@@ -53,13 +55,28 @@ class CachalotPanel(Panel):
                     model_cache_keys.keys()).items():
                 invalidation = datetime.fromtimestamp(timestamp)
                 model = model_cache_keys[cache_key]
+                model_name = model.__name__
+                if (
+                    tenant_handler.is_multi_tenant_database(db_alias) and
+                    cache_key not in tenant_handler.public_schema_keys
+                ):
+                    # Add indicator to show that this cached model is tenant-specific.
+                    model_name = '{}*'.format(model_name)
                 data[db_alias].append(
-                    (model._meta.app_label, model.__name__, invalidation))
+                    (model._meta.app_label, model_name, invalidation))
                 if self.last_invalidation is None \
                         or invalidation > self.last_invalidation:
                     self.last_invalidation = invalidation
             data[db_alias].sort(key=lambda row: row[2], reverse=True)
-        self.record_stats({'invalidations_per_db': data.items()})
+            if tenant_handler.is_multi_tenant_database(db_alias):
+                multi_tenant_dbs.append(db_alias)
+        self.record_stats(
+            {
+                'invalidations_per_db': data.items(),
+                'multi_tenant_dbs': multi_tenant_dbs
+
+            }
+        )
 
     @property
     def nav_subtitle(self):

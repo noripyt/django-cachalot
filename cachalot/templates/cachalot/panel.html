@@ -7,7 +7,7 @@
     <thead>
       <tr>
         <th>{% trans 'Application' %}</th>
-        <th>{% trans 'Model' %}</th>
+        <th>{% trans 'Model' %}{% if db_alias in multi_tenant_dbs %}{% trans '(*=tenant-specific)' %}{% endif %}</th>
         <th>{% trans 'Last invalidation' %}</th>
       </tr>
     </thead>
