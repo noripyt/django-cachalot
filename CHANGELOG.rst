@@ -1,6 +1,18 @@
 What’s new in django-cachalot?
 ==============================
 
+2.4.5
+-----
+
+- Dropped Python 3.6 and Django 3.1 support. Added Django 4.0 support (#208)
+
+2.4.4
+-----
+
+- Handle queryset implementations without lhs/rhs attribute (#204)
+- Add Python 3.10 support (#206)
+- (Internal) Omit additional unnecessary code in coverage
+
 2.4.3
 -----
 

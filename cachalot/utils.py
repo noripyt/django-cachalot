@@ -153,10 +153,15 @@ def _find_subqueries_in_where(children):
         elif child_class is NothingNode:
             pass
         else:
-            rhs = _find_rhs_lhs_subquery(child.rhs)
+            try:
+                child_rhs = child.rhs
+                child_lhs = child.lhs
+            except AttributeError:
+                raise UncachableQuery
+            rhs = _find_rhs_lhs_subquery(child_rhs)
             if rhs is not None:
                 yield rhs
-            lhs = _find_rhs_lhs_subquery(child.lhs)
+            lhs = _find_rhs_lhs_subquery(child_lhs)
             if lhs is not None:
                 yield lhs
 

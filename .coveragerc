@@ -1,2 +1,13 @@
 [run]
 omit = */tests/*
+
+[report]
+exclude_lines = 
+    pragma: no cover
+    pragma: nocover
+    def __repr__
+
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    except ImportError:
+

@@ -1,3 +1,4 @@
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField,
@@ -57,11 +58,9 @@ class PostgresModel(Model):
                            null=True, blank=True)
 
     hstore = HStoreField(null=True, blank=True)
-    try:
+    if DJANGO_VERSION[0] < 4:
         from django.contrib.postgres.fields import JSONField
         json = JSONField(null=True, blank=True)
-    except ImportError:
-        pass
 
     int_range = IntegerRangeField(null=True, blank=True)
     try:

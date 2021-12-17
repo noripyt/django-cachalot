@@ -1,3 +1,4 @@
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.postgres.fields import (
     ArrayField, HStoreField, IntegerRangeField,
@@ -10,11 +11,8 @@ from django.db import models, migrations
 def extra_regular_available_fields():
     fields = []
     try:
-        # TODO Add to module import when Dj40 dropped
-        from django import VERSION as DJANGO_VERSION
-        from django.contrib.postgres.fields import JSONField
-        if float(".".join(map(str, DJANGO_VERSION[:2]))) > 3.0:
-            fields.append(('json', JSONField(null=True, blank=True)))
+        from django.db.models import JSONField
+        fields.append(('json', JSONField(null=True, blank=True)))
     except ImportError:
         pass
 
@@ -38,12 +36,10 @@ def extra_postgres_available_fields():
         pass
 
     # Future proofing with Django 40 deprecation
-    try:
+    if DJANGO_VERSION[0] < 4:
         # TODO Remove when Dj40 support is dropped
         from django.contrib.postgres.fields import JSONField
         fields.append(('json', JSONField(null=True, blank=True)))
-    except ImportError:
-        pass
 
     return fields
 
