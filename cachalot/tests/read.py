@@ -4,6 +4,7 @@ from uuid import UUID
 from decimal import Decimal
 
 from django import VERSION as django_version
+from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import (
@@ -350,31 +351,46 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
     @all_final_sql_checks
     def test_subquery(self):
+        additional_tables = []
+        if django_version[0] >= 4 and settings.CACHALOT_FINAL_SQL_CHECK:
+            # with Django 4.0 comes some query optimalizations that do selects little differently.
+            additional_tables.append('django_content_type')
         qs = Test.objects.filter(owner__in=User.objects.all())
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t1, self.t2])
 
         qs = Test.objects.filter(
-            owner__groups__permissions__in=Permission.objects.all())
-        self.assert_tables(qs, Test, User, User.groups.through, Group,
-                           Group.permissions.through, Permission)
+            owner__groups__permissions__in=Permission.objects.all()
+        )
+        self.assert_tables(
+            qs, Test, User, User.groups.through, Group,
+            Group.permissions.through, Permission,
+            *additional_tables
+        )
         self.assert_query_cached(qs, [self.t1, self.t1, self.t1])
 
         qs = Test.objects.filter(
             owner__groups__permissions__in=Permission.objects.all()
         ).distinct()
-        self.assert_tables(qs, Test, User, User.groups.through, Group,
-                           Group.permissions.through, Permission)
+        self.assert_tables(
+            qs, Test, User, User.groups.through, Group,
+            Group.permissions.through, Permission,
+            *additional_tables
+        )
         self.assert_query_cached(qs, [self.t1])
 
         qs = TestChild.objects.exclude(permissions__isnull=True)
-        self.assert_tables(qs, TestParent, TestChild,
-                           TestChild.permissions.through, Permission)
+        self.assert_tables(
+            qs, TestParent, TestChild,
+            TestChild.permissions.through, Permission
+        )
         self.assert_query_cached(qs, [])
 
         qs = TestChild.objects.exclude(permissions__name='')
-        self.assert_tables(qs, TestParent, TestChild,
-                           TestChild.permissions.through, Permission)
+        self.assert_tables(
+            qs, TestParent, TestChild,
+            TestChild.permissions.through, Permission
+        )
         self.assert_query_cached(qs, [])
 
     @with_final_sql_check
