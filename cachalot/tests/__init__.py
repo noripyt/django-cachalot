@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from ..settings import cachalot_settings
 from .read import ReadTestCase, ParameterTypeTestCase
 from .write import WriteTestCase, DatabaseCommandTestCase
-from .transaction import AtomicTestCase
+from .transaction import AtomicCacheTestCase, AtomicTestCase
 from .thread_safety import ThreadSafetyTestCase
 from .multi_db import MultiDatabaseTestCase
 from .settings import SettingsTestCase

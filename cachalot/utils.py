@@ -83,6 +83,10 @@ def get_query_cache_key(compiler):
     check_parameter_types(params)
     cache_key = '%s:%s:%s' % (compiler.using, sql,
                               [str(p) for p in params])
+    # Set attribute on compiler for later access
+    # to the generated SQL. This prevents another as_sql() call!
+    compiler.__cachalot_generated_sql = sql.lower()
+
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
@@ -101,9 +105,23 @@ def get_table_cache_key(db_alias, table):
     return sha1(cache_key.encode('utf-8')).hexdigest()
 
 
-def _get_tables_from_sql(connection, lowercased_sql):
-    return {t for t in connection.introspection.django_table_names()
-            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES if t in lowercased_sql}
+def _get_tables_from_sql(connection, lowercased_sql, enable_quote: bool = False):
+    """Returns names of involved tables after analyzing the final SQL query."""
+    return {table for table in (connection.introspection.django_table_names()
+            + cachalot_settings.CACHALOT_ADDITIONAL_TABLES)
+            if _quote_table_name(table, connection, enable_quote) in lowercased_sql}
+
+
+def _quote_table_name(table_name, connection, enable_quote: bool):
+    """
+    Returns quoted table name.
+
+    Put database-specific quotation marks around the table name
+    to preven that tables with substrings of the table are considered.
+    E.g. cachalot_testparent must not return cachalot_test.
+    """
+    return f'{connection.ops.quote_name(table_name)}' \
+        if enable_quote else table_name
 
 
 def _find_rhs_lhs_subquery(side):
@@ -170,7 +188,7 @@ def filter_cachable(tables):
     return tables
 
 
-def _flatten(expression: "BaseExpression"):
+def _flatten(expression: 'BaseExpression'):
     """
     Recursively yield this expression and all subexpressions, in
     depth-first order.
@@ -187,7 +205,7 @@ def _flatten(expression: "BaseExpression"):
                 yield expr
 
 
-def _get_tables(db_alias, query):
+def _get_tables(db_alias, query, compiler=False):
     if query.select_for_update or (
             not cachalot_settings.CACHALOT_CACHE_RANDOM
             and '?' in query.order_by):
@@ -196,6 +214,7 @@ def _get_tables(db_alias, query):
     try:
         if query.extra_select:
             raise IsRawQuery
+
         # Gets all tables already found by the ORM.
         tables = set(query.table_map)
         tables.add(query.get_meta().db_table)
@@ -206,8 +225,10 @@ def _get_tables(db_alias, query):
                 raise UncachableQuery
             for expression in _flatten(annotation):
                 if isinstance(expression, Subquery):
-                    if hasattr(expression, "queryset"):
+                    # Django 2.2 only: no query, only queryset
+                    if not hasattr(expression, 'query'):
                         tables.update(_get_tables(db_alias, expression.queryset.query))
+                    # Django 3+
                     else:
                         tables.update(_get_tables(db_alias, expression.query))
                 elif isinstance(expression, RawSQL):
@@ -230,6 +251,18 @@ def _get_tables(db_alias, query):
     except IsRawQuery:
         sql = query.get_compiler(db_alias).as_sql()[0].lower()
         tables = _get_tables_from_sql(connections[db_alias], sql)
+    else:
+        # Additional check of the final SQL.
+        # Potentially overlooked tables are added here. Tables may be overlooked by the regular checks
+        # as not all expressions are handled yet. This final check acts as safety net.
+        if cachalot_settings.CACHALOT_FINAL_SQL_CHECK:
+            if compiler:
+                # Access generated SQL stored when caching the query!
+                sql = compiler.__cachalot_generated_sql
+            else:
+                sql = query.get_compiler(db_alias).as_sql()[0].lower()
+            final_check_tables = _get_tables_from_sql(connections[db_alias], sql, enable_quote=True)
+            tables.update(final_check_tables)
 
     if not are_all_cachable(tables):
         raise UncachableQuery
@@ -240,7 +273,7 @@ def _get_table_cache_keys(compiler):
     db_alias = compiler.using
     get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
     return [get_table_cache_key(db_alias, t)
-            for t in _get_tables(db_alias, compiler.query)]
+            for t in _get_tables(db_alias, compiler.query, compiler)]
 
 
 def _invalidate_tables(cache, db_alias, tables):

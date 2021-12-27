@@ -1,6 +1,8 @@
+from cachalot.transaction import AtomicCache
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.db import transaction, connection, IntegrityError
-from django.test import TransactionTestCase, skipUnlessDBFeature
+from django.test import SimpleTestCase, TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test
 from .test_utils import TestUtilsMixin
@@ -167,7 +169,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1])
-
+    
     @skipUnlessDBFeature('can_defer_constraint_checks')
     def test_deferred_error(self):
         """
@@ -187,3 +189,13 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
                         '-- ' + Test._meta.db_table)  # Should invalidate Test.
         with self.assertNumQueries(1):
             list(Test.objects.all())
+
+
+class AtomicCacheTestCase(SimpleTestCase):
+    def setUp(self):
+        self.atomic_cache = AtomicCache(cache, 'db_alias')
+    
+    def test_set(self):
+        self.assertDictEqual(self.atomic_cache, {})
+        self.atomic_cache.set('key', 'value', None)
+        self.assertDictEqual(self.atomic_cache, {'key': 'value'})

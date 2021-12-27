@@ -4,6 +4,7 @@ from uuid import UUID
 from decimal import Decimal
 
 from django import VERSION as django_version
+from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import (
@@ -21,6 +22,8 @@ from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin
+
+from .tests_decorators import all_final_sql_checks, with_final_sql_check, no_final_sql_check
 
 
 def is_field_available(name):
@@ -125,6 +128,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [self.t1, self.t2])
 
+    @all_final_sql_checks
     def test_filter(self):
         qs = Test.objects.filter(public=True)
         self.assert_tables(qs, Test)
@@ -142,11 +146,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
+    @all_final_sql_checks
     def test_filter_empty(self):
         qs = Test.objects.filter(public=True, name='user')
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [])
 
+    @all_final_sql_checks
     def test_exclude(self):
         qs = Test.objects.exclude(public=True)
         self.assert_tables(qs, Test)
@@ -156,11 +162,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
+    @all_final_sql_checks
     def test_slicing(self):
         qs = Test.objects.all()[:1]
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t1])
 
+    @all_final_sql_checks
     def test_order_by(self):
         qs = Test.objects.order_by('pk')
         self.assert_tables(qs, Test)
@@ -170,12 +178,38 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
+    @all_final_sql_checks
     def test_random_order_by(self):
         qs = Test.objects.order_by('?')
         with self.assertRaises(UncachableQuery):
             self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1, compare_results=False)
 
+    @with_final_sql_check
+    def test_order_by_field_of_another_table_with_check(self):
+        qs = Test.objects.order_by('owner__username')
+        self.assert_tables(qs, Test, User)
+        self.assert_query_cached(qs, [self.t2, self.t1])
+
+    @no_final_sql_check
+    def test_order_by_field_of_another_table_no_check(self):
+        qs = Test.objects.order_by('owner__username')
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs, [self.t2, self.t1])
+
+    @with_final_sql_check
+    def test_order_by_field_of_another_table_with_expression_with_check(self):
+        qs = Test.objects.order_by(Coalesce('name', 'owner__username'))
+        self.assert_tables(qs, Test, User)
+        self.assert_query_cached(qs, [self.t1, self.t2])
+
+    @no_final_sql_check
+    def test_order_by_field_of_another_table_with_expression_no_check(self):
+        qs = Test.objects.order_by(Coalesce('name', 'owner__username'))
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs, [self.t1, self.t2])
+
+    @all_final_sql_checks
     @skipIf(connection.vendor == 'mysql',
             'MySQL does not support limit/offset on a subquery. '
             'Since Django only applies ordering in subqueries when they are '
@@ -187,11 +221,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1, compare_results=False)
 
+    @all_final_sql_checks
     def test_reverse(self):
         qs = Test.objects.reverse()
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
+    @all_final_sql_checks
     def test_distinct(self):
         # We ensure that the query without distinct should return duplicate
         # objects, in order to have a real-world example.
@@ -222,12 +258,14 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertDictEqual(data2, data1)
         self.assertDictEqual(data2, {self.t2.pk: self.t2})
 
+    @all_final_sql_checks
     def test_values(self):
         qs = Test.objects.values('name', 'public')
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [{'name': 'test1', 'public': False},
                                       {'name': 'test2', 'public': True}])
 
+    @all_final_sql_checks
     def test_values_list(self):
         qs = Test.objects.values_list('name', flat=True)
         self.assert_tables(qs, Test)
@@ -249,18 +287,21 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertEqual(data2, data1)
         self.assertEqual(data2, self.t2)
 
+    @all_final_sql_checks
     def test_dates(self):
         qs = Test.objects.dates('date', 'year')
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [datetime.date(1789, 1, 1),
                                       datetime.date(1944, 1, 1)])
 
+    @all_final_sql_checks
     def test_datetimes(self):
         qs = Test.objects.datetimes('datetime', 'hour')
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [datetime.datetime(1789, 7, 14, 16),
                                       datetime.datetime(1944, 6, 6, 6)])
 
+    @all_final_sql_checks
     @skipIf(connection.vendor == 'mysql',
             'Time zones are not supported by MySQL.')
     @override_settings(USE_TZ=True)
@@ -271,6 +312,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             datetime.datetime(1789, 7, 14, 16, tzinfo=UTC),
             datetime.datetime(1944, 6, 6, 6, tzinfo=UTC)])
 
+    @all_final_sql_checks
     def test_foreign_key(self):
         with self.assertNumQueries(3):
             data1 = [t.owner for t in Test.objects.all()]
@@ -283,7 +325,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.user.pk, self.admin.pk])
 
-    def test_many_to_many(self):
+    def _test_many_to_many(self):
         u = User.objects.create_user('test_user')
         ct = ContentType.objects.get_for_model(User)
         u.user_permissions.add(
@@ -293,50 +335,93 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 name='Can touch', content_type=ct, codename='touch'),
             Permission.objects.create(
                 name='Can cuddle', content_type=ct, codename='cuddle'))
-        qs = u.user_permissions.values_list('codename', flat=True)
+        return u.user_permissions.values_list('codename', flat=True)
+
+    @with_final_sql_check
+    def test_many_to_many_when_sql_check(self):
+        qs = self._test_many_to_many()
+        self.assert_tables(qs, User, User.user_permissions.through, Permission, ContentType)
+        self.assert_query_cached(qs, ['cuddle', 'discuss', 'touch'])
+
+    @no_final_sql_check
+    def test_many_to_many_when_no_sql_check(self):
+        qs = self._test_many_to_many()
         self.assert_tables(qs, User, User.user_permissions.through, Permission)
         self.assert_query_cached(qs, ['cuddle', 'discuss', 'touch'])
 
+    @all_final_sql_checks
     def test_subquery(self):
+        additional_tables = []
+        if django_version[0] >= 4 and settings.CACHALOT_FINAL_SQL_CHECK:
+            # with Django 4.0 comes some query optimalizations that do selects little differently.
+            additional_tables.append('django_content_type')
         qs = Test.objects.filter(owner__in=User.objects.all())
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t1, self.t2])
 
         qs = Test.objects.filter(
-            owner__groups__permissions__in=Permission.objects.all())
-        self.assert_tables(qs, Test, User, User.groups.through, Group,
-                           Group.permissions.through, Permission)
+            owner__groups__permissions__in=Permission.objects.all()
+        )
+        self.assert_tables(
+            qs, Test, User, User.groups.through, Group,
+            Group.permissions.through, Permission,
+            *additional_tables
+        )
         self.assert_query_cached(qs, [self.t1, self.t1, self.t1])
 
         qs = Test.objects.filter(
             owner__groups__permissions__in=Permission.objects.all()
         ).distinct()
-        self.assert_tables(qs, Test, User, User.groups.through, Group,
-                           Group.permissions.through, Permission)
+        self.assert_tables(
+            qs, Test, User, User.groups.through, Group,
+            Group.permissions.through, Permission,
+            *additional_tables
+        )
         self.assert_query_cached(qs, [self.t1])
 
         qs = TestChild.objects.exclude(permissions__isnull=True)
-        self.assert_tables(qs, TestParent, TestChild,
-                           TestChild.permissions.through, Permission)
+        self.assert_tables(
+            qs, TestParent, TestChild,
+            TestChild.permissions.through, Permission
+        )
         self.assert_query_cached(qs, [])
 
         qs = TestChild.objects.exclude(permissions__name='')
-        self.assert_tables(qs, TestParent, TestChild,
-                           TestChild.permissions.through, Permission)
+        self.assert_tables(
+            qs, TestParent, TestChild,
+            TestChild.permissions.through, Permission
+        )
         self.assert_query_cached(qs, [])
 
-    def test_custom_subquery(self):
+    @with_final_sql_check
+    def test_custom_subquery_with_check(self):
+        tests = Test.objects.filter(permission=OuterRef('pk')).values('name')
+        qs = Permission.objects.annotate(first_permission=Subquery(tests[:1]))
+        self.assert_tables(qs, Permission, Test, ContentType)
+        self.assert_query_cached(qs, list(Permission.objects.all()))
+
+    @no_final_sql_check
+    def test_custom_subquery_no_check(self):
         tests = Test.objects.filter(permission=OuterRef('pk')).values('name')
         qs = Permission.objects.annotate(first_permission=Subquery(tests[:1]))
         self.assert_tables(qs, Permission, Test)
         self.assert_query_cached(qs, list(Permission.objects.all()))
 
+    @with_final_sql_check
+    def test_custom_subquery_exists(self):
+        tests = Test.objects.filter(permission=OuterRef('pk'))
+        qs = Permission.objects.annotate(has_tests=Exists(tests))
+        self.assert_tables(qs, Permission, Test, ContentType)
+        self.assert_query_cached(qs, list(Permission.objects.all()))
+
+    @no_final_sql_check
     def test_custom_subquery_exists(self):
         tests = Test.objects.filter(permission=OuterRef('pk'))
         qs = Permission.objects.annotate(has_tests=Exists(tests))
         self.assert_tables(qs, Permission, Test)
         self.assert_query_cached(qs, list(Permission.objects.all()))
 
+    @all_final_sql_checks
     def test_raw_subquery(self):
         with self.assertNumQueries(0):
             raw_sql = RawSQL('SELECT id FROM auth_permission WHERE id = %s',
@@ -350,28 +435,34 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs, [self.t1])
 
+    @all_final_sql_checks
     def test_aggregate(self):
-        Test.objects.create(name='test3', owner=self.user)
+        test3 = Test.objects.create(name='test3', owner=self.user)
         with self.assertNumQueries(1):
             n1 = User.objects.aggregate(n=Count('test'))['n']
         with self.assertNumQueries(0):
             n2 = User.objects.aggregate(n=Count('test'))['n']
         self.assertEqual(n2, n1)
         self.assertEqual(n2, 3)
+        test3.delete()
 
+    @all_final_sql_checks
     def test_annotate(self):
-        Test.objects.create(name='test3', owner=self.user)
+        test3 = Test.objects.create(name='test3', owner=self.user)
         qs = (User.objects.annotate(n=Count('test')).order_by('pk')
               .values_list('n', flat=True))
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [2, 1])
+        test3.delete()
 
+    @all_final_sql_checks
     def test_annotate_subquery(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(first_test=Subquery(tests[:1]))
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    @all_final_sql_checks
     def test_annotate_case_with_when_and_query_in_default(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(
@@ -383,6 +474,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    @all_final_sql_checks
     def test_annotate_case_with_when(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(
@@ -394,6 +486,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    @all_final_sql_checks
     def test_annotate_coalesce(self):
         tests = Test.objects.filter(owner=OuterRef('pk')).values('name')
         qs = User.objects.annotate(
@@ -405,6 +498,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Test)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    @all_final_sql_checks
     def test_annotate_raw(self):
         qs = User.objects.annotate(
             perm_id=RawSQL('SELECT id FROM auth_permission WHERE id = %s',
@@ -413,6 +507,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, User, Permission)
         self.assert_query_cached(qs, [self.user, self.admin])
 
+    @all_final_sql_checks
     def test_only(self):
         with self.assertNumQueries(1):
             t1 = Test.objects.only('name').first()
@@ -428,6 +523,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertEqual(t2.name, t1.name)
         self.assertEqual(t2.public, t1.public)
 
+    @all_final_sql_checks
     def test_defer(self):
         with self.assertNumQueries(1):
             t1 = Test.objects.defer('name').first()
@@ -443,6 +539,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertEqual(t2.name, t1.name)
         self.assertEqual(t2.public, t1.public)
 
+    @all_final_sql_checks
     def test_select_related(self):
         # Simple select_related
         with self.assertNumQueries(1):
@@ -468,6 +565,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertEqual(t4, t3)
         self.assertEqual(t4, self.t1)
 
+    @all_final_sql_checks
     def test_prefetch_related(self):
         # Simple prefetch_related
         with self.assertNumQueries(2):
@@ -530,35 +628,74 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(permissions8, permissions7)
         self.assertListEqual(permissions8, self.group__permissions)
 
-    def test_filtered_relation(self):
+    @all_final_sql_checks
+    def test_test_parent(self):
+        child = TestChild.objects.create(name='child')
+        qs = TestChild.objects.filter(name='child')
+        self.assert_query_cached(qs)
+
+        parent = TestParent.objects.all().first()
+        parent.name = 'another name'
+        parent.save()
+
+        child = TestChild.objects.all().first()
+        self.assertEqual(child.name, 'another name')
+
+    def _filtered_relation(self):
+        """
+        Resulting query:
+            SELECT "cachalot_testparent"."id", "cachalot_testparent"."name",
+            "cachalot_testchild"."testparent_ptr_id", "cachalot_testchild"."public"
+            FROM "cachalot_testchild" INNER JOIN "cachalot_testparent" ON
+            ("cachalot_testchild"."testparent_ptr_id" = "cachalot_testparent"."id")
+        """
         from django.db.models import FilteredRelation
 
         qs = TestChild.objects.annotate(
             filtered_permissions=FilteredRelation(
-                'permissions', condition=Q(permissions__pk__gt=1)))
-        self.assert_tables(qs, TestChild)
+                'permissions', condition=Q(permissions__pk__gt=1))
+        )
+        return qs
+
+    def _filtered_relation_common_asserts(self, qs):
         self.assert_query_cached(qs)
 
         values_qs = qs.values('filtered_permissions')
         self.assert_tables(
-            values_qs, TestChild, TestChild.permissions.through, Permission)
+            values_qs, TestParent, TestChild, TestChild.permissions.through, Permission
+        )
         self.assert_query_cached(values_qs)
 
         filtered_qs = qs.filter(filtered_permissions__pk__gt=2)
         self.assert_tables(
-            values_qs, TestChild, TestChild.permissions.through, Permission)
+            values_qs, TestParent, TestChild, TestChild.permissions.through, Permission
+        )
         self.assert_query_cached(filtered_qs)
 
-    @skipUnlessDBFeature('supports_select_union')
-    def test_union(self):
-        qs = (Test.objects.filter(pk__lt=5)
-              | Test.objects.filter(permission__name__contains='a'))
+    @with_final_sql_check
+    def test_filtered_relation_with_check(self):
+        qs = self._filtered_relation()
+        self.assert_tables(qs, TestParent, TestChild)
+        self._filtered_relation_common_asserts(qs)
+
+    @no_final_sql_check
+    def test_filtered_relation_no_check(self):
+        qs = self._filtered_relation()
+        self.assert_tables(qs, TestChild)
+        self._filtered_relation_common_asserts(qs)
+
+    def _test_union(self, check: bool):
+        qs = (
+            Test.objects.filter(pk__lt=5)
+            | Test.objects.filter(permission__name__contains='a')
+        )
         self.assert_tables(qs, Test, Permission)
         self.assert_query_cached(qs)
 
         with self.assertRaisesMessage(
-                AssertionError if django_version[0] < 4 else TypeError,
-                'Cannot combine queries on two different base models.'):
+            AssertionError if django_version[0] < 4 else TypeError,
+            'Cannot combine queries on two different base models.'
+        ):
             Test.objects.all() | Permission.objects.all()
 
         qs = Test.objects.filter(pk__lt=5)
@@ -576,12 +713,25 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             qs = qs.order_by()
             sub_qs = sub_qs.order_by()
         qs = qs.union(sub_qs)
-        self.assert_tables(qs, Test, Permission)
+        tables = {Test, Permission}
+        # Sqlite does not do an ORDER BY django_content_type
+        if not self.is_sqlite and check:
+            tables.add(ContentType)
+        self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
-    @skipUnlessDBFeature('supports_select_intersection')
-    def test_intersection(self):
+    @with_final_sql_check
+    @skipUnlessDBFeature('supports_select_union')
+    def test_union_with_sql_check(self):
+        self._test_union(check=True)
+
+    @no_final_sql_check
+    @skipUnlessDBFeature('supports_select_union')
+    def test_union_with_sql_check(self):
+        self._test_union(check=False)
+
+    def _test_intersection(self, check: bool):
         qs = (Test.objects.filter(pk__lt=5)
               & Test.objects.filter(permission__name__contains='a'))
         self.assert_tables(qs, Test, Permission)
@@ -607,12 +757,24 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             qs = qs.order_by()
             sub_qs = sub_qs.order_by()
         qs = qs.intersection(sub_qs)
-        self.assert_tables(qs, Test, Permission)
+        tables = {Test, Permission}
+        if not self.is_sqlite and check:
+            tables.add(ContentType)
+        self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
 
-    @skipUnlessDBFeature('supports_select_difference')
-    def test_difference(self):
+    @with_final_sql_check
+    @skipUnlessDBFeature('supports_select_intersection')
+    def test_intersection_with_check(self):
+        self._test_intersection(check=True)
+
+    @no_final_sql_check
+    @skipUnlessDBFeature('supports_select_intersection')
+    def test_intersection_with_check(self):
+        self._test_intersection(check=False)
+
+    def _test_difference(self, check: bool):
         qs = Test.objects.filter(pk__lt=5)
         sub_qs = Test.objects.filter(permission__name__contains='a')
         if self.is_sqlite:
@@ -628,9 +790,22 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             qs = qs.order_by()
             sub_qs = sub_qs.order_by()
         qs = qs.difference(sub_qs)
-        self.assert_tables(qs, Test, Permission)
+        tables = {Test, Permission}
+        if not self.is_sqlite and check:
+            tables.add(ContentType)
+        self.assert_tables(qs, *tables)
         with self.assertRaises((ProgrammingError, OperationalError)):
             self.assert_query_cached(qs)
+
+    @with_final_sql_check
+    @skipUnlessDBFeature('supports_select_difference')
+    def test_difference_with_check(self):
+        self._test_difference(check=True)
+
+    @no_final_sql_check
+    @skipUnlessDBFeature('supports_select_difference')
+    def test_difference_with_check(self):
+        self._test_difference(check=False)
 
     @skipUnlessDBFeature('has_select_for_update')
     def test_select_for_update(self):
@@ -665,6 +840,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 self.assertListEqual([t.name for t in data4],
                                      ['test1', 'test2'])
 
+    @all_final_sql_checks
     def test_having(self):
         qs = (User.objects.annotate(n=Count('user_permissions')).filter(n__gte=1))
         self.assert_tables(qs, User, User.user_permissions.through, Permission)
@@ -697,6 +873,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertListEqual(data2, [self.t1, self.t2])
             self.assertListEqual([o.username_length for o in data2], [4, 5])
 
+    @all_final_sql_checks
     def test_extra_where(self):
         sql_condition = ("owner_id IN "
                          "(SELECT id FROM auth_user WHERE username = 'admin')")
@@ -704,12 +881,14 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs, [self.t2])
 
+    @all_final_sql_checks
     def test_extra_tables(self):
         qs = Test.objects.extra(tables=['auth_user'],
                                 select={'extra_id': 'auth_user.id'})
         self.assert_tables(qs, Test, User)
         self.assert_query_cached(qs)
 
+    @all_final_sql_checks
     def test_extra_order_by(self):
         qs = Test.objects.extra(order_by=['-cachalot_test.name'])
         self.assert_tables(qs, Test)
@@ -850,6 +1029,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, data1)
         self.assertListEqual(data2, [(1,), (2,)])
 
+    @all_final_sql_checks
     def test_missing_table_cache_key(self):
         qs = Test.objects.all()
         self.assert_tables(qs, Test)
@@ -861,6 +1041,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
 
         self.assert_query_cached(qs)
 
+    @all_final_sql_checks
     def test_broken_query_cache_value(self):
         """
         In some undetermined cases, cache.get_many return wrong values such
@@ -889,6 +1070,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertRaises(Test.DoesNotExist):
                 Test.objects.get(name='Clémentine')
 
+    @all_final_sql_checks
     def test_unicode_table_name(self):
         """
         Tests if using unicode in table names does not break caching.
@@ -908,6 +1090,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         with connection.cursor() as cursor:
             cursor.execute('DROP TABLE %s;' % table_name)
 
+    @all_final_sql_checks
     def test_unmanaged_model(self):
         qs = UnmanagedModel.objects.all()
         self.assert_tables(qs, UnmanagedModel)
@@ -917,9 +1100,10 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         """Check that queries with a Now() annotation are not cached #193"""
         qs = Test.objects.annotate(now=Now())
         self.assert_query_cached(qs, after=1)
-        
+
 
 class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
+    @all_final_sql_checks
     def test_tuple(self):
         qs = Test.objects.filter(pk__in=(1, 2, 3))
         self.assert_tables(qs, Test)
@@ -929,6 +1113,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs)
 
+    @all_final_sql_checks
     def test_list(self):
         qs = Test.objects.filter(pk__in=[1, 2, 3])
         self.assert_tables(qs, Test)
@@ -949,6 +1134,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs)
 
+    @all_final_sql_checks
     def test_binary(self):
         """
         Binary data should be cached on PostgreSQL & MySQL, but not on SQLite,
@@ -990,11 +1176,12 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(a_float=0.123456789)
 
+    @all_final_sql_checks
     def test_decimal(self):
         with self.assertNumQueries(1):
-            Test.objects.create(name='test1', a_decimal=Decimal('123.45'))
+            test1 = Test.objects.create(name='test1', a_decimal=Decimal('123.45'))
         with self.assertNumQueries(1):
-            Test.objects.create(name='test1', a_decimal=Decimal('12.3'))
+            test2 = Test.objects.create(name='test2', a_decimal=Decimal('12.3'))
 
         qs = Test.objects.values_list('a_decimal', flat=True).filter(
             a_decimal__isnull=False).order_by('a_decimal')
@@ -1006,11 +1193,15 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(a_decimal=Decimal('123.45'))
 
+        test1.delete()
+        test2.delete()
+
+    @all_final_sql_checks
     def test_ipv4_address(self):
         with self.assertNumQueries(1):
-            Test.objects.create(name='test1', ip='127.0.0.1')
+            test1 = Test.objects.create(name='test1', ip='127.0.0.1')
         with self.assertNumQueries(1):
-            Test.objects.create(name='test2', ip='192.168.0.1')
+            test2 = Test.objects.create(name='test2', ip='192.168.0.1')
 
         qs = Test.objects.values_list('ip', flat=True).filter(
             ip__isnull=False).order_by('ip')
@@ -1022,11 +1213,15 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(ip='127.0.0.1')
 
+        test1.delete()
+        test2.delete()
+
+    @all_final_sql_checks
     def test_ipv6_address(self):
         with self.assertNumQueries(1):
-            Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
+            test1 = Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
         with self.assertNumQueries(1):
-            Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
+            test2 = Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
 
         qs = Test.objects.values_list('ip', flat=True).filter(
             ip__isnull=False).order_by('ip')
@@ -1039,11 +1234,15 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
 
+        test1.delete()
+        test2.delete()
+
+    @all_final_sql_checks
     def test_duration(self):
         with self.assertNumQueries(1):
-            Test.objects.create(name='test1', duration=datetime.timedelta(30))
+            test1 = Test.objects.create(name='test1', duration=datetime.timedelta(30))
         with self.assertNumQueries(1):
-            Test.objects.create(name='test2', duration=datetime.timedelta(60))
+            test2 = Test.objects.create(name='test2', duration=datetime.timedelta(60))
 
         qs = Test.objects.values_list('duration', flat=True).filter(
             duration__isnull=False).order_by('duration')
@@ -1056,12 +1255,16 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(0):
             Test.objects.get(duration=datetime.timedelta(30))
 
+        test1.delete()
+        test2.delete()
+
+    @all_final_sql_checks
     def test_uuid(self):
         with self.assertNumQueries(1):
-            Test.objects.create(name='test1',
+            test1 = Test.objects.create(name='test1',
                                 uuid='1cc401b7-09f4-4520-b8d0-c267576d196b')
         with self.assertNumQueries(1):
-            Test.objects.create(name='test2',
+            test2 = Test.objects.create(name='test2',
                                 uuid='ebb3b6e1-1737-4321-93e3-4c35d61ff491')
 
         qs = Test.objects.values_list('uuid', flat=True).filter(
@@ -1075,6 +1278,9 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))
         with self.assertNumQueries(0):
             Test.objects.get(uuid=UUID('1cc401b7-09f4-4520-b8d0-c267576d196b'))
+
+        test1.delete()
+        test2.delete()
 
     def test_now(self):
         """
