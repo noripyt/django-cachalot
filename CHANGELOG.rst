@@ -1,6 +1,12 @@
 What’s new in django-cachalot?
 ==============================
 
+2.4.6
+-----
+
+- Add final SQL check to include potentially overlooked tables when looking up involved tables (#199)
+- Add ``CACHALOT_FINAL_SQL_CHECK`` for enabling Final SQL check
+
 2.4.5
 -----
 
