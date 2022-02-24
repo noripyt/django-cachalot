@@ -1,2 +1,2 @@
-include README.rst LICENSE CHANGELOG.rst requirements.txt tox.ini
+include README.rst LICENSE CHANGELOG.rst requirements.txt tox.ini runtests.py runtests_urls.py settings.py
 recursive-include cachalot *.json *.html
