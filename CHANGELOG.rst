@@ -1,6 +1,13 @@
 What’s new in django-cachalot?
 ==============================
 
+2.5.1
+-----
+
+- Table invalidation condition enhanced (#213)
+- Add test settings to sdist (#203)
+- Include docs in sdist (#202)
+
 2.5.0
 -----
 
