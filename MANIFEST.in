@@ -1,2 +1,3 @@
 include README.rst LICENSE CHANGELOG.rst requirements.txt
 recursive-include cachalot *.json *.html
+graft docs
