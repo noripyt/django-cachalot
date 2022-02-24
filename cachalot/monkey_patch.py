@@ -1,3 +1,4 @@
+import re
 from collections.abc import Iterable
 from functools import wraps
 from time import time
@@ -21,6 +22,13 @@ from .utils import (
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
 
+SQL_DATA_CHANGE_RE = re.compile(
+    '|'.join([
+        fr'(\W|\A){re.escape(keyword)}(\W|\Z)'
+        for keyword in ['update', 'insert', 'delete', 'alter', 'create', 'drop']
+    ]),
+    flags=re.IGNORECASE,
+)
 
 def _unset_raw_connection(original):
     def inner(compiler, *args, **kwargs):
@@ -133,9 +141,7 @@ def _patch_cursor():
                     if isinstance(sql, bytes):
                         sql = sql.decode('utf-8')
                     sql = sql.lower()
-                    if 'update' in sql or 'insert' in sql or 'delete' in sql \
-                            or 'alter' in sql or 'create' in sql \
-                            or 'drop' in sql:
+                    if SQL_DATA_CHANGE_RE.search(sql):
                         tables = filter_cachable(
                             _get_tables_from_sql(connection, sql))
                         if tables:
