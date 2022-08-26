@@ -1,6 +1,10 @@
 What’s new in django-cachalot?
 ==============================
 
+2.5.2
+-----
+- Added Django 4.1 support (#217)
+
 2.5.1
 -----
 
