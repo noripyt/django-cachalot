@@ -352,7 +352,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     @all_final_sql_checks
     def test_subquery(self):
         additional_tables = []
-        if django_version[0] >= 4 and settings.CACHALOT_FINAL_SQL_CHECK:
+        if django_version[0] >= 4 and django_version[1] < 1 and settings.CACHALOT_FINAL_SQL_CHECK:
             # with Django 4.0 comes some query optimalizations that do selects little differently.
             additional_tables.append('django_content_type')
         qs = Test.objects.filter(owner__in=User.objects.all())
