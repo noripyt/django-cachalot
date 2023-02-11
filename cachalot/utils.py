@@ -217,7 +217,8 @@ def _get_tables(db_alias, query, compiler=False):
 
         # Gets all tables already found by the ORM.
         tables = set(query.table_map)
-        tables.add(query.get_meta().db_table)
+        if query.get_meta():
+            tables.add(query.get_meta().db_table)
 
         # Gets tables in subquery annotations.
         for annotation in query.annotations.values():
