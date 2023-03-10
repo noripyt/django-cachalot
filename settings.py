@@ -90,9 +90,13 @@ elif DEFAULT_CACHE_ALIAS == 'pylibmc':
 
 INSTALLED_APPS = [
     'cachalot',
+    'cachalot.admin_tests',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.postgres',  # Enables the unaccent lookup.
+    'django.contrib.sessions',
+    'django.contrib.admin',
+    'django.contrib.messages',
 ]
 
 MIGRATION_MODULES = {
@@ -104,6 +108,12 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
         'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        }
     },
     {
         'BACKEND': 'django.template.backends.jinja2.Jinja2',
@@ -116,7 +126,11 @@ TEMPLATES = [
     }
 ]
 
-MIDDLEWARE = []
+MIDDLEWARE = [
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+]
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 SECRET_KEY = 'it’s not important in tests but we have to set it'
 
