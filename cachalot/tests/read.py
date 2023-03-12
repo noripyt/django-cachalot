@@ -52,12 +52,13 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.group__permissions = list(Permission.objects.all()[:3])
         self.group.permissions.add(*self.group__permissions)
         self.user = User.objects.create_user('user')
-        self.user__permissions = list(Permission.objects.all()[3:6])
+        self.user__permissions = list(Permission.objects.filter(content_type__app_label='auth')[3:6])
         self.user.groups.add(self.group)
         self.user.user_permissions.add(*self.user__permissions)
         self.admin = User.objects.create_superuser('admin', 'admin@test.me',
                                                    'password')
-        self.t1__permission = (Permission.objects.order_by('?')
+        self.t1__permission = (Permission.objects
+                               .order_by('?')
                                .select_related('content_type')[0])
         self.t1 = Test.objects.create(
             name='test1', owner=self.user,
