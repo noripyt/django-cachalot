@@ -1,6 +1,10 @@
 What’s new in django-cachalot?
 ==============================
 
+2.5.3
+-----
+- Verify get_meta isn't none before requesting db_table (#225 #226)
+
 2.5.2
 -----
 - Added Django 4.1 support (#217)
