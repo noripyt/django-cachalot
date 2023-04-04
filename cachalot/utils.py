@@ -36,13 +36,6 @@ CACHABLE_PARAM_TYPES = {
 UNCACHABLE_FUNCS = {Now, TransactionNow}
 
 try:
-    # TODO Drop after Dj30 drop
-    from django.contrib.postgres.fields.jsonb import JsonAdapter
-    CACHABLE_PARAM_TYPES.update((JsonAdapter,))
-except ImportError:
-    pass
-
-try:
     from psycopg2 import Binary
     from psycopg2.extras import (
         NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json)
@@ -131,13 +124,7 @@ def _find_rhs_lhs_subquery(side):
     elif h_class is QuerySet:
         return side.query
     elif h_class in (Subquery, Exists):  # Subquery allows QuerySet & Query
-        try:
-            return side.query.query if side.query.__class__ is QuerySet else side.query
-        except AttributeError:  # TODO Remove try/except closure after drop Django 2.2
-            try:
-                return side.queryset.query
-            except AttributeError:
-                return None
+        return side.query.query if side.query.__class__ is QuerySet else side.query
     elif h_class in UNCACHABLE_FUNCS:
         raise UncachableQuery
 

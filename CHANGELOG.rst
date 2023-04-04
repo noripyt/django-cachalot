@@ -4,7 +4,7 @@ What’s new in django-cachalot?
 2.6.0
 -----
 
-- Dropped Django 2.2 and 4.0 support. Added Django 4.2 and Python 3.11 support (#229)
+- Dropped Django 2.2 and 4.0 support. Added Django 4.2 and Python 3.11 support. Added psycopg support (#229)
 
 2.5.3
 -----
