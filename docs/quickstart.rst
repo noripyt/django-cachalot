@@ -196,6 +196,39 @@ Settings
               Clear your cache after changing this setting (it’s not enough
               to use ``./manage.py invalidate_cachalot``).
 
+``CACHALOT_FINAL_SQL_CHECK``
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``False``
+:Description:
+    If set to ``True``, the final SQL check will be performed.
+    The `Final SQL check` checks for potentially overlooked tables when looking up involved tables
+    (eg. Ordering by referenced table). See tests for more details
+    (eg. ``test_order_by_field_of_another_table_with_check``).
+
+    Enabling this setting comes with a small performance cost::
+
+        CACHALOT_FINAL_SQL_CHECK=False:
+            mysql      is 1.4× slower then 9.9× faster
+            postgresql is 1.3× slower then 11.7× faster
+            sqlite     is 1.4× slower then 3.0× faster
+            filebased  is 1.4× slower then 9.5× faster
+            locmem     is 1.3× slower then 11.3× faster
+            pylibmc    is 1.4× slower then 8.5× faster
+            pymemcache is 1.4× slower then 7.3× faster
+            redis      is 1.4× slower then 6.8× faster
+
+        CACHALOT_FINAL_SQL_CHECK=True:
+            mysql      is 1.5× slower then 9.0× faster
+            postgresql is 1.3× slower then 10.5× faster
+            sqlite     is 1.4× slower then 2.6× faster
+            filebased  is 1.4× slower then 9.1× faster
+            locmem     is 1.3× slower then 9.9× faster
+            pylibmc    is 1.4× slower then 7.5× faster
+            pymemcache is 1.4× slower then 6.5× faster
+            redis      is 1.5× slower then 6.2× faster
+
+
 
 .. _Command:
 

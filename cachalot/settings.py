@@ -61,6 +61,7 @@ class Settings(object):
     CACHALOT_ADDITIONAL_TABLES = ()
     CACHALOT_QUERY_KEYGEN = 'cachalot.utils.get_query_cache_key'
     CACHALOT_TABLE_KEYGEN = 'cachalot.utils.get_table_cache_key'
+    CACHALOT_FINAL_SQL_CHECK = False
 
     @classmethod
     def add_converter(cls, setting):

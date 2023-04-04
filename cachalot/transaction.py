@@ -3,7 +3,7 @@ from .settings import cachalot_settings
 
 class AtomicCache(dict):
     def __init__(self, parent_cache, db_alias):
-        super(AtomicCache, self).__init__()
+        super().__init__()
         self.parent_cache = parent_cache
         self.db_alias = db_alias
         self.to_be_invalidated = set()

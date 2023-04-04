@@ -45,6 +45,10 @@ class TestParent(Model):
 
 
 class TestChild(TestParent):
+    """
+    A OneToOneField to TestParent is automatically added here.
+    https://docs.djangoproject.com/en/3.2/topics/db/models/#multi-table-inheritance
+    """
     public = BooleanField(default=False)
     permissions = ManyToManyField('auth.Permission', blank=True)
 

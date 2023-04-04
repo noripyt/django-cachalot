@@ -19,7 +19,6 @@ jobs:
             django-version: '4.1'
           - python-version: '3.7'
             django-version: '4.2'
-
     services:
       redis:
         image: redis:6

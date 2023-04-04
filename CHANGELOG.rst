@@ -1,10 +1,31 @@
 What’s new in django-cachalot?
 ==============================
 
+2.6.0
+-----
+
+- Dropped Django 2.2 and 4.0 support. Added Django 4.2 and Python 3.11 support (#229)
+
+2.5.3
+-----
+- Verify get_meta isn't none before requesting db_table (#225 #226)
+
+2.5.2
+-----
+- Added Django 4.1 support (#217)
+
+2.5.1
+-----
+
+- Table invalidation condition enhanced (#213)
+- Add test settings to sdist (#203)
+- Include docs in sdist (#202)
+
 2.5.0
 -----
 
-- Dropped Django 3.2 support. Added Django 4.1-4.2 and Python 3.11 support (#229)
+- Add final SQL check to include potentially overlooked tables when looking up involved tables (#199)
+- Add ``CACHALOT_FINAL_SQL_CHECK`` for enabling Final SQL check
 
 2.4.5
 -----
