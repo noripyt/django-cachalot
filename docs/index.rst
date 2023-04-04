@@ -11,8 +11,8 @@ Caches your Django ORM queries and automatically invalidates them.
 .. image:: http://img.shields.io/pypi/v/django-cachalot.svg?style=flat-square&maxAge=3600
    :target: https://pypi.python.org/pypi/django-cachalot
 
-.. image:: http://img.shields.io/travis/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
-   :target: https://travis-ci.org/noripyt/django-cachalot
+.. image:: https://github.com/noripyt/django-cachalot/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/noripyt/django-cachalot/actions/workflows/ci.yml
 
 .. image:: http://img.shields.io/coveralls/noripyt/django-cachalot/master.svg?style=flat-square&maxAge=3600
    :target: https://coveralls.io/r/noripyt/django-cachalot?branch=master
