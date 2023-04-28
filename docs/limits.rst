@@ -65,11 +65,9 @@ in a multi-processes project, if you use RQ or Celery for instance.
 Filebased
 .........
 
-Filebased, a simple persistent cache implemented in Django, has a small bug
+Filebased, a simple persistent cache implemented in Django, had a small bug
 (`#25501 <https://code.djangoproject.com/ticket/25501>`_):
-it cannot cache some objects, like psycopg2 ranges.
-If you use range fields from `django.contrib.postgres` and your Django
-version is affected by this bug, you need to add the tables using range fields
+it cannot cache some objects, like psycopg2 ranges. This bug was fixed in 2015, if you sill use an affected Django version and you use range fields from `django.contrib.postgres`, you need to add the tables using range fields
 to :ref:`CACHALOT_UNCACHABLE_TABLES`.
 
 .. _MySQL:
