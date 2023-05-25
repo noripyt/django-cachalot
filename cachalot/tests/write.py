@@ -133,7 +133,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             Test.objects.bulk_create(unsaved_tests)
         self.assertEqual(Test.objects.count(), 20)
 
-        with self.assertNumQueries(3 if DJANGO_VERSION >= (4, 2) else else 1):
+        with self.assertNumQueries(3 if DJANGO_VERSION >= (4, 2) else 1):
             data2 = list(Test.objects.all())
         self.assertEqual(len(data2), 20)
         self.assertListEqual([t.name for t in data2],
