@@ -1,4 +1,3 @@
-from django import VERSION as DJANGO_VERSION
 from django.core.management.color import no_style
 from django.db import connection, transaction
 
@@ -11,7 +10,6 @@ class TestUtilsMixin:
         self.is_sqlite = connection.vendor == 'sqlite'
         self.is_mysql = connection.vendor == 'mysql'
         self.is_postgresql = connection.vendor == 'postgresql'
-        self.django_version = DJANGO_VERSION
         self.force_reopen_connection()
 
     # TODO: Remove this workaround when this issue is fixed:
@@ -19,8 +17,6 @@ class TestUtilsMixin:
     def tearDown(self):
         if connection.vendor == 'postgresql':
             flush_args = [no_style(), (PostgresModel._meta.db_table,),]
-            if float(".".join(map(str, DJANGO_VERSION[:2]))) < 3.1:
-                flush_args.append(())
             flush_sql_list = connection.ops.sql_flush(*flush_args)
             with transaction.atomic():
                 for sql in flush_sql_list:

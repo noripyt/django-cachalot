@@ -58,7 +58,7 @@ class PostgresModel(Model):
                            null=True, blank=True)
 
     hstore = HStoreField(null=True, blank=True)
-    if DJANGO_VERSION[0] < 4:
+    if DJANGO_VERSION < (4, 0):
         from django.contrib.postgres.fields import JSONField
         json = JSONField(null=True, blank=True)
 
