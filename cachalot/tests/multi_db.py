@@ -1,6 +1,5 @@
 from unittest import skipIf
 
-from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.db import DEFAULT_DB_ALIAS, connections, transaction
 from django.test import TransactionTestCase
@@ -27,24 +26,6 @@ class MultiDatabaseTestCase(TransactionTestCase):
             # will execute an extra SQL request below.
             connection2.cursor()
 
-    def is_django_21_below_and_sqlite2(self):
-        """
-        Note: See test_utils.py with this function name
-        Checks if Django 2.1 or below and SQLite2
-        """
-        django_version = DJANGO_VERSION
-        if not self.is_sqlite2:
-            # Immediately know if SQLite
-            return False
-        if django_version[0] < 2:
-            # Takes Django 0 and 1 out of the picture
-            return True
-        else:
-            if django_version[0] == 2 and django_version[1] < 2:
-                # Takes Django 2.0-2.1 out
-                return True
-            return False
-
     def test_read(self):
         with self.assertNumQueries(1):
             data1 = list(Test.objects.all())
@@ -66,8 +47,7 @@ class MultiDatabaseTestCase(TransactionTestCase):
             data1 = list(Test.objects.using(self.db_alias2))
             self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(2 if self.is_django_21_below_and_sqlite2() else 1,
-                                   using=self.db_alias2):
+        with self.assertNumQueries(1, using=self.db_alias2):
             t3 = Test.objects.using(self.db_alias2).create(name='test3')
 
         with self.assertNumQueries(1, using=self.db_alias2):
@@ -82,8 +62,7 @@ class MultiDatabaseTestCase(TransactionTestCase):
             data1 = list(Test.objects.all())
             self.assertListEqual(data1, [self.t1, self.t2])
 
-        with self.assertNumQueries(2 if self.is_django_21_below_and_sqlite2() else 1,
-                                   using=self.db_alias2):
+        with self.assertNumQueries(1, using=self.db_alias2):
             Test.objects.using(self.db_alias2).create(name='test3')
 
         with self.assertNumQueries(0):

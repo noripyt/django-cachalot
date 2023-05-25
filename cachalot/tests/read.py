@@ -3,7 +3,7 @@ from unittest import skipIf
 from uuid import UUID
 from decimal import Decimal
 
-from django import VERSION as django_version
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.models import Group, Permission, User
 from django.contrib.contenttypes.models import ContentType
@@ -353,7 +353,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
     @all_final_sql_checks
     def test_subquery(self):
         additional_tables = []
-        if django_version[0] == 4 and django_version[1] < 1 and settings.CACHALOT_FINAL_SQL_CHECK:
+        if DJANGO_VERSION >= (4, 0) and DJANGO_VERSION < (4, 1) and settings.CACHALOT_FINAL_SQL_CHECK:
             # with Django 4.0 comes some query optimalizations that do selects little differently.
             additional_tables.append('django_content_type')
         qs = Test.objects.filter(owner__in=User.objects.all())
@@ -694,7 +694,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs)
 
         with self.assertRaisesMessage(
-            AssertionError if django_version[0] < 4 else TypeError,
+            AssertionError if DJANGO_VERSION < (4, 0) else TypeError,
             'Cannot combine queries on two different base models.'
         ):
             Test.objects.all() | Permission.objects.all()
@@ -739,7 +739,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs)
 
         with self.assertRaisesMessage(
-                AssertionError if django_version[0] < 4 else TypeError,
+                AssertionError if DJANGO_VERSION < (4, 0) else TypeError,
                 'Cannot combine queries on two different base models.'):
             Test.objects.all() & Permission.objects.all()
 
@@ -816,21 +816,21 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertRaises(TransactionManagementError):
             list(Test.objects.select_for_update())
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3 if DJANGO_VERSION >= (4, 2) else 1):
             with transaction.atomic():
                 data1 = list(Test.objects.select_for_update())
                 self.assertListEqual(data1, [self.t1, self.t2])
                 self.assertListEqual([t.name for t in data1],
                                      ['test1', 'test2'])
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(3 if DJANGO_VERSION >= (4, 2) else 1):
             with transaction.atomic():
                 data2 = list(Test.objects.select_for_update())
                 self.assertListEqual(data2, [self.t1, self.t2])
                 self.assertListEqual([t.name for t in data2],
                                      ['test1', 'test2'])
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4 if DJANGO_VERSION >= (4, 2) else 2):
             with transaction.atomic():
                 data3 = list(Test.objects.select_for_update())
                 data4 = list(Test.objects.select_for_update())
@@ -896,7 +896,9 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_table_inheritance(self):
-        with self.assertNumQueries(3 if self.is_sqlite else 2):
+        with self.assertNumQueries(
+            3 if self.is_sqlite else (4 if DJANGO_VERSION >= (4, 2) else 2)
+        ):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):
@@ -911,15 +913,10 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
             expected = (r'\d+ 0 0 SCAN cachalot_test\n'
                         r'\d+ 0 0 USE TEMP B-TREE FOR ORDER BY')
         elif self.is_mysql:
-            if self.django_version < (3, 1):
-                expected = (
-                    r'1 SIMPLE cachalot_test '
-                    r'(?:None )?ALL None None None None 2 100\.0 Using filesort')
-            else:
-                expected = (
-                    r'-> Sort row IDs: cachalot_test.`name`  \(cost=[\d\.]+ rows=\d\)\n    '
-                    r'-> Table scan on cachalot_test  \(cost=[\d\.]+ rows=\d\)\n'
-                )
+            expected = (
+                r'-> Sort row IDs: cachalot_test.`name`  \(cost=[\d\.]+ rows=\d\)\n    '
+                r'-> Table scan on cachalot_test  \(cost=[\d\.]+ rows=\d\)\n'
+            )
         else:
             explain_kwargs.update(
                 analyze=True,
@@ -935,9 +932,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
                 r'Planning Time: [\d\.]+ ms\n'
                 r'Execution Time: [\d\.]+ ms$') % (operation_detail,
                                                    operation_detail)
-        with self.assertNumQueries(
-                2 if self.is_mysql and django_version[0] < 3
-                else 1):
+        with self.assertNumQueries(1):
             explanation1 = Test.objects.explain(**explain_kwargs)
         self.assertRegex(explanation1, expected)
         with self.assertNumQueries(0):
