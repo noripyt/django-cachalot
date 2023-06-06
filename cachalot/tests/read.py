@@ -816,21 +816,21 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         with self.assertRaises(TransactionManagementError):
             list(Test.objects.select_for_update())
 
-        with self.assertNumQueries(3 if DJANGO_VERSION >= (4, 2) else 1):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data1 = list(Test.objects.select_for_update())
                 self.assertListEqual(data1, [self.t1, self.t2])
                 self.assertListEqual([t.name for t in data1],
                                      ['test1', 'test2'])
 
-        with self.assertNumQueries(3 if DJANGO_VERSION >= (4, 2) else 1):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data2 = list(Test.objects.select_for_update())
                 self.assertListEqual(data2, [self.t1, self.t2])
                 self.assertListEqual([t.name for t in data2],
                                      ['test1', 'test2'])
 
-        with self.assertNumQueries(4 if DJANGO_VERSION >= (4, 2) else 2):
+        with self.assertNumQueries(2):
             with transaction.atomic():
                 data3 = list(Test.objects.select_for_update())
                 data4 = list(Test.objects.select_for_update())
