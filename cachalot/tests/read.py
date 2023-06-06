@@ -21,7 +21,7 @@ from cachalot.cache import cachalot_caches
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
 from .models import Test, TestChild, TestParent, UnmanagedModel
-from .test_utils import TestUtilsMixin
+from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
 
 from .tests_decorators import all_final_sql_checks, with_final_sql_check, no_final_sql_check
 
@@ -36,7 +36,7 @@ def is_field_available(name):
     return name in fields
 
 
-class ReadTestCase(TestUtilsMixin, TransactionTestCase):
+class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
     """
     Tests if every SQL request that only reads data is cached.
 
@@ -896,9 +896,7 @@ class ReadTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(qs, [self.t2, self.t1])
 
     def test_table_inheritance(self):
-        with self.assertNumQueries(
-            3 if self.is_sqlite else (4 if DJANGO_VERSION >= (4, 2) else 2)
-        ):
+        with self.assertNumQueries(2):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):
