@@ -106,7 +106,7 @@ class FilteredAssertNumQueriesContext(CaptureQueriesContext):
         self.test_case.assertEqual(
             executed,
             self.num,
-            f"\n{executed} queries executed, {self.num} expected\n" +
+            f"\n{executed} queries executed on {self.connection.vendor}, {self.num} expected\n" +
             "\nCaptured queries were:\n" +
             "".join(
                 f"{i}. {query['sql']}\n"
