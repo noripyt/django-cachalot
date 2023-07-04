@@ -5,7 +5,11 @@ from unittest import skipUnless
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connection
 from django.test import TransactionTestCase, override_settings
-from psycopg2.extras import DateRange, DateTimeTZRange, NumericRange
+from django.db.backends.postgresql.psycopg_any import (
+    DateRange,
+    DateTimeTZRange,
+    NumericRange,
+)
 from pytz import timezone
 
 from ..utils import UncachableQuery
