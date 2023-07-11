@@ -4,8 +4,8 @@ Quick start
 Requirements
 ............
 
-- Django 2.2, 3.2, 4.0-4.1
-- Python 3.7-3.10
+- Django 3.2, 4.1, 4.2
+- Python 3.7-3.11
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwinz/django-redis>`_

@@ -1,6 +1,5 @@
 from unittest import skipIf, skipUnless
 
-from django import VERSION as DJANGO_VERSION
 from django.contrib.auth.models import User, Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import MultipleObjectsReturned
@@ -12,10 +11,10 @@ from django.db.models.expressions import RawSQL
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
 from .models import Test, TestParent, TestChild
-from .test_utils import TestUtilsMixin
+from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
 
 
-class WriteTestCase(TestUtilsMixin, TransactionTestCase):
+class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
     """
     Tests if every SQL request writing data is not cached and invalidates the
     implied data.
@@ -56,7 +55,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(3 if self.is_sqlite else 2):
+        with self.assertNumQueries(2):
             t, created = Test.objects.get_or_create(name='test')
         self.assertTrue(created)
 
@@ -78,14 +77,14 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         with self.assertNumQueries(1):
             self.assertListEqual(list(Test.objects.all()), [])
 
-        with self.assertNumQueries(5 if self.is_sqlite else 4):
+        with self.assertNumQueries(4):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': True})
             self.assertTrue(created)
             self.assertEqual(t.name, 'test')
             self.assertEqual(t.public, True)
 
-        with self.assertNumQueries(3 if self.is_sqlite else 2):
+        with self.assertNumQueries(2):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': False})
             self.assertFalse(created)
@@ -94,7 +93,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
 
         # The number of SQL queries doesn’t decrease because update_or_create
         # always calls an UPDATE, even when data wasn’t changed.
-        with self.assertNumQueries(3 if self.is_sqlite else 2):
+        with self.assertNumQueries(2):
             t, created = Test.objects.update_or_create(
                 name='test', defaults={'public': False})
             self.assertFalse(created)
@@ -109,12 +108,12 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             unsaved_tests = [Test(name='test%02d' % i) for i in range(1, 11)]
             Test.objects.bulk_create(unsaved_tests)
         self.assertEqual(Test.objects.count(), 10)
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             unsaved_tests = [Test(name='test%02d' % i) for i in range(1, 11)]
             Test.objects.bulk_create(unsaved_tests)
         self.assertEqual(Test.objects.count(), 20)
@@ -160,12 +159,12 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data1, [t1.name, t2.name])
         self.assertListEqual(data2, [t1.name])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             Test.objects.bulk_create([Test(name='test%s' % i)
                                       for i in range(2, 11)])
         with self.assertNumQueries(1):
             self.assertEqual(Test.objects.count(), 10)
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             Test.objects.all().delete()
         with self.assertNumQueries(1):
             self.assertEqual(Test.objects.count(), 0)
@@ -360,7 +359,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data4, [user1, user2])
         self.assertListEqual([u.n for u in data4], [1, 0])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             Test.objects.bulk_create([
                 Test(name='test3', owner=user1),
                 Test(name='test4', owner=user2),
@@ -588,7 +587,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             data2 = list(Test.objects.select_related('owner'))
         self.assertListEqual(data2, [])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             Test.objects.bulk_create([
                 Test(name='test1', owner=u1),
                 Test(name='test2', owner=u2),
@@ -602,7 +601,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertEqual(data3[2].owner, u2)
             self.assertEqual(data3[3].owner, u1)
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             Test.objects.filter(name__in=['test1', 'test2']).delete()
         with self.assertNumQueries(1):
             data4 = list(Test.objects.select_related('owner'))
@@ -634,12 +633,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             self.assertEqual(data3[0].owner, u)
             self.assertListEqual(list(data3[0].owner.groups.all()), [])
 
-        with self.assertNumQueries(
-                8 if self.is_sqlite and DJANGO_VERSION[0] == 2 and DJANGO_VERSION[1] == 2
-                else 4 if self.is_postgresql and DJANGO_VERSION[0] > 2
-                else 4 if self.is_mysql and DJANGO_VERSION[0] > 2
-                else 6
-        ):
+        with self.assertNumQueries(4):
             group = Group.objects.create(name='test_group')
             permissions = list(Permission.objects.all()[:5])
             group.permissions.add(*permissions)
@@ -852,7 +846,7 @@ class WriteTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertRaises(TestChild.DoesNotExist):
                 TestChild.objects.get()
 
-        with self.assertNumQueries(3 if self.is_sqlite else 2):
+        with self.assertNumQueries(2):
             t_child = TestChild.objects.create(name='test_child')
 
         with self.assertNumQueries(1):

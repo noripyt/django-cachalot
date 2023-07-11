@@ -1,10 +1,10 @@
 from threading import Thread
 
 from django.db import connection, transaction
-from django.test import TransactionTestCase, skipUnlessDBFeature
+from django.test import skipUnlessDBFeature
 
 from .models import Test
-from .test_utils import TestUtilsMixin
+from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
 
 
 class TestThread(Thread):
@@ -19,7 +19,7 @@ class TestThread(Thread):
 
 
 @skipUnlessDBFeature('test_db_allows_multiple_connections')
-class ThreadSafetyTestCase(TestUtilsMixin, TransactionTestCase):
+class ThreadSafetyTestCase(TestUtilsMixin, FilteredTransactionTestCase):
     def test_concurrent_caching(self):
         t1 = TestThread().start_and_join()
         t = Test.objects.create(name='test')

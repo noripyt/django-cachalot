@@ -1,16 +1,17 @@
 from cachalot.transaction import AtomicCache
+
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db import transaction, connection, IntegrityError
-from django.test import SimpleTestCase, TransactionTestCase, skipUnlessDBFeature
+from django.test import SimpleTestCase, skipUnlessDBFeature
 
 from .models import Test
-from .test_utils import TestUtilsMixin
+from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
 
 
-class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
+class AtomicTestCase(TestUtilsMixin, FilteredTransactionTestCase):
     def test_successful_read_atomic(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
@@ -20,7 +21,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, [])
 
     def test_unsuccessful_read_atomic(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             try:
                 with transaction.atomic():
                     data1 = list(Test.objects.all())
@@ -38,21 +39,21 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
         with self.assertNumQueries(1):
             data2 = list(Test.objects.all())
         self.assertListEqual(data2, [t1])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 t2 = Test.objects.create(name='test2')
         with self.assertNumQueries(1):
             data3 = list(Test.objects.all())
         self.assertListEqual(data3, [t1, t2])
 
-        with self.assertNumQueries(4 if self.is_sqlite else 3):
+        with self.assertNumQueries(3):
             with transaction.atomic():
                 data4 = list(Test.objects.all())
                 t3 = Test.objects.create(name='test3')
@@ -67,7 +68,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
             data1 = list(Test.objects.all())
         self.assertListEqual(data1, [])
 
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             try:
                 with transaction.atomic():
                     Test.objects.create(name='test')
@@ -82,7 +83,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
                 Test.objects.get(name='test')
 
     def test_cache_inside_atomic(self):
-        with self.assertNumQueries(2 if self.is_sqlite else 1):
+        with self.assertNumQueries(1):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
                 data2 = list(Test.objects.all())
@@ -90,7 +91,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, [])
 
     def test_invalidation_inside_atomic(self):
-        with self.assertNumQueries(4 if self.is_sqlite else 3):
+        with self.assertNumQueries(3):
             with transaction.atomic():
                 data1 = list(Test.objects.all())
                 t = Test.objects.create(name='test')
@@ -99,7 +100,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data2, [t])
 
     def test_successful_nested_read_atomic(self):
-        with self.assertNumQueries(7 if self.is_sqlite else 6):
+        with self.assertNumQueries(6):
             with transaction.atomic():
                 list(Test.objects.all())
                 with transaction.atomic():
@@ -114,7 +115,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
             list(User.objects.all())
 
     def test_unsuccessful_nested_read_atomic(self):
-        with self.assertNumQueries(6 if self.is_sqlite else 5):
+        with self.assertNumQueries(5):
             with transaction.atomic():
                 try:
                     with transaction.atomic():
@@ -127,7 +128,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
                     list(Test.objects.all())
 
     def test_successful_nested_write_atomic(self):
-        with self.assertNumQueries(13 if self.is_sqlite else 12):
+        with self.assertNumQueries(12):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
                 with transaction.atomic():
@@ -144,7 +145,7 @@ class AtomicTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertListEqual(data3, [t1, t2, t3, t4])
 
     def test_unsuccessful_nested_write_atomic(self):
-        with self.assertNumQueries(16 if self.is_sqlite else 15):
+        with self.assertNumQueries(15):
             with transaction.atomic():
                 t1 = Test.objects.create(name='test1')
                 try:

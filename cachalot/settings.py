@@ -9,8 +9,6 @@ SUPPORTED_DATABASE_ENGINES = {
     'django.db.backends.sqlite3',
     'django.db.backends.postgresql',
     'django.db.backends.mysql',
-    # TODO: Remove when we drop Django 2.x support.
-    'django.db.backends.postgresql_psycopg2',
 
     # GeoDjango
     'django.contrib.gis.db.backends.spatialite',
@@ -20,8 +18,6 @@ SUPPORTED_DATABASE_ENGINES = {
     # django-transaction-hooks
     'transaction_hooks.backends.sqlite3',
     'transaction_hooks.backends.postgis',
-    # TODO: Remove when we drop Django 2.x support.
-    'transaction_hooks.backends.postgresql_psycopg2',
     'transaction_hooks.backends.mysql',
 
     # django-prometheus wrapped engines
