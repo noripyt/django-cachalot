@@ -2,10 +2,21 @@ from datetime import date, datetime
 from decimal import Decimal
 from unittest import skipUnless
 
+from django import VERSION
 from django.contrib.postgres.functions import TransactionNow
 from django.db import connection
 from django.test import TransactionTestCase, override_settings
-from psycopg2.extras import DateRange, DateTimeTZRange, NumericRange
+
+# If we are using Django 4.2 or higher, we need to use:
+if VERSION >= (4, 2):
+    from django.db.backends.postgresql.psycopg_any import (
+        DateRange,
+        DateTimeTZRange,
+        NumericRange,
+    )
+else:
+    from psycopg2.extras import DateRange, DateTimeTZRange, NumericRange
+
 from pytz import timezone
 
 from ..utils import UncachableQuery

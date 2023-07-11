@@ -1213,7 +1213,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
     @all_final_sql_checks
     def test_ipv6_address(self):
         with self.assertNumQueries(1):
-            test1 = Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1/64')
+            test1 = Test.objects.create(name='test1', ip='2001:db8:a0b:12f0::1')
         with self.assertNumQueries(1):
             test2 = Test.objects.create(name='test2', ip='2001:db8:0:85a3::ac1f:8001')
 
@@ -1221,7 +1221,7 @@ class ParameterTypeTestCase(TestUtilsMixin, TransactionTestCase):
             ip__isnull=False).order_by('ip')
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, ['2001:db8:0:85a3::ac1f:8001',
-                                      '2001:db8:a0b:12f0::1/64'])
+                                      '2001:db8:a0b:12f0::1'])
 
         with self.assertNumQueries(1):
             Test.objects.get(ip='2001:db8:0:85a3::ac1f:8001')
