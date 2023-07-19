@@ -29,20 +29,20 @@ Usage
 #. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. If you use multiple servers with a common cache server,
-   :ref:`double check their clock synchronisation <https://django-cachalot.readthedocs.io/en/latest/limits.html#multiple-servers>`_
+   :ref:`double check their clock synchronisation <limits:Multiple servers clock synchronisation>`
 #. If you modify data outside Django
    – typically after restoring a SQL database –,
-   use the :ref:`manage.py command <https://django-cachalot.readthedocs.io/en/latest/quickstart.html#command>`_
-#. Be aware of :ref:`the few other limits <https://django-cachalot.readthedocs.io/en/latest/limits.html#limits>`_
+   use the :ref:`manage.py command <quickstart:\`\`manage.py\`\` command>`
+#. Be aware of :ref:`the few other limits <limits:limits>`
 #. If you use
    `django-debug-toolbar <https://github.com/jazzband/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
    to your ``DEBUG_TOOLBAR_PANELS``
 #. Enjoy!
 
-Note: In settings, you can use `CACHALOT_UNCACHABLE_TABLES <https://django-cachalot.readthedocs.io/en/latest/quickstart.html#cachalot-only-cachable-tables>`_ as a frozenset of table names (e.g. "public_test" if public was the app name and test is a model name).
+Note: In settings, you can use :ref:`CACHALOT_UNCACHABLE_TABLES <quickstart:\`\`cachalot_only_cachable_apps\`\`>` as a frozenset of table names (e.g. "public_test" if public was the app name and test is a model name).
 
-Why use cachalot? `Check out our comparison <https://django-cachalot.readthedocs.io/en/latest/introduction.html#comparison-with-similar-tools>`_
+Why use cachalot? :ref:`Check out our comparison <introduction:comparison with similar tools>`
 
 Below the tree is an in-depth opinion from the new maintainer:
 

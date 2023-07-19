@@ -13,14 +13,14 @@ Requirements
     (using either python-memcached or pylibmc)
   - `filebased <https://docs.djangoproject.com/en/dev/topics/cache/#filesystem-caching>`_
   - `locmem <https://docs.djangoproject.com/en/dev/topics/cache/#local-memory-caching>`_
-    (but it’s not shared between processes, see :ref:`locmem limits <Locmem>`)
+    (but it’s not shared between processes, see :ref:`locmem limits <limits:Locmem>`)
 
 - one of these databases:
 
   - PostgreSQL
   - SQLite
   - MySQL (but on older versions like MySQL 5.5, django-cachalot has no effect,
-    see :ref:`MySQL limits <MySQL>`)
+    see :ref:`MySQL limits <limits:MySQL>`)
 
 Usage
 .....
@@ -28,11 +28,11 @@ Usage
 #. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. If you use multiple servers with a common cache server,
-   :ref:`double check their clock synchronisation <multiple servers>`
+   :ref:`double check their clock synchronisation <limits:Multiple servers clock synchronisation>`
 #. If you modify data outside Django
    – typically after restoring a SQL database –,
    use the :ref:`manage.py command <Command>`
-#. Be aware of :ref:`the few other limits <Limits>`
+#. Be aware of :ref:`the few other limits <limits:Limits>`
 #. If you use
    `django-debug-toolbar <https://github.com/jazzband/django-debug-toolbar>`_,
    you can add ``'cachalot.panels.CachalotPanel',``
@@ -61,7 +61,7 @@ Settings
 
   .. warning::
      After modifying this setting, you should invalidate the cache
-     :ref:`using the manage.py command <Command>` or :ref:`the API <API>`.
+     :ref:`using the manage.py command <Command>` or :ref:`the API <api:api>`.
      Indeed, only the cache configured using this setting is automatically
      invalidated by django-cachalot – for optimisation reasons. So when you
      change this setting, you end up on a cache that may contain stale data.
@@ -114,7 +114,7 @@ Settings
 :Default: ``True``
 :Description:
   If set to ``False``, disables automatic invalidation on raw
-  SQL queries – read :ref:`raw queries limits <Raw SQL queries>` for more info.
+  SQL queries – read :ref:`raw queries limits <limits:Raw SQL queries>` for more info.
 
 
 .. _CACHALOT_ONLY_CACHABLE_TABLES:
@@ -197,7 +197,7 @@ Settings
               to use ``./manage.py invalidate_cachalot``).
 
 ``CACHALOT_FINAL_SQL_CHECK``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :Default: ``False``
 :Description:
