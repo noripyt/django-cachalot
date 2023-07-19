@@ -1,3 +1,5 @@
+.. _Limits:
+
 Limits
 ------
 
@@ -8,7 +10,7 @@ Do not use django-cachalot if your project has more than 50 database
 modifications per minute on most of its tables. There will be no problem,
 but django-cachalot will become inefficient and will end up slowing
 your project instead of speeding it.
-Read :ref:`the introduction <introduction:Introduction>` for more details.
+Read :ref:`the introduction <Introduction>` for more details.
 
 Redis
 .....
@@ -51,6 +53,8 @@ memcached. If you use Ubuntu and installed the package, you can modify
 per cache key to 10 MB, and if you want increase the already existing ``-m 64``
 to something like ``-m 1000`` to set the maximum cache size to 1 GB.
 
+.. _Locmem:
+
 Locmem
 ......
 
@@ -66,6 +70,8 @@ Filebased, a simple persistent cache implemented in Django, had a small bug
 it cannot cache some objects, like psycopg2 ranges. This bug was fixed in 2015, if you sill use an affected Django version and you use range fields from `django.contrib.postgres`, you need to add the tables using range fields
 to :ref:`CACHALOT_UNCACHABLE_TABLES`.
 
+.. _MySQL:
+
 MySQL
 .....
 
@@ -76,9 +82,11 @@ Unfortunately, this built-in query cache has no significant effect
 since at least MySQL 5.7. However, in MySQL 5.5 it was working so well that
 django-cachalot was not improving performance.
 So depending on the MySQL version, django-cachalot may be useless.
-See the current :ref:`django-cachalot benchmark <benchmark:benchmark>` and compare it with
+See the current :ref:`django-cachalot benchmark <Benchmark>` and compare it with
 `an older run of the same benchmark <http://django-cachalot.readthedocs.io/en/1.2.0/benchmark.html>`_
 to see the clear difference: MySQL became 4 × slower since then!
+
+.. _Raw SQL queries:
 
 Raw SQL queries
 ...............
@@ -94,13 +102,14 @@ It detects if the raw query contains ``UPDATE``, ``INSERT``, ``DELETE``,
 in that query by comparing with models registered by Django.
 
 This is quite robust, so if a query is not invalidated automatically
-by this system, please :ref:`send a bug report <reporting:Bug reports, questions, discussion, new features>`.
-In the meantime, you can use :ref:`the API <api:API>` to manually invalidate
+by this system, please :ref:`send a bug report <Reporting>`.
+In the meantime, you can use :ref:`the API <Api>` to manually invalidate
 the tables where data has changed.
 
 However, this simple system can be too efficient in some very rare cases
 and lead to unwanted extra invalidations.
 
+.. _Multiple servers:
 
 Multiple servers clock synchronisation
 ......................................

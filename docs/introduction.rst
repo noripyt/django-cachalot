@@ -19,7 +19,7 @@ of modifications per minute** on each table, like a social network with
 more than a 50 messages per minute. Django-cachalot may still give a small
 speedup in such cases, but it may also slow things a bit
 (in the worst case scenario, a 20% slowdown,
-according to :ref:`the benchmark <benchmark:benchmark>`).
+according to :ref:`the benchmark <Benchmark>`).
 If you have a website like that, optimising your SQL database and queries
 is the number one thing you have to do.
 
@@ -46,13 +46,15 @@ Features
   that per-object feature, they are unreliable and dangerous for your data.
 - **Handles everything in the ORM**. You can use the most advanced features
   from the ORM without a single issue, django-cachalot is extremely robust.
-- An easy control thanks to :ref:`quickstart:settings` and :ref:`a simple API <api:api>`.
+- An easy control thanks to :ref:`settings` and :ref:`a simple API <Api>`.
   But that’s only required if you have a complex infrastructure.  Most people
   will never use settings or the API.
 - A few bonus features like
-  :ref:`a signal triggered at each database change <quickstart:signal>`
+  :ref:`a signal triggered at each database change <Signal>`
   (including bulk changes) and
-  :ref:`a template tag for a better template fragment caching <quickstart:template utils>`.
+  :ref:`a template tag for a better template fragment caching <Template utils>`.
+
+.. _Comparison with similar tools:
 
 Comparison with similar tools
 .............................
