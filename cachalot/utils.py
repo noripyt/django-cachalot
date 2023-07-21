@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from django.contrib.postgres.functions import TransactionNow
-from django.db import connections, connection
 from django.db.models import Exists, QuerySet, Subquery
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Now
@@ -35,24 +34,14 @@ CACHABLE_PARAM_TYPES = {
 }
 UNCACHABLE_FUNCS = {Now, TransactionNow}
 
-# Check if psycopg2 or 3 is used
-connection.ensure_connection()
-underlying_connection = connection.connection
 
-if underlying_connection.__class__.__module__.startswith('psycopg2'):
-    from psycopg2 import Binary
-    from psycopg2.extras import (
-        NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json)
-    CACHABLE_PARAM_TYPES.update((
-        Binary, NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet,
-        Json,))
-elif underlying_connection.__class__.__module__.startswith('psycopg'):
+try:
+    from psycopg.dbapi20 import Binary
+
     from django.db.backends.postgresql.psycopg_any import (
         NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet,
     )
-
-    from psycopg.dbapi20 import Binary
-
+    
     from psycopg.types.numeric import (
         Int2, Int4, Int8, Float4, Float8,
     )
@@ -71,6 +60,17 @@ elif underlying_connection.__class__.__module__.startswith('psycopg'):
         Int2, Int4, Int8, Float4, Float8, IPv4Address, IPv6Address,
         Binary,
     ))
+except ImportError:
+    try:
+        from psycopg2 import Binary
+        from psycopg2.extras import (
+            NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet, Json)
+        CACHABLE_PARAM_TYPES.update((
+            Binary, NumericRange, DateRange, DateTimeRange, DateTimeTZRange, Inet,
+            Json,))
+    except ImportError:
+        pass
+
 
 def check_parameter_types(params):
     for p in params:
@@ -218,6 +218,8 @@ def _flatten(expression: 'BaseExpression'):
 
 
 def _get_tables(db_alias, query, compiler=False):
+    from django.db import connections
+
     if query.select_for_update or (
             not cachalot_settings.CACHALOT_CACHE_RANDOM
             and '?' in query.order_by):
