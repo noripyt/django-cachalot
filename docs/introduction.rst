@@ -48,13 +48,15 @@ Features
   that per-object feature, they are unreliable and dangerous for your data.
 - **Handles everything in the ORM**. You can use the most advanced features
   from the ORM without a single issue, django-cachalot is extremely robust.
-- An easy control thanks to :ref:`settings` and :ref:`a simple API <API>`.
+- An easy control thanks to :ref:`settings` and :ref:`a simple API <Api>`.
   But that’s only required if you have a complex infrastructure.  Most people
   will never use settings or the API.
 - A few bonus features like
   :ref:`a signal triggered at each database change <Signal>`
   (including bulk changes) and
   :ref:`a template tag for a better template fragment caching <Template utils>`.
+
+.. _Comparison with similar tools:
 
 Comparison with similar tools
 .............................
@@ -63,9 +65,6 @@ This comparison was done in December 2015.  It compares django-cachalot
 to the other popular automatic ORM caches at the moment:
 `django-cache-machine <https://github.com/django-cache-machine/django-cache-machine>`_
 & `django-cacheops <https://github.com/Suor/django-cacheops>`_.
-
-Features
-~~~~~~~~
 
 ===================================================== ========= ============= ==========
 Feature                                               cachalot  cache-machine cacheops

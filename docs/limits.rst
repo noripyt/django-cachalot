@@ -103,7 +103,7 @@ in that query by comparing with models registered by Django.
 
 This is quite robust, so if a query is not invalidated automatically
 by this system, please :ref:`send a bug report <Reporting>`.
-In the meantime, you can use :ref:`the API <API>` to manually invalidate
+In the meantime, you can use :ref:`the API <Api>` to manually invalidate
 the tables where data has changed.
 
 However, this simple system can be too efficient in some very rare cases

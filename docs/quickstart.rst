@@ -28,7 +28,7 @@ Usage
 #. ``pip install django-cachalot``
 #. Add ``'cachalot',`` to your ``INSTALLED_APPS``
 #. If you use multiple servers with a common cache server,
-   :ref:`double check their clock synchronisation <multiple servers>`
+   :ref:`double check their clock synchronisation <Multiple servers>`
 #. If you modify data outside Django
    – typically after restoring a SQL database –,
    use the :ref:`manage.py command <Command>`
@@ -61,7 +61,7 @@ Settings
 
   .. warning::
      After modifying this setting, you should invalidate the cache
-     :ref:`using the manage.py command <Command>` or :ref:`the API <API>`.
+     :ref:`using the manage.py command <Command>` or :ref:`the API <Api>`.
      Indeed, only the cache configured using this setting is automatically
      invalidated by django-cachalot – for optimisation reasons. So when you
      change this setting, you end up on a cache that may contain stale data.
@@ -197,7 +197,7 @@ Settings
               to use ``./manage.py invalidate_cachalot``).
 
 ``CACHALOT_FINAL_SQL_CHECK``
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 :Default: ``False``
 :Description:
