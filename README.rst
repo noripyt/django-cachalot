@@ -124,7 +124,7 @@ stuck with a huge table that's modified rapidly? Since you've mixed your cold (9
 you're caching and invalidating an entire table. It's like trying to boil 1 ton of noodles inside ONE pot instead of
 100 pots boiling 1 ton of noodles. Which is more efficient? The splitting up of them.
 
-Note 1: My personal experience with caches stems from Reddit's: https://redditblog.com/2017/01/17/caching-at-reddit/
+Note 1: My personal experience with caches stems from Reddit's: https://web.archive.org/web/20210803213621/https://redditblog.com/2017/01/17/caching-at-reddit/
 
 Note 2: Technical comparison: https://django-cachalot.readthedocs.io/en/latest/introduction.html#comparison-with-similar-tools
 
