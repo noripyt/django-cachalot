@@ -88,7 +88,7 @@ Settings
 :Default: ``False``
 :Description:
   Whether to allow usage of unsupported databases. 
-  No errors will be thrown if this set to `True`.
+  No startup errors will be thrown if this set to `True`.
 
 ``CACHALOT_ADDITIONAL_SUPPORTED_DATABASES``
 ~~~~~~~~~~~~~~~~~~~~~~
