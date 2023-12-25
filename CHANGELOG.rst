@@ -1,5 +1,9 @@
 What’s new in django-cachalot?
 ==============================
+2.6.2
+-----
+
+- Support for Python 3.12 and Django 5.0
 
 2.6.1
 -----
