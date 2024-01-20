@@ -1,4 +1,5 @@
 import datetime
+import warnings
 from unittest import skipIf
 from uuid import UUID
 from decimal import Decimal
@@ -15,6 +16,7 @@ from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Coalesce, Now
 from django.db.transaction import TransactionManagementError
 from django.test import TransactionTestCase, skipUnlessDBFeature, override_settings
+from psycopg2 import sql
 from pytz import UTC
 
 from cachalot.cache import cachalot_caches
@@ -1009,6 +1011,20 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         self.assertListEqual(
             data2,
             [('é',) + l for l in Test.objects.values_list(*attnames)])
+
+    def test_unsupported_sql_type_execute_with_warning(self):
+        table_name = Test._meta.db_table
+        sql_ = sql.SQL("SELECT {field} FROM {table}").format(
+            field=sql.Identifier('name'),
+            table=sql.Identifier(table_name),
+        )
+        with warnings.catch_warnings(record=True) as warning:
+            with connection.cursor() as cursor:
+                cursor.execute(sql_)
+                data = list(cursor.fetchall())
+            self.assertEqual(len(warning), 1)
+            self.assertEqual(warning[0]._category_name, 'UserWarning')
+            self.assertEqual(len(data), 2)
 
     def test_cursor_execute_no_table(self):
         sql = 'SELECT * FROM (SELECT 1 AS id UNION ALL SELECT 2) AS t;'
