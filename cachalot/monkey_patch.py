@@ -44,7 +44,7 @@ def _get_result_or_execute_query(execute_query_func, cache,
                                  cache_key, table_cache_keys):
     try:
         data = cache.get_many(table_cache_keys + [cache_key])
-    except KeyError:
+    except (KeyError, ModuleNotFoundError):
         data = None
 
     new_table_cache_keys = set(table_cache_keys)
