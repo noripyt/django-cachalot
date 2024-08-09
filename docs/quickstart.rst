@@ -4,7 +4,7 @@ Quick start
 Requirements
 ............
 
-- Django 3.2, 4.1, 4.2, 5.0
+- Django 3.2, 4.1, 4.2, 5.0, 5.1
 - Python 3.7-3.12
 - a cache configured as ``'default'`` with one of these backends:
 
