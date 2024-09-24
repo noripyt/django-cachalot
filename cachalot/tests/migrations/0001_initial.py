@@ -51,6 +51,8 @@ class Migration(migrations.Migration):
                 ('permission', models.ForeignKey(blank=True, to='auth.Permission', null=True, on_delete=models.PROTECT)),
                 ('a_float', models.FloatField(null=True, blank=True)),
                 ('a_decimal', models.DecimalField(null=True, blank=True, max_digits=5, decimal_places=2)),
+                ('a_choice', models.CharField(choices=[("foo","foo"), ("bar","bar")], null=True, max_length=3)),
+                ('a_dict_choice', models.CharField(choices=[("foo","foo"), ("bar","bar")], null=True, max_length=3)),
                 ('bin', models.BinaryField(null=True, blank=True)),
                 ('ip', models.GenericIPAddressField(null=True, blank=True)),
                 ('duration', models.DurationField(null=True, blank=True)),

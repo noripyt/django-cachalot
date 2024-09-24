@@ -6,9 +6,13 @@ from django.contrib.postgres.fields import (
     DateTimeRangeField)
 from django.db.models import (
     Model, CharField, ForeignKey, BooleanField, DateField, DateTimeField,
-    ManyToManyField, BinaryField, IntegerField, GenericIPAddressField,
+    ManyToManyField, BinaryField, IntegerField, GenericIPAddressField, TextChoices,
     FloatField, DecimalField, DurationField, UUIDField, SET_NULL, PROTECT)
 
+
+class SomeChoices(TextChoices):
+    foo = 'foo'
+    bar = 'bar'
 
 class Test(Model):
     name = CharField(max_length=20)
@@ -25,6 +29,7 @@ class Test(Model):
     a_float = FloatField(null=True, blank=True)
     a_decimal = DecimalField(null=True, blank=True,
                              max_digits=5, decimal_places=2)
+    a_choice = CharField(max_length=3, choices=SomeChoices.choices, null=True)
     bin = BinaryField(null=True, blank=True)
     ip = GenericIPAddressField(null=True, blank=True)
     duration = DurationField(null=True, blank=True)
