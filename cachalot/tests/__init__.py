@@ -12,6 +12,7 @@ from .api import APITestCase, CommandTestCase
 from .signals import SignalsTestCase
 from .postgres import PostgresReadTestCase
 from .debug_toolbar import DebugToolbarTestCase
+from .test_case_annotation_bug import TestAnnotationFilteringBug
 
 
 @receiver(setting_changed)
