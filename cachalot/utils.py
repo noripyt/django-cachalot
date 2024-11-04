@@ -7,6 +7,7 @@ from uuid import UUID
 
 from django.contrib.postgres.functions import TransactionNow
 from django.db.models import Exists, QuerySet, Subquery
+from django.db.models.enums import Choices
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Now
 from django.db.models.sql import Query, AggregateQuery
@@ -80,6 +81,11 @@ def check_parameter_types(params):
                 check_parameter_types(p)
             elif cl is dict:
                 check_parameter_types(p.items())
+            elif issubclass(cl, Choices):
+                # Handle the case where a parameter from a Choices field is passed.
+                # Django Choices use enum.unique() so the values are guaranteed to be unique.
+                # Dereference the true "value" and verify that it is cachable.
+                check_parameter_types([p.value])
             else:
                 raise UncachableQuery
 
