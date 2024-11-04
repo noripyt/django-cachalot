@@ -1,4 +1,5 @@
 import re
+import warnings
 from collections.abc import Iterable
 from functools import wraps
 from time import time
@@ -140,6 +141,15 @@ def _patch_cursor():
                 if getattr(connection, 'raw', True):
                     if isinstance(sql, bytes):
                         sql = sql.decode('utf-8')
+                    # in case `sql` is not of type `str`,
+                    # we raise a warning and return.
+                    if not isinstance(sql, str):
+                        warnings.warn(
+                            f"Unsupported sql of type {type(sql)}, "
+                            f"skipping raw query cache invalidation's. "
+                            f"Try setting `CACHALOT_INVALIDATE_RAW` to False."
+                        )
+                        return
                     sql = sql.lower()
                     if SQL_DATA_CHANGE_RE.search(sql):
                         tables = filter_cachable(
