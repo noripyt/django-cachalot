@@ -1,4 +1,5 @@
 import re
+import types
 from collections.abc import Iterable
 from functools import wraps
 from time import time
@@ -62,6 +63,10 @@ def _get_result_or_execute_query(execute_query_func, cache,
                 pass
 
     result = execute_query_func()
+
+    if result.__class__ == types.GeneratorType and not cachalot_settings.CACHALOT_CACHE_ITERATORS:
+        return result
+
     if result.__class__ not in ITERABLES and isinstance(result, Iterable):
         result = list(result)
 
