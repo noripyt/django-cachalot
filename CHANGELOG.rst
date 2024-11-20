@@ -1,5 +1,20 @@
 What’s new in django-cachalot?
 ==============================
+2.7.0
+-----
+
+- Add support for caching queries with enum filters (#267)
+
+2.6.3
+-----
+
+- Support for Django 5.1
+
+
+2.6.2
+-----
+
+- Support for Python 3.12 and Django 5.0
 
 2.6.1
 -----
