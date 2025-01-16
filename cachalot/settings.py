@@ -30,6 +30,7 @@ SUPPORTED_CACHE_BACKENDS = {
     'django.core.cache.backends.dummy.DummyCache',
     'django.core.cache.backends.locmem.LocMemCache',
     'django.core.cache.backends.filebased.FileBasedCache',
+    'django.core.cache.backends.redis.RedisCache',
     'django_redis.cache.RedisCache',
     'django.core.cache.backends.memcached.MemcachedCache',
     'django.core.cache.backends.memcached.PyLibMCCache',
