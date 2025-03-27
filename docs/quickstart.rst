@@ -9,6 +9,8 @@ Requirements
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwinz/django-redis>`_
+  - `redis <https://docs.djangoproject.com/en/dev/topics/cache/#redis>`_
+    (requires Django >= 4)
   - `memcached <https://docs.djangoproject.com/en/dev/topics/cache/#memcached>`_
     (using either python-memcached or pylibmc)
   - `filebased <https://docs.djangoproject.com/en/dev/topics/cache/#filesystem-caching>`_

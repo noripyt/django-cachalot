@@ -73,6 +73,18 @@ CACHES = {
 }
 
 try:
+    from django.core.cache.backends.redis import RedisCache
+except ImportError:
+    pass
+else:
+    CACHES['builtin_redis']= {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        # Make sure to use a different redis database to avoid conflicts with the other
+        # redis cache backend.
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+    }
+
+try:
     import pylibmc
 except ImportError:
     pass
