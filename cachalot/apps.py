@@ -44,11 +44,18 @@ def check_databases_compatibility(app_configs, **kwargs):
         for db_alias in enabled_databases:
             if db_alias in databases:
                 engine = databases[db_alias]['ENGINE']
-                if engine not in SUPPORTED_DATABASE_ENGINES:
+                if (
+                    engine not in SUPPORTED_DATABASE_ENGINES
+                    and engine
+                    not in cachalot_settings.CACHALOT_ADDITIONAL_SUPPORTED_DATABASES
+                    and not cachalot_settings.CACHALOT_USE_UNSUPPORTED_DATABASE
+                ):
                     errors.append(Warning(
                         'Database engine %r is not supported '
                         'by django-cachalot.' % engine,
-                        hint='Switch to a supported database engine.',
+                            hint='Switch to a supported database engine, '
+                            'add an entry in `CACHALOT_ADDITIONAL_SUPPORTED_DATABASES`'
+                            ', or set True to `CACHALOT_USE_UNSUPPORTED_DATABASE`.',
                         id='cachalot.W003'
                     ))
             else:

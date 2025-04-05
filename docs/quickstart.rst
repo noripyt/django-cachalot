@@ -84,6 +84,22 @@ Settings
 .. |DATABASES| replace:: ``DATABASES``
 .. _DATABASES: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
+``CACHALOT_USE_UNSUPPORTED_DATABASE``
+~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``False``
+:Description:
+  Whether to allow usage of unsupported databases. 
+  No startup errors will be thrown if this set to `True`.
+
+``CACHALOT_ADDITIONAL_SUPPORTED_DATABASES``
+~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``frozenset()``
+:Description:
+  Allows us to define custom supported databases without setting 
+  ``CACHALOT_USE_UNSUPPORTED_DATABASE`` to ``True``.
+
 ``CACHALOT_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~
 
