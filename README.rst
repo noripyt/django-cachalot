@@ -39,7 +39,7 @@ Table of Contents:
 Quickstart
 ----------
 
-Cachalot officially supports Python 3.7-3.11 and Django 3.2, 4.1, 4.2, 5.0, 5.1 with the databases PostgreSQL, SQLite, and MySQL.
+Cachalot officially supports Python 3.8-3.12 and Django 3.2, 4.1, 4.2, 5.0, 5.1, 5.2 with the databases PostgreSQL, SQLite, and MySQL.
 
 Note: an upper limit on Django version is set for your safety. Please do not ignore it.
 
@@ -51,7 +51,7 @@ Usage
 #. If you use multiple servers with a common cache server,
    `double check their clock synchronisation <https://django-cachalot.readthedocs.io/en/latest/limits.html#multiple-servers>`_
 #. If you modify data outside Django
-   – typically after restoring a SQL database –,
+   – typically after restoring a SQL database –,
    use the `manage.py command <https://django-cachalot.readthedocs.io/en/latest/quickstart.html#command>`_
 #. Be aware of `the few other limits <https://django-cachalot.readthedocs.io/en/latest/limits.html#limits>`_
 #. If you use
@@ -78,7 +78,7 @@ For setup:
 #. Install: ``pip install -r requirements/hacking.txt``
 #. For PostgreSQL: ``CREATE ROLE cachalot LOGIN SUPERUSER;``
 #. Run: ``tox --current-env`` to run the test suite on your current Python version.
-#. You can also run specific databases and Django versions: ``tox -e py38-django3.1-postgresql-redis``
+#. You can also run specific databases and Django versions: ``tox -e py312-django5.2-postgresql-redis``
 
 Benchmark
 ---------

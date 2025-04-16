@@ -249,19 +249,19 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         self.assert_query_cached(qs, [t])
 
     def test_iterator(self):
-        with self.assertNumQueries(2):
-            data1 = list(Test.objects.iterator())
-            data2 = list(Test.objects.iterator())
-        self.assertListEqual(data2, data1)
-        self.assertListEqual(data2, [self.t1, self.t2])
-
-        with self.settings(CACHALOT_CACHE_ITERATORS=True):
-            with self.assertNumQueries(1):
+        with self.settings(CACHALOT_CACHE_ITERATORS=False):
+            with self.assertNumQueries(2):
                 data1 = list(Test.objects.iterator())
-            with self.assertNumQueries(0):
                 data2 = list(Test.objects.iterator())
             self.assertListEqual(data2, data1)
             self.assertListEqual(data2, [self.t1, self.t2])
+
+        with self.assertNumQueries(1):
+            data1 = list(Test.objects.iterator())
+        with self.assertNumQueries(0):
+            data2 = list(Test.objects.iterator())
+        self.assertListEqual(data2, data1)
+        self.assertListEqual(data2, [self.t1, self.t2])
 
     def test_in_bulk(self):
         with self.assertNumQueries(1):

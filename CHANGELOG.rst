@@ -1,5 +1,11 @@
 What’s new in django-cachalot?
 ==============================
+2.8.0
+-----
+- Add a setting for disabling iterator caching (#263)
+- Add support for testing against the builtin redis backend (#264)
+- Add Django 5.2 support to tox configuration (#272)
+
 2.7.0
 -----
 
@@ -9,7 +15,6 @@ What’s new in django-cachalot?
 -----
 
 - Support for Django 5.1
-
 
 2.6.2
 -----
