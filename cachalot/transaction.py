@@ -12,10 +12,43 @@ class AtomicCache(dict):
         self[k] = v
 
     def get_many(self, keys):
+        # Get values present in this cache level
         data = {k: self[k] for k in keys if k in self}
+        
+        # Identify keys that are missing at this level
         missing_keys = set(keys)
         missing_keys.difference_update(data)
-        data.update(self.parent_cache.get_many(missing_keys))
+        
+        # Only proceed if there are missing keys
+        if missing_keys:
+            # Find the bottom-most non-AtomicCache to avoid recursion
+            current_cache = self.parent_cache
+            visited_caches = set([id(self)])
+            
+            # Continue until we hit a non-AtomicCache or visit a cache we've seen before
+            while isinstance(current_cache, AtomicCache) and id(current_cache) not in visited_caches:
+                # Mark this cache as visited
+                visited_caches.add(id(current_cache))
+                
+                # Get any keys available in this cache level
+                available_keys = missing_keys.intersection(current_cache.keys())
+                if available_keys:
+                    for k in available_keys:
+                        data[k] = current_cache[k]
+                    missing_keys.difference_update(available_keys)
+                
+                # If we found all keys, no need to go further
+                if not missing_keys:
+                    break
+                
+                # Move to the parent cache
+                current_cache = current_cache.parent_cache
+            
+            # If we've reached a non-AtomicCache and still have missing keys, use its get_many method
+            if missing_keys and not isinstance(current_cache, AtomicCache) and hasattr(current_cache, 'get_many'):
+                parent_data = current_cache.get_many(missing_keys)
+                data.update(parent_data)
+        
         return data
 
     def set_many(self, data, timeout):
