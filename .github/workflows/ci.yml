@@ -16,17 +16,32 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        django-version: ['3.2', '4.1', '4.2', '5.0', '5.1', '5.2']
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
+        django-version: ['4.2', '5.2', '6.0']
         exclude:
+          # Django 4.2: only py38, py39, py310, py312
           - python-version: '3.11'
-            django-version: '3.2'
-          - python-version: '3.12'
-            django-version: '3.2'
+            django-version: '4.2'
+          - python-version: '3.13'
+            django-version: '4.2'
+          - python-version: '3.14'
+            django-version: '4.2'
+          # Django 5.2: only py310, py311, py312, py313
+          - python-version: '3.8'
+            django-version: '5.2'
+          - python-version: '3.9'
+            django-version: '5.2'
+          - python-version: '3.14'
+            django-version: '5.2'
+          # Django 6.0: only py312, py313, py314
+          - python-version: '3.8'
+            django-version: '6.0'
+          - python-version: '3.9'
+            django-version: '6.0'
+          - python-version: '3.10'
+            django-version: '6.0'
           - python-version: '3.11'
-            django-version: '4.1'
-          - python-version: '3.12'
-            django-version: '4.1'
+            django-version: '6.0'
     services:
       redis:
         image: redis:6
@@ -58,9 +73,9 @@ jobs:
           - 11211:11211
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     - name: Get pip cache dir
