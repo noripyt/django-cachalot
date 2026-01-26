@@ -17,13 +17,21 @@ class DebugToolbarTestCase(LiveServerTestCase):
         soup = BeautifulSoup(response.content.decode('utf-8'), 'html.parser')
         toolbar = soup.find(id='djDebug')
         self.assertIsNotNone(toolbar)
-        store_id = toolbar.attrs['data-store-id']
-        # Checks that store_id is a valid UUID.
-        UUID(store_id)
-        render_panel_url = toolbar.attrs['data-render-panel-url']
-        panel_id = soup.find(title='Cachalot')['class'][0]
-        panel_url = ('%s?store_id=%s&panel_id=%s'
-                     % (render_panel_url, store_id, panel_id))
+        # Support both old (store_id) and new (request_id) debug toolbar APIs
+        if 'data-request-id' in toolbar.attrs:
+            # django-debug-toolbar 6.x
+            request_id = toolbar.attrs['data-request-id']
+            UUID(request_id)
+            render_panel_url = toolbar.attrs['data-render-panel-url']
+            panel_id = soup.find(title='Cachalot')['class'][0]
+            panel_url = f'{render_panel_url}?request_id={request_id}&panel_id={panel_id}'
+        else:
+            # django-debug-toolbar < 6.0
+            store_id = toolbar.attrs['data-store-id']
+            UUID(store_id)
+            render_panel_url = toolbar.attrs['data-render-panel-url']
+            panel_id = soup.find(title='Cachalot')['class'][0]
+            panel_url = f'{render_panel_url}?store_id={store_id}&panel_id={panel_id}'
 
         #
         # Rendering panel
