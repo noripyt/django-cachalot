@@ -226,7 +226,7 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             'Cache backend %r is not supported by django-cachalot.'
             % 'django.core.cache.backends.db.DatabaseCache',
             hint='Switch to a supported cache backend '
-                 'like Redis or Memcached.',
+                 'like Redis, Valkey, or Memcached.',
             id='cachalot.W001')
         with self.settings(CACHES={'default': incompatible_cache}):
             errors = run_checks(tags=[Tags.compatibility])
@@ -236,6 +236,17 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
                            CACHALOT_CACHE='secondary'):
             errors = run_checks(tags=[Tags.compatibility])
             self.assertListEqual(errors, [warning001])
+
+    def test_valkey_cache_compatibility(self):
+        """Test that django-valkey backend is recognized as compatible."""
+        valkey_cache = {
+            'BACKEND': 'django_valkey.cache.ValkeyCache',
+            'LOCATION': 'valkey://127.0.0.1:6379/1',
+        }
+        
+        with self.settings(CACHES={'default': valkey_cache}):
+            errors = run_checks(tags=[Tags.compatibility])
+            self.assertListEqual(errors, [])
 
     def test_database_compatibility(self):
         compatible_database = {
