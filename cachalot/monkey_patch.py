@@ -61,9 +61,11 @@ def _get_result_or_execute_query(execute_query_func, cache,
                 # For timestamp mode, cached_value is a single timestamp
                 if cachalot_settings.CACHALOT_USE_UUID_INVALIDATION:
                     # Check if all table UUIDs match the cached query's table UUIDs
+                    # Note: At this point, all table_cache_keys are guaranteed to be in data
+                    # because new_table_cache_keys is empty
                     if isinstance(cached_value, dict):
                         # All table cache keys should have matching UUIDs
-                        if all(data.get(k) == cached_value.get(k) for k in table_cache_keys if k in data):
+                        if all(data.get(k) == cached_value.get(k) for k in table_cache_keys):
                             return result
                 else:
                     # Original timestamp comparison
@@ -83,11 +85,11 @@ def _get_result_or_execute_query(execute_query_func, cache,
         result = list(result)
 
     if cachalot_settings.CACHALOT_USE_UUID_INVALIDATION:
-        # Generate UUIDs for new table keys and get existing ones
+        # Generate a single UUID for all new table keys in this batch for consistency
+        uuid_val = _get_invalidation_value()
         to_be_set = {}
         table_uuid_snapshot = {}
         for k in new_table_cache_keys:
-            uuid_val = _get_invalidation_value()
             to_be_set[k] = uuid_val
             table_uuid_snapshot[k] = uuid_val
         

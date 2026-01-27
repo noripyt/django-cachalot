@@ -133,8 +133,12 @@ def _get_invalidation_value():
     """
     Generates an invalidation value for cache keys.
     
-    If CACHALOT_USE_UUID_INVALIDATION is enabled, returns a UUID4-based SHA1 hash.
-    Otherwise, returns a timestamp from time.time().
+    The return type depends on the CACHALOT_USE_UUID_INVALIDATION setting:
+    - If True: Returns a SHA1 hash (string) of a UUID4 for guaranteed uniqueness
+    - If False: Returns a timestamp (float) from time.time() for backward compatibility
+    
+    Note: The mixed return types are intentional to support both invalidation modes
+    without requiring cache migration. Each mode uses its own comparison logic.
     
     :return: An invalidation value (SHA1 hash string or float timestamp)
     :rtype: str or float

@@ -417,7 +417,7 @@ class CommandTestCase(TransactionTestCase):
             with self.settings(CACHALOT_INVALIDATE_RAW=False):
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "INSERT INTO cachalot_test (name, public) "
+                        f"INSERT INTO {Test._meta.db_table} (name, public) "
                         "VALUES ('test2', %s);", [1 if self.is_sqlite else True])
             
             # Should still use cache (not invalidated yet)
@@ -425,8 +425,8 @@ class CommandTestCase(TransactionTestCase):
                 data3 = list(Test.objects.values_list('name', flat=True))
                 self.assertListEqual(data3, ['test1'])
             
-            # Invalidate the table
-            invalidate('cachalot_test')
+            # Invalidate the table using the model
+            invalidate(Test)
             
             # Should execute query again and get new data
             with self.assertNumQueries(1):
