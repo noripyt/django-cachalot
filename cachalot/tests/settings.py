@@ -265,7 +265,9 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         warning003 = Warning(
             'Database engine %r is not supported by django-cachalot.'
             % 'django.db.backends.oracle',
-            hint='Switch to a supported database engine.',
+            hint='Switch to a supported database engine, '
+                 'add an entry in `CACHALOT_ADDITIONAL_SUPPORTED_DATABASES`'
+                 ', or set True to `CACHALOT_USE_UNSUPPORTED_DATABASE`.',
             id='cachalot.W003'
         )
         warning004 = Warning(
