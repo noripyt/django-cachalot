@@ -63,7 +63,7 @@ def _get_result_or_execute_query(execute_query_func, cache,
                     # Check if all table UUIDs match the cached query's table UUIDs
                     if isinstance(cached_value, dict):
                         # All table cache keys should have matching UUIDs
-                        if all(data.get(k) == cached_value.get(k) for k in table_cache_keys):
+                        if all(data.get(k) == cached_value.get(k) for k in table_cache_keys if k in data):
                             return result
                 else:
                     # Original timestamp comparison
@@ -83,12 +83,22 @@ def _get_result_or_execute_query(execute_query_func, cache,
         result = list(result)
 
     if cachalot_settings.CACHALOT_USE_UUID_INVALIDATION:
-        # Store current table UUIDs with the query result
-        current_table_values = cache.get_many(new_table_cache_keys)
-        to_be_set = {k: current_table_values.get(k, _get_invalidation_value()) 
-                     for k in new_table_cache_keys}
-        # Store dict of table UUIDs with the result
-        to_be_set[cache_key] = (current_table_values, result)
+        # Generate UUIDs for new table keys and get existing ones
+        to_be_set = {}
+        table_uuid_snapshot = {}
+        for k in new_table_cache_keys:
+            uuid_val = _get_invalidation_value()
+            to_be_set[k] = uuid_val
+            table_uuid_snapshot[k] = uuid_val
+        
+        # Get existing table UUIDs (already cached tables)
+        existing_table_keys = [k for k in table_cache_keys if k not in new_table_cache_keys]
+        if existing_table_keys:
+            existing_data = cache.get_many(existing_table_keys)
+            table_uuid_snapshot.update(existing_data)
+        
+        # Store dict of all table UUIDs with the result
+        to_be_set[cache_key] = (table_uuid_snapshot, result)
     else:
         # Original timestamp-based approach
         now = time()

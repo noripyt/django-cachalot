@@ -392,3 +392,73 @@ class CommandTestCase(TransactionTestCase):
         with self.assertNumQueries(1):
             with self.settings(CACHALOT_CACHE=self.cache_alias2):
                 self.assertListEqual(list(Test.objects.all()), [self.t1])
+
+    def test_uuid_invalidation(self):
+        """
+        Test that UUID-based invalidation works correctly.
+        This prevents race conditions on Windows where time() has low precision.
+        """
+        # Test with UUID invalidation enabled
+        with self.settings(CACHALOT_USE_UUID_INVALIDATION=True):
+            # Clear cache to start fresh
+            invalidate()
+            
+            # First query should execute and be cached
+            with self.assertNumQueries(1):
+                data1 = list(Test.objects.values_list('name', flat=True))
+                self.assertListEqual(data1, ['test1'])
+            
+            # Second query should use cache
+            with self.assertNumQueries(0):
+                data2 = list(Test.objects.values_list('name', flat=True))
+                self.assertListEqual(data2, ['test1'])
+            
+            # Insert data without using ORM (to bypass automatic invalidation)
+            with self.settings(CACHALOT_INVALIDATE_RAW=False):
+                with connection.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO cachalot_test (name, public) "
+                        "VALUES ('test2', %s);", [1 if self.is_sqlite else True])
+            
+            # Should still use cache (not invalidated yet)
+            with self.assertNumQueries(0):
+                data3 = list(Test.objects.values_list('name', flat=True))
+                self.assertListEqual(data3, ['test1'])
+            
+            # Invalidate the table
+            invalidate('cachalot_test')
+            
+            # Should execute query again and get new data
+            with self.assertNumQueries(1):
+                data4 = list(Test.objects.values_list('name', flat=True))
+                self.assertListEqual(data4, ['test1', 'test2'])
+            
+            # Should use cache again
+            with self.assertNumQueries(0):
+                data5 = list(Test.objects.values_list('name', flat=True))
+                self.assertListEqual(data5, ['test1', 'test2'])
+    
+    def test_uuid_invalidation_multiple_tables(self):
+        """
+        Test that UUID invalidation works with queries involving multiple tables.
+        """
+        with self.settings(CACHALOT_USE_UUID_INVALIDATION=True):
+            # Clear cache
+            invalidate()
+            
+            # Query involving multiple tables (using select_related)
+            with self.assertNumQueries(1):
+                permission = Permission.objects.select_related('content_type').first()
+            
+            # Should use cache
+            with self.assertNumQueries(0):
+                permission2 = Permission.objects.select_related('content_type').first()
+                self.assertEqual(permission.id, permission2.id)
+            
+            # Invalidate one of the tables
+            invalidate('auth_permission')
+            
+            # Should execute query again
+            with self.assertNumQueries(1):
+                permission3 = Permission.objects.select_related('content_type').first()
+                self.assertEqual(permission.id, permission3.id)
