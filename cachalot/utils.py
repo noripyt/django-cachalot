@@ -252,6 +252,10 @@ def _get_tables(db_alias, query, compiler=False):
                     # Django 3+
                     else:
                         tables.update(_get_tables(db_alias, expression.query))
+                # Django 6.0+: Subquery.resolve_expression() returns Query directly
+                # with subquery=True attribute instead of Subquery wrapper
+                elif isinstance(expression, Query) and getattr(expression, 'subquery', False):
+                    tables.update(_get_tables(db_alias, expression))
                 elif isinstance(expression, RawSQL):
                     sql = expression.as_sql(None, None)[0].lower()
                     tables.update(_get_tables_from_sql(connections[db_alias], sql))
