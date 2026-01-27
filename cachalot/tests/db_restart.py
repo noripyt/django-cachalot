@@ -6,7 +6,7 @@ doesn't occur after a database restart when data is modified outside Django.
 """
 from unittest import skipIf
 
-from django.db import connection
+from django.db import connection, transaction
 from django.test import TransactionTestCase
 
 from .models import Test
@@ -80,40 +80,59 @@ class DatabaseRestartTestCase(TestUtilsMixin, FilteredTransactionTestCase):
             data5 = list(Test.objects.filter(name='test1').values('name', 'public'))
         self.assertDictEqual(data5[0], {'name': 'test1', 'public': False})
 
-    def test_cache_invalidation_with_connection_close(self):
+    def test_cache_invalidation_with_atomic_block_and_connection_close(self):
         """
-        Test that cache invalidation still works after connection is closed/reopened.
+        Test that cache invalidation works after a connection close during an atomic block.
         
-        This simulates what happens during a database restart when Django
-        connections get closed and recreated.
+        This is the key scenario that causes the bug: if a database connection fails
+        during an atomic transaction and the connection.needs_rollback access fails,
+        the exit_atomic() cleanup might not happen, leaving stale AtomicCache state.
         """
+        from django.db import transaction
+        
         # Create and cache some data
         with self.assertNumQueries(1):
-            t = Test.objects.create(name='restart_test', public=False)
+            t = Test.objects.create(name='atomic_test', public=False)
         
         # Query and cache it
         with self.assertNumQueries(1):
-            data1 = list(Test.objects.filter(name='restart_test'))
+            data1 = list(Test.objects.filter(name='atomic_test'))
         self.assertEqual(len(data1), 1)
         self.assertEqual(data1[0].public, False)
         
         # Verify it's cached
         with self.assertNumQueries(0):
-            data2 = list(Test.objects.filter(name='restart_test'))
+            data2 = list(Test.objects.filter(name='atomic_test'))
         self.assertEqual(data2[0].public, False)
         
-        # Simulate DB restart by closing the connection
-        # Django will automatically reconnect on the next query
-        connection.close()
+        # Now simulate a DB restart during an atomic block
+        # This is the critical scenario that was causing the bug
+        try:
+            with transaction.atomic():
+                # Close the connection to simulate DB restart
+                # This will cause the atomic exit to potentially fail
+                connection.close()
+                # Force a reconnect by making a query
+                # This simulates what happens after a real DB restart
+                list(Test.objects.all()[:1])
+        except Exception:
+            # We expect some exception due to the connection close
+            pass
         
-        # Now update via ORM - this should invalidate the cache
+        # After the atomic block exits (even with errors), cache invalidation
+        # should still work. Test that an update properly invalidates the cache.
         with self.assertNumQueries(1):
-            Test.objects.filter(name='restart_test').update(public=True)
+            Test.objects.filter(name='atomic_test').update(public=True)
         
         # The query should get fresh data (cache should have been invalidated)
         with self.assertNumQueries(1):
-            data3 = list(Test.objects.filter(name='restart_test'))
+            data3 = list(Test.objects.filter(name='atomic_test'))
         self.assertEqual(data3[0].public, True)
+        
+        # And it should be cached now
+        with self.assertNumQueries(0):
+            data4 = list(Test.objects.filter(name='atomic_test'))
+        self.assertEqual(data4[0].public, True)
 
     def test_multiple_tables_after_db_restart(self):
         """

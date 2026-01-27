@@ -179,7 +179,12 @@ def _patch_atomic():
     def patch_exit(original):
         @wraps(original)
         def inner(self, exc_type, exc_value, traceback):
-            needs_rollback = get_connection(self.using).needs_rollback
+            try:
+                needs_rollback = get_connection(self.using).needs_rollback
+            except Exception:
+                # If we can't access the connection (e.g., after a database restart),
+                # assume we need to rollback to be safe
+                needs_rollback = True
             try:
                 original(self, exc_type, exc_value, traceback)
             finally:
