@@ -1,5 +1,10 @@
 What’s new in django-cachalot?
 ==============================
+2.9.0
+-----
+- Add support for Django 6.0 and Python 3.8-3.14 (#277)
+- Fix #280 CachalotPanel not working in Django Debug Toolbar (#277)
+
 2.8.0
 -----
 - Add a setting for disabling iterator caching (#263)
