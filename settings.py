@@ -94,6 +94,16 @@ else:
         'LOCATION': '127.0.0.1:11211',
     }
 
+try:
+    import django_valkey
+except ImportError:
+    pass
+else:
+    CACHES['valkey'] = {
+        'BACKEND': 'django_valkey.cache.ValkeyCache',
+        'LOCATION': 'valkey://127.0.0.1:6379/2',
+    }
+
 DEFAULT_CACHE_ALIAS = os.environ.get('CACHE_BACKEND', 'locmem')
 CACHES['default'] = CACHES.pop(DEFAULT_CACHE_ALIAS)
 if DEFAULT_CACHE_ALIAS == 'memcached' and 'pylibmc' in CACHES:
