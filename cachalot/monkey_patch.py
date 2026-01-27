@@ -172,7 +172,11 @@ def _patch_atomic():
         @wraps(original)
         def inner(self):
             cachalot_caches.enter_atomic(self.using)
-            original(self)
+            try:
+                original(self)
+            except Exception:
+                cachalot_caches.exit_atomic(self.using, False)
+                raise
 
         return inner
 

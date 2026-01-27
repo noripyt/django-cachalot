@@ -1,9 +1,11 @@
 from cachalot.transaction import AtomicCache
+from cachalot.cache import cachalot_caches
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.db import transaction, connection, IntegrityError
 from django.test import SimpleTestCase, skipUnlessDBFeature
+from unittest.mock import patch
 
 from .models import Test
 from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
@@ -190,6 +192,69 @@ class AtomicTestCase(TestUtilsMixin, FilteredTransactionTestCase):
                         '-- ' + Test._meta.db_table)  # Should invalidate Test.
         with self.assertNumQueries(1):
             list(Test.objects.all())
+
+    def test_exception_during_atomic_enter(self):
+        """
+        Tests that an exception raised during Atomic.__enter__ (the original() call)
+        properly cleans up the atomic_caches stack to prevent memory leaks
+        and cache corruption in subsequent requests.
+        
+        This test verifies the fix for the issue where if original(self) raises
+        an exception in __enter__, the __exit__ method is never called, leaving
+        the atomic_caches stack in a corrupted state.
+        
+        We test this by temporarily patching Atomic's unwrapped __enter__ to fail,
+        then verifying that the atomic_caches stack is properly cleaned up.
+        """
+        from cachalot import monkey_patch
+        
+        # Check that atomic_caches is initially empty
+        db_alias = connection.alias
+        initial_stack_length = len(cachalot_caches.atomic_caches.get(db_alias, []))
+        self.assertEqual(initial_stack_length, 0)
+        
+        # Temporarily unpatch and repatch with a failing original
+        monkey_patch._unpatch_atomic()
+        
+        # Save the real original
+        real_original_enter = transaction.Atomic.__enter__
+        
+        # Create a failing version
+        def failing_original_enter(self):
+            raise RuntimeError("Simulated database connection error")
+        
+        try:
+            # Replace with failing version
+            transaction.Atomic.__enter__ = failing_original_enter
+            
+            # Now repatch with cachalot - this will wrap our failing version
+            monkey_patch._patch_atomic()
+            
+            # Attempt to use atomic, which should fail
+            with self.assertRaises(RuntimeError):
+                with transaction.atomic():
+                    pass
+            
+            # Check that atomic_caches stack was properly cleaned up
+            # Without the fix, this would have length 1 (corrupted state)
+            final_stack_length = len(cachalot_caches.atomic_caches.get(db_alias, []))
+            self.assertEqual(final_stack_length, 0, 
+                            "atomic_caches stack should be cleaned up after exception in __enter__")
+        finally:
+            # Restore everything
+            monkey_patch._unpatch_atomic()
+            transaction.Atomic.__enter__ = real_original_enter
+            monkey_patch._patch_atomic()
+        
+        # Verify that subsequent atomic blocks work correctly
+        with self.assertNumQueries(1):
+            with transaction.atomic():
+                data = list(Test.objects.all())
+        self.assertListEqual(data, [])
+        
+        # Verify the stack is still clean
+        final_stack_length_2 = len(cachalot_caches.atomic_caches.get(db_alias, []))
+        self.assertEqual(final_stack_length_2, 0)
 
 
 class AtomicCacheTestCase(SimpleTestCase):
