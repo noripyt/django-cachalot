@@ -244,6 +244,31 @@ Settings
             pymemcache is 1.4× slower then 6.5× faster
             redis      is 1.5× slower then 6.2× faster
 
+``CACHALOT_USE_UUID_INVALIDATION``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``False``
+:Description:
+    If set to ``True``, uses UUID4-based cache invalidation instead of timestamps.
+    This prevents race conditions on systems where ``time.time()`` has low precision
+    (such as Windows with ~100ns precision). When enabled, each table invalidation
+    generates a unique UUID instead of using a timestamp, eliminating the possibility
+    of cache key collisions during rapid successive operations like ``get_or_create()``.
+
+    .. note::
+       This setting is particularly useful for:
+       
+       - **Windows environments** where ``time.time()`` precision can cause issues
+       - **High-throughput applications** performing many rapid database operations
+       - **Testing scenarios** where operations complete in microseconds
+       
+       UUID-based invalidation provides stronger guarantees against race conditions
+       at a negligible performance cost.
+
+    .. warning::
+       After changing this setting, run ``./manage.py invalidate_cachalot``
+       to clear the cache and avoid mixing timestamp and UUID-based cache entries.
+
 
 
 .. _Command:
