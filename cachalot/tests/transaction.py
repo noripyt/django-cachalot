@@ -1,5 +1,6 @@
 from cachalot.transaction import AtomicCache
 from cachalot.cache import cachalot_caches
+from cachalot import monkey_patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -206,8 +207,6 @@ class AtomicTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         We test this by temporarily patching Atomic's unwrapped __enter__ to fail,
         then verifying that the atomic_caches stack is properly cleaned up.
         """
-        from cachalot import monkey_patch
-        
         # Check that atomic_caches is initially empty
         db_alias = connection.alias
         initial_stack_length = len(cachalot_caches.atomic_caches.get(db_alias, []))
