@@ -215,7 +215,8 @@ def _flatten(expression: 'BaseExpression'):
     for existence of flatten.
     """
     yield expression
-    # Some expressions don't have get_source_expressions, so we check first
+    # Some expressions (like F objects) don't have get_source_expressions,
+    # so we check for its existence to prevent AttributeError
     if not hasattr(expression, 'get_source_expressions'):
         return
     for expr in expression.get_source_expressions():
@@ -259,8 +260,9 @@ def _get_tables(db_alias, query, compiler=False):
                     sql = expression.as_sql(None, None)[0].lower()
                     tables.update(_get_tables_from_sql(connections[db_alias], sql))
                 elif isinstance(expression, WhereNode):
-                    # WhereNodes in annotations (e.g., from Case/When with Q objects)
-                    # need to be processed to extract their subqueries
+                    # WhereNodes appear in annotations when Q objects are resolved during query
+                    # compilation (e.g., When(condition=Q(...)) becomes When(condition=WhereNode(...)))
+                    # We need to extract subqueries from these WhereNodes
                     for subquery in _find_subqueries_in_where(expression.children):
                         tables.update(_get_tables(db_alias, subquery))
         # Gets tables in WHERE subqueries.

@@ -998,11 +998,15 @@ class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
 
     def test_m2m_annotation_filter_invalidation(self):
         """
-        Tests that cache is invalidated when a query contains an annotation
-        based on a subquery of a ManyToMany field, and that M2M field is modified.
+        Tests that cache is properly invalidated when a ManyToMany relationship changes
+        and a query uses an annotation containing a subquery of that relationship.
         
-        Regression test for queries with annotations containing subqueries in Case/When
-        expressions not properly invalidating cache when M2M relationships change.
+        Regression test for: When using Case/When annotations with subqueries based on
+        ManyToMany fields, cache was not invalidated when the M2M relationship changed
+        because the M2M through table was not being detected as a dependency.
+        
+        Expected behavior: Cache should be invalidated whenever user.orders.add/remove
+        is called, causing the query to re-execute and return updated results.
         """
         u = User.objects.create_user('user')
         order1 = Order.objects.create(name='order1')
