@@ -199,6 +199,7 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         # cachalot tables should be cached (whitelist wins), auth tables should not
         self.assert_query_cached(Test.objects.all())
         self.assert_query_cached(TestParent.objects.all())
+        # User is from 'auth' app, which is not in whitelist, so not cached
         self.assert_query_cached(User.objects.all(), after=1)
 
     def test_only_cachable_and_uncachable_table(self):
