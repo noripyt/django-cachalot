@@ -59,7 +59,7 @@ class CachalotPanel(Panel):
                         or invalidation > self.last_invalidation:
                     self.last_invalidation = invalidation
             data[db_alias].sort(key=lambda row: row[2], reverse=True)
-        self.record_stats({'invalidations_per_db': data.items()})
+        self.record_stats({'invalidations_per_db': list(data.items())})
 
     @property
     def nav_subtitle(self):

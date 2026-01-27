@@ -933,7 +933,7 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
                 costs=False,
             )
             operation_detail = (r'\(actual time=[\d\.]+..[\d\.]+\ '
-                                r'rows=\d+ loops=\d+\)')
+                                r'rows=[\d\.]+ loops=\d+\)')
             expected = (
                 r'^Sort %s\n'
                 r'  Sort Key: name\n'
