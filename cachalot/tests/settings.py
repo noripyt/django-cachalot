@@ -81,12 +81,15 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         SUPPORTED_DATABASE_ENGINES.remove(engine)
         with self.settings(CACHALOT_DATABASES=SUPPORTED_ONLY):
             self.assert_query_cached(qs, after=1)
+        invalidate(Test)
+
         with self.settings(CACHALOT_USE_UNSUPPORTED_DATABASE=True):
             self.assert_query_cached(qs)
+        invalidate(Test)
 
-        custom_engine = 'custom_engine'
-        with self.settings(CACHALOT_ADDITIONAL_SUPPORTED_DATABASES={custom_engine}):
+        with self.settings(CACHALOT_ADDITIONAL_SUPPORTED_DATABASES={engine}):
             self.assert_query_cached(qs)
+        invalidate(Test)
 
         SUPPORTED_DATABASE_ENGINES.add(engine)
         with self.settings(CACHALOT_DATABASES=SUPPORTED_ONLY):
