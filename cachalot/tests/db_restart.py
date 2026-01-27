@@ -68,10 +68,11 @@ class DatabaseRestartTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         # Update data via raw SQL (simulating external DB modification)
         # This currently triggers invalidation because of CACHALOT_INVALIDATE_RAW
         # but after a real DB restart, timestamps might be out of sync
+        table_name = Test._meta.db_table
         with self.assertNumQueries(1):
             with connection.cursor() as cursor:
                 cursor.execute(
-                    "UPDATE cachalot_test SET public = %s WHERE name = %s",
+                    f"UPDATE {table_name} SET public = %s WHERE name = %s",
                     [False, 'test1'])
         
         # Step 8: Query again - should NOT return stale data
@@ -88,8 +89,6 @@ class DatabaseRestartTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         during an atomic transaction and the connection.needs_rollback access fails,
         the exit_atomic() cleanup might not happen, leaving stale AtomicCache state.
         """
-        from django.db import transaction
-        
         # Create and cache some data
         with self.assertNumQueries(1):
             t = Test.objects.create(name='atomic_test', public=False)
@@ -160,9 +159,10 @@ class DatabaseRestartTestCase(TestUtilsMixin, FilteredTransactionTestCase):
             data2 = list(Test.objects.select_related('owner').filter(name='multi_test'))
         
         # Modify via raw SQL (simulating DB restart + external change)
+        table_name = Test._meta.db_table
         with connection.cursor() as cursor:
             cursor.execute(
-                "UPDATE cachalot_test SET public = %s WHERE name = %s",
+                f"UPDATE {table_name} SET public = %s WHERE name = %s",
                 [True, 'multi_test'])
         
         # Should detect the change
