@@ -191,12 +191,23 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         self.assert_query_cached(Test.objects.all(), after=1)
         self.assert_query_cached(TestParent.objects.all(), after=1)
 
+    @override_settings(CACHALOT_UNCACHABLE_APPS=('cachalot', 'auth'),
+                       CACHALOT_ONLY_CACHABLE_APPS=('cachalot',))
+    def test_only_cachable_apps_with_uncachable_apps(self):
+        # Test that whitelist takes precedence over blacklist
+        # When ONLY_CACHABLE_APPS=['cachalot'] and UNCACHABLE_APPS=['cachalot', 'auth'],
+        # cachalot tables should be cached (whitelist wins), auth tables should not
+        self.assert_query_cached(Test.objects.all())
+        self.assert_query_cached(TestParent.objects.all())
+        self.assert_query_cached(User.objects.all(), after=1)
+
     def test_only_cachable_and_uncachable_table(self):
         with self.settings(
                 CACHALOT_ONLY_CACHABLE_TABLES=('cachalot_test',
                                                'cachalot_testparent'),
                 CACHALOT_UNCACHABLE_TABLES=('cachalot_test',)):
-            self.assert_query_cached(Test.objects.all(), after=1)
+            # When a table is in both whitelist and blacklist, whitelist takes precedence
+            self.assert_query_cached(Test.objects.all())
             self.assert_query_cached(TestParent.objects.all())
             self.assert_query_cached(User.objects.all(), after=1)
 

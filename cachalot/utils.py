@@ -186,24 +186,29 @@ def _find_subqueries_in_where(children):
 
 def is_cachable(table):
     whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
-    if whitelist and table not in whitelist:
-        return False
+    if whitelist:
+        # If whitelist is set, table must be in whitelist (whitelist takes precedence)
+        return table in whitelist
+    # No whitelist, so check blacklist
     return table not in cachalot_settings.CACHALOT_UNCACHABLE_TABLES
 
 
 def are_all_cachable(tables):
     whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
-    if whitelist and not tables.issubset(whitelist):
-        return False
+    if whitelist:
+        # If whitelist is set, all tables must be in whitelist (whitelist takes precedence)
+        return tables.issubset(whitelist)
+    # No whitelist, so check blacklist
     return tables.isdisjoint(cachalot_settings.CACHALOT_UNCACHABLE_TABLES)
 
 
 def filter_cachable(tables):
     whitelist = cachalot_settings.CACHALOT_ONLY_CACHABLE_TABLES
-    tables = tables.difference(cachalot_settings.CACHALOT_UNCACHABLE_TABLES)
     if whitelist:
+        # If whitelist is set, only keep tables in whitelist (whitelist takes precedence)
         return tables.intersection(whitelist)
-    return tables
+    # No whitelist, so filter out blacklisted tables
+    return tables.difference(cachalot_settings.CACHALOT_UNCACHABLE_TABLES)
 
 
 def _flatten(expression: 'BaseExpression'):
