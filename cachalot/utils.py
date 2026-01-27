@@ -10,6 +10,7 @@ from django.db.models import Exists, QuerySet, Subquery
 from django.db.models.enums import Choices
 from django.db.models.expressions import RawSQL
 from django.db.models.functions import Now
+from django.db.models.query_utils import Q
 from django.db.models.sql import Query, AggregateQuery
 from django.db.models.sql.where import ExtraWhere, WhereNode, NothingNode
 
@@ -215,6 +216,10 @@ def _flatten(expression: 'BaseExpression'):
     for existence of flatten.
     """
     yield expression
+    # Q objects don't have get_source_expressions, so we skip them here
+    # They will be handled separately in _get_tables
+    if isinstance(expression, Q):
+        return
     for expr in expression.get_source_expressions():
         if expr:
             if hasattr(expr, 'flatten'):
@@ -255,6 +260,16 @@ def _get_tables(db_alias, query, compiler=False):
                 elif isinstance(expression, RawSQL):
                     sql = expression.as_sql(None, None)[0].lower()
                     tables.update(_get_tables_from_sql(connections[db_alias], sql))
+                elif isinstance(expression, (Q, WhereNode)):
+                    # Q objects and WhereNodes in annotations (e.g., inside Case/When)
+                    # need to be processed to extract their subqueries
+                    if isinstance(expression, Q):
+                        # Q objects need to be resolved first
+                        where_node = expression.resolve_expression(query, allow_joins=True)
+                    else:
+                        where_node = expression
+                    for subquery in _find_subqueries_in_where(where_node.children):
+                        tables.update(_get_tables(db_alias, subquery))
         # Gets tables in WHERE subqueries.
         for subquery in _find_subqueries_in_where(query.where.children):
             tables.update(_get_tables(db_alias, subquery))

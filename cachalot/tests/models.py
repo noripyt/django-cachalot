@@ -92,3 +92,9 @@ class UnmanagedModel(Model):
 
     class Meta:
         managed = False
+
+
+class Order(Model):
+    """Model to test ManyToMany cache invalidation with annotations."""
+    name = CharField(max_length=50)
+    users = ManyToManyField(settings.AUTH_USER_MODEL, related_name="orders", related_query_name="order")

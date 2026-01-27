@@ -6,11 +6,11 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.core.management import call_command
 from django.db import (
     connection, transaction, ProgrammingError, OperationalError)
-from django.db.models import Count
+from django.db.models import BooleanField, Case, Count, When
 from django.db.models.expressions import RawSQL
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
-from .models import Test, TestParent, TestChild
+from .models import Test, TestParent, TestChild, Order
 from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
 
 
@@ -995,6 +995,60 @@ class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         with self.assertRaises((ProgrammingError, OperationalError)):
             with self.assertNumQueries(1):
                 self.assertListEqual(list(Test.objects.all()), [])
+
+    def test_m2m_annotation_filter_invalidation(self):
+        """
+        Tests that cache is invalidated when a query contains an annotation
+        based on a subquery of a ManyToMany field, and that M2M field is modified.
+        
+        This is a regression test for:
+        https://github.com/noripyt/django-cachalot/issues/XXX
+        """
+        u = User.objects.create_user('user')
+        order1 = Order.objects.create(name='order1')
+        order2 = Order.objects.create(name='order2')
+        
+        def all_orders(user):
+            """Returns all orders marked as managed by the user."""
+            managed = user.orders.all().values_list("pk", flat=True)
+            return Order.objects.annotate(
+                is_managed=Case(
+                    When(pk__in=managed, then=True),
+                    default=False,
+                    output_field=BooleanField(),
+                )
+            ).filter(is_managed=True)
+        
+        # Initially user has no orders
+        with self.assertNumQueries(1):
+            data1 = list(all_orders(u))
+        self.assertListEqual(data1, [])
+        
+        # Query is cached
+        with self.assertNumQueries(0):
+            data2 = list(all_orders(u))
+        self.assertListEqual(data2, [])
+        
+        # Add an order to the user
+        u.orders.add(order1)
+        
+        # Cache should be invalidated, so we should see order1
+        with self.assertNumQueries(1):
+            data3 = list(all_orders(u))
+        self.assertListEqual(data3, [order1])
+        
+        # Query is cached again
+        with self.assertNumQueries(0):
+            data4 = list(all_orders(u))
+        self.assertListEqual(data4, [order1])
+        
+        # Add another order
+        u.orders.add(order2)
+        
+        # Cache should be invalidated, so we should see both orders
+        with self.assertNumQueries(1):
+            data5 = list(all_orders(u))
+        self.assertListEqual(sorted(data5, key=lambda o: o.name), [order1, order2])
 
 
 class DatabaseCommandTestCase(TestUtilsMixin, TransactionTestCase):
