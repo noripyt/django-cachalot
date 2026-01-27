@@ -69,7 +69,7 @@ and run the tests via tox.
 Make sure you have the following services:
 
 * Memcached
-* Redis
+* Redis / Valkey
 * PostgreSQL
 * MySQL
 

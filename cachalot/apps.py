@@ -18,7 +18,7 @@ def check_cache_compatibility(app_configs, **kwargs):
             'Cache backend %r is not supported by django-cachalot.'
             % cache_backend,
             hint='Switch to a supported cache backend '
-                 'like Redis or Memcached.',
+                 'like Redis, Valkey, or Memcached.',
             id='cachalot.W001')]
     return []
 

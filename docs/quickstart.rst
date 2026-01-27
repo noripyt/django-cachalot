@@ -9,6 +9,7 @@ Requirements
 - a cache configured as ``'default'`` with one of these backends:
 
   - `django-redis <https://github.com/niwinz/django-redis>`_
+  - `django-valkey <https://github.com/django-commons/django-valkey>`_
   - `redis <https://docs.djangoproject.com/en/dev/topics/cache/#redis>`_
     (requires Django >= 4)
   - `memcached <https://docs.djangoproject.com/en/dev/topics/cache/#memcached>`_
