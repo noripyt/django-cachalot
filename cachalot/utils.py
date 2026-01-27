@@ -216,9 +216,9 @@ def _flatten(expression: 'BaseExpression'):
     for existence of flatten.
     """
     yield expression
-    # Q objects don't have get_source_expressions, so we skip them here
-    # They will be handled separately in _get_tables
-    if isinstance(expression, Q):
+    # Q objects and some other expressions don't have get_source_expressions,
+    # so we skip them here. Q objects will be handled separately in _get_tables
+    if isinstance(expression, Q) or not hasattr(expression, 'get_source_expressions'):
         return
     for expr in expression.get_source_expressions():
         if expr:
