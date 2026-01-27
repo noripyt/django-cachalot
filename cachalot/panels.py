@@ -54,7 +54,7 @@ class CachalotPanel(Panel):
                 invalidation = datetime.fromtimestamp(timestamp)
                 model = model_cache_keys[cache_key]
                 data[db_alias].append(
-                    (model._meta.app_label, model.__name__, invalidation))
+                    (model._meta.app_label, model.__name__, timesince(invalidation)))
                 if self.last_invalidation is None \
                         or invalidation > self.last_invalidation:
                     self.last_invalidation = invalidation
