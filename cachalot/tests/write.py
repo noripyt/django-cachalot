@@ -1001,8 +1001,8 @@ class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         Tests that cache is invalidated when a query contains an annotation
         based on a subquery of a ManyToMany field, and that M2M field is modified.
         
-        This is a regression test for:
-        https://github.com/noripyt/django-cachalot/issues/XXX
+        Regression test for queries with annotations containing subqueries in Case/When
+        expressions not properly invalidating cache when M2M relationships change.
         """
         u = User.objects.create_user('user')
         order1 = Order.objects.create(name='order1')
