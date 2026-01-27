@@ -243,7 +243,7 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             'BACKEND': 'django_valkey.cache.ValkeyCache',
             'LOCATION': 'valkey://127.0.0.1:6379/1',
         }
-        
+
         with self.settings(CACHES={'default': valkey_cache}):
             errors = run_checks(tags=[Tags.compatibility])
             self.assertListEqual(errors, [])
