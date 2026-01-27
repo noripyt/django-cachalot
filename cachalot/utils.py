@@ -3,7 +3,7 @@ from decimal import Decimal
 from hashlib import sha1
 from time import time
 from typing import TYPE_CHECKING
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from django.contrib.postgres.functions import TransactionNow
 from django.db.models import Exists, QuerySet, Subquery
@@ -127,6 +127,21 @@ def get_table_cache_key(db_alias, table):
     """
     cache_key = '%s:%s' % (db_alias, table)
     return sha1(cache_key.encode('utf-8')).hexdigest()
+
+
+def _get_invalidation_value():
+    """
+    Generates an invalidation value for cache keys.
+    
+    If CACHALOT_USE_UUID_INVALIDATION is enabled, returns a UUID4-based SHA1 hash.
+    Otherwise, returns a timestamp from time.time().
+    
+    :return: An invalidation value (SHA1 hash string or float timestamp)
+    :rtype: str or float
+    """
+    if cachalot_settings.CACHALOT_USE_UUID_INVALIDATION:
+        return sha1(uuid4().bytes).hexdigest()
+    return time()
 
 
 def _get_tables_from_sql(connection, lowercased_sql, enable_quote: bool = False):
@@ -301,10 +316,10 @@ def _invalidate_tables(cache, db_alias, tables):
     tables = filter_cachable(set(tables))
     if not tables:
         return
-    now = time()
+    invalidation_value = _get_invalidation_value()
     get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
     cache.set_many(
-        {get_table_cache_key(db_alias, t): now for t in tables},
+        {get_table_cache_key(db_alias, t): invalidation_value for t in tables},
         cachalot_settings.CACHALOT_TIMEOUT)
 
     if isinstance(cache, AtomicCache):

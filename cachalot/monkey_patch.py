@@ -16,7 +16,7 @@ from .api import invalidate, LOCAL_STORAGE
 from .cache import cachalot_caches
 from .settings import cachalot_settings, ITERABLES
 from .utils import (
-    _get_table_cache_keys, _get_tables_from_sql,
+    _get_table_cache_keys, _get_tables_from_sql, _get_invalidation_value,
     UncachableQuery, is_cachable, filter_cachable,
 )
 
@@ -54,9 +54,21 @@ def _get_result_or_execute_query(execute_query_func, cache,
 
         if not new_table_cache_keys:
             try:
-                timestamp, result = data.pop(cache_key)
-                if timestamp >= max(data.values()):
-                    return result
+                cached_value, result = data.pop(cache_key)
+                table_values = data.values()
+                
+                # For UUID mode, cached_value is a dict mapping table keys to UUIDs
+                # For timestamp mode, cached_value is a single timestamp
+                if cachalot_settings.CACHALOT_USE_UUID_INVALIDATION:
+                    # Check if all table UUIDs match the cached query's table UUIDs
+                    if isinstance(cached_value, dict):
+                        # All table cache keys should have matching UUIDs
+                        if all(data.get(k) == cached_value.get(k) for k in table_cache_keys):
+                            return result
+                else:
+                    # Original timestamp comparison
+                    if cached_value >= max(table_values):
+                        return result
             except (KeyError, TypeError, ValueError):
                 # In case `cache_key` is not in `data` or contains bad data,
                 # we simply run the query and cache again the results.
@@ -70,9 +82,19 @@ def _get_result_or_execute_query(execute_query_func, cache,
     if result.__class__ not in ITERABLES and isinstance(result, Iterable):
         result = list(result)
 
-    now = time()
-    to_be_set = {k: now for k in new_table_cache_keys}
-    to_be_set[cache_key] = (now, result)
+    if cachalot_settings.CACHALOT_USE_UUID_INVALIDATION:
+        # Store current table UUIDs with the query result
+        current_table_values = cache.get_many(new_table_cache_keys)
+        to_be_set = {k: current_table_values.get(k, _get_invalidation_value()) 
+                     for k in new_table_cache_keys}
+        # Store dict of table UUIDs with the result
+        to_be_set[cache_key] = (current_table_values, result)
+    else:
+        # Original timestamp-based approach
+        now = time()
+        to_be_set = {k: now for k in new_table_cache_keys}
+        to_be_set[cache_key] = (now, result)
+    
     cache.set_many(to_be_set, cachalot_settings.CACHALOT_TIMEOUT)
 
     return result
