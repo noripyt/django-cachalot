@@ -47,7 +47,7 @@ def _get_tables(tables_or_models):
 
 
 def invalidate(
-    *tables_or_models: Tuple[Union[str, Any], ...],
+    *tables_or_models: Union[str, Any],
     cache_alias: Optional[str] = None,
     db_alias: Optional[str] = None,
 ) -> None:
@@ -86,7 +86,7 @@ def invalidate(
 
 
 def get_last_invalidation(
-    *tables_or_models: Tuple[Union[str, Any], ...],
+    *tables_or_models: Union[str, Any],
     cache_alias: Optional[str] = None,
     db_alias: Optional[str] = None,
 ) -> float:
