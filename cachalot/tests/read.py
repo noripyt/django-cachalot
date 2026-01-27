@@ -1,6 +1,6 @@
 import datetime
 import warnings
-from unittest import skipIf
+from unittest import skipIf, skipUnless
 from uuid import UUID
 from decimal import Decimal
 
@@ -16,7 +16,6 @@ from django.db.models.expressions import RawSQL, Subquery, OuterRef, Exists
 from django.db.models.functions import Coalesce, Now
 from django.db.transaction import TransactionManagementError
 from django.test import TransactionTestCase, skipUnlessDBFeature, override_settings
-from psycopg2 import sql
 
 from cachalot.cache import cachalot_caches
 from ..settings import cachalot_settings
@@ -1027,11 +1026,14 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
             data2,
             [('é',) + l for l in Test.objects.values_list(*attnames)])
 
+    @skipUnless(connection.vendor == 'postgresql', 'This test is only for PostgreSQL')
     def test_unsupported_sql_type_execute_with_warning(self):
+        from psycopg2 import sql as psycopg_sql
+
         table_name = Test._meta.db_table
-        sql_ = sql.SQL("SELECT {field} FROM {table}").format(
-            field=sql.Identifier('name'),
-            table=sql.Identifier(table_name),
+        sql_ = psycopg_sql.SQL("SELECT {field} FROM {table}").format(
+            field=psycopg_sql.Identifier('name'),
+            table=psycopg_sql.Identifier(table_name),
         )
         with warnings.catch_warnings(record=True) as warning:
             with connection.cursor() as cursor:
