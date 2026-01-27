@@ -65,15 +65,18 @@ def _get_result_or_execute_query(execute_query_func, cache,
                     # because new_table_cache_keys is empty
                     if isinstance(cached_value, dict):
                         # All table cache keys should have matching UUIDs
-                        if all(data.get(k) == cached_value.get(k) for k in table_cache_keys):
+                        # If cached_value is missing any keys, it's a cache miss
+                        if all(k in cached_value and data.get(k) == cached_value.get(k) 
+                               for k in table_cache_keys):
                             return result
                 else:
                     # Original timestamp comparison
-                    if cached_value >= max(table_values):
+                    if isinstance(cached_value, (int, float)) and cached_value >= max(table_values):
                         return result
             except (KeyError, TypeError, ValueError):
                 # In case `cache_key` is not in `data` or contains bad data,
                 # we simply run the query and cache again the results.
+                # This handles cache corruption, mixed timestamp/UUID modes, etc.
                 pass
 
     result = execute_query_func()
@@ -97,7 +100,11 @@ def _get_result_or_execute_query(execute_query_func, cache,
         existing_table_keys = [k for k in table_cache_keys if k not in new_table_cache_keys]
         if existing_table_keys:
             existing_data = cache.get_many(existing_table_keys)
-            table_uuid_snapshot.update(existing_data)
+            # Only add existing keys that were actually found in cache
+            # If a key is missing, it will be treated as a cache miss and query will execute
+            for k in existing_table_keys:
+                if k in existing_data:
+                    table_uuid_snapshot[k] = existing_data[k]
         
         # Store dict of all table UUIDs with the result
         to_be_set[cache_key] = (table_uuid_snapshot, result)
