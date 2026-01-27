@@ -322,8 +322,8 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         qs = Test.objects.datetimes('datetime', 'hour')
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [
-            datetime.datetime(1789, 7, 14, 16, tzinfo=datetime.timezone.UTC),
-            datetime.datetime(1944, 6, 6, 6, tzinfo=datetime.timezone.UTC)])
+            datetime.datetime(1789, 7, 14, 16, tzinfo=datetime.timezone.utc),
+            datetime.datetime(1944, 6, 6, 6, tzinfo=datetime.timezone.utc)])
 
     @all_final_sql_checks
     def test_foreign_key(self):
