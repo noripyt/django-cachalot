@@ -1,5 +1,9 @@
 What’s new in django-cachalot?
 ==============================
+2.9.1
+-----
+- Add support for Django 6.1
+
 2.9.0
 -----
 - Add support for Django 6.0 and Python 3.8-3.14 (#277)
