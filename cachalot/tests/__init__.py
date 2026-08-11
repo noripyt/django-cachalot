@@ -12,6 +12,7 @@ from .api import APITestCase, CommandTestCase
 from .signals import SignalsTestCase
 from .postgres import PostgresReadTestCase
 from .debug_toolbar import DebugToolbarTestCase
+from .table_caches import TableOverridesTestCase
 
 
 @receiver(setting_changed)

@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from .settings import cachalot_settings
 
 
@@ -7,6 +9,7 @@ class AtomicCache(dict):
         self.parent_cache = parent_cache
         self.db_alias = db_alias
         self.to_be_invalidated = set()
+        self._timeouts = {}
 
     def set(self, k, v, timeout):
         self[k] = v
@@ -53,14 +56,22 @@ class AtomicCache(dict):
 
     def set_many(self, data, timeout):
         self.update(data)
+        for k in data:
+            self._timeouts[k] = timeout
 
     def commit(self):
         # We import this here to avoid a circular import issue.
         from .utils import _invalidate_tables
 
         if self:
-            self.parent_cache.set_many(
-                self, cachalot_settings.CACHALOT_TIMEOUT)
+            # Group entries by timeout for separate set_many calls.
+            by_timeout = defaultdict(dict)
+            default_timeout = cachalot_settings.CACHALOT_TIMEOUT
+            for k, v in self.items():
+                timeout = self._timeouts.get(k, default_timeout)
+                by_timeout[timeout][k] = v
+            for timeout, data in by_timeout.items():
+                self.parent_cache.set_many(data, timeout)
         # The previous `set_many` is not enough.  The parent cache needs to be
         # invalidated in case another transaction occurred in the meantime.
         _invalidate_tables(self.parent_cache, self.db_alias,

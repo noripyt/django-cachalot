@@ -18,6 +18,8 @@ from .settings import cachalot_settings, ITERABLES
 from .utils import (
     _get_table_cache_keys, _get_tables_from_sql,
     UncachableQuery, is_cachable, filter_cachable,
+    get_cache_alias_for_tables, get_cache_aliases_for_invalidation,
+    get_timeout_for_tables,
 )
 
 
@@ -42,7 +44,8 @@ def _unset_raw_connection(original):
 
 
 def _get_result_or_execute_query(execute_query_func, cache,
-                                 cache_key, table_cache_keys):
+                                 cache_key, table_cache_keys,
+                                 timeout=None):
     try:
         data = cache.get_many(table_cache_keys + [cache_key])
     except (KeyError, ModuleNotFoundError):
@@ -73,7 +76,7 @@ def _get_result_or_execute_query(execute_query_func, cache,
     now = time()
     to_be_set = {k: now for k in new_table_cache_keys}
     to_be_set[cache_key] = (now, result)
-    cache.set_many(to_be_set, cachalot_settings.CACHALOT_TIMEOUT)
+    cache.set_many(to_be_set, timeout)
 
     return result
 
@@ -94,14 +97,17 @@ def _patch_compiler(original):
 
         try:
             cache_key = cachalot_settings.CACHALOT_QUERY_KEYGEN(compiler)
-            table_cache_keys = _get_table_cache_keys(compiler)
+            tables, table_cache_keys = _get_table_cache_keys(compiler)
         except (EmptyResultSet, UncachableQuery):
             return execute_query_func()
 
+        cache_alias = get_cache_alias_for_tables(tables)
+        timeout = get_timeout_for_tables(tables)
         return _get_result_or_execute_query(
             execute_query_func,
-            cachalot_caches.get_cache(db_alias=db_alias),
-            cache_key, table_cache_keys)
+            cachalot_caches.get_cache(cache_alias=cache_alias,
+                                      db_alias=db_alias),
+            cache_key, table_cache_keys, timeout)
 
     return inner
 
@@ -113,8 +119,8 @@ def _patch_write_compiler(original):
         db_alias = write_compiler.using
         table = write_compiler.query.get_meta().db_table
         if is_cachable(table):
-            invalidate(table, db_alias=db_alias,
-                       cache_alias=cachalot_settings.CACHALOT_CACHE)
+            for alias in get_cache_aliases_for_invalidation({table}):
+                invalidate(table, db_alias=db_alias, cache_alias=alias)
         return original(write_compiler, *args, **kwargs)
 
     return inner
@@ -150,9 +156,10 @@ def _patch_cursor():
                         tables = filter_cachable(
                             _get_tables_from_sql(connection, sql))
                         if tables:
-                            invalidate(
-                                *tables, db_alias=connection.alias,
-                                cache_alias=cachalot_settings.CACHALOT_CACHE)
+                            for alias in get_cache_aliases_for_invalidation(
+                                    tables):
+                                invalidate(*tables, db_alias=connection.alias,
+                                           cache_alias=alias)
 
         return inner
 
@@ -198,8 +205,10 @@ def _unpatch_atomic():
 
 
 def _invalidate_on_migration(sender, **kwargs):
-    invalidate(*sender.get_models(), db_alias=kwargs['using'],
-               cache_alias=cachalot_settings.CACHALOT_CACHE)
+    models = sender.get_models()
+    model_tables = {m._meta.db_table for m in models}
+    for alias in get_cache_aliases_for_invalidation(model_tables):
+        invalidate(*models, db_alias=kwargs['using'], cache_alias=alias)
 
 
 def patch():

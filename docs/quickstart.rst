@@ -262,6 +262,36 @@ Settings
 
 
 
+``CACHALOT_TABLE_OVERRIDES``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:Default: ``{}``
+:Description:
+  A dictionary mapping SQL table names to per-table override dictionaries.
+  Each override dictionary can contain the following keys:
+
+  - ``cache``: A cache alias from |CACHES|_ to use for queries involving
+    this table. If all tables in a query map to the same alias, that cache
+    is used; otherwise the query falls back to ``CACHALOT_CACHE``.
+  - ``timeout``: Cache timeout in seconds for queries involving this table.
+    If all tables in a query have a timeout override, the minimum is used;
+    otherwise the query falls back to ``CACHALOT_TIMEOUT``.
+
+  Example::
+
+      CACHALOT_TABLE_OVERRIDES = {
+          'auth_permission': {
+              'cache': 'local',
+              'timeout': 30,
+          },
+          'myapp_session': {
+              'timeout': 5,
+          },
+      }
+
+  Write invalidation always targets both the default ``CACHALOT_CACHE``
+  and any per-table cache aliases, ensuring cross-table query consistency.
+
 .. _Command:
 
 ``manage.py`` command

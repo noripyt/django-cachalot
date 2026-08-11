@@ -297,8 +297,61 @@ def _get_tables(db_alias, query, compiler=False):
 def _get_table_cache_keys(compiler):
     db_alias = compiler.using
     get_table_cache_key = cachalot_settings.CACHALOT_TABLE_KEYGEN
-    return [get_table_cache_key(db_alias, t)
-            for t in _get_tables(db_alias, compiler.query, compiler)]
+    tables = _get_tables(db_alias, compiler.query, compiler)
+    table_cache_keys = [get_table_cache_key(db_alias, t) for t in tables]
+    return tables, table_cache_keys
+
+
+def get_cache_alias_for_tables(tables):
+    """Returns the cache alias for a query involving the given tables.
+    Uses the per-table alias if ALL tables map to the same one,
+    otherwise falls back to CACHALOT_CACHE."""
+    overrides = cachalot_settings.CACHALOT_TABLE_OVERRIDES
+    if not overrides:
+        return cachalot_settings.CACHALOT_CACHE
+    alias = None
+    for table in tables:
+        table_alias = overrides.get(table, {}).get('cache')
+        if table_alias is None:
+            return cachalot_settings.CACHALOT_CACHE
+        if alias is None:
+            alias = table_alias
+        elif alias != table_alias:
+            return cachalot_settings.CACHALOT_CACHE
+    return alias or cachalot_settings.CACHALOT_CACHE
+
+
+def get_cache_aliases_for_invalidation(tables):
+    """Returns all cache aliases that need invalidation for the given tables.
+    Always includes the default CACHALOT_CACHE plus any per-table overrides."""
+    aliases = {cachalot_settings.CACHALOT_CACHE}
+    overrides = cachalot_settings.CACHALOT_TABLE_OVERRIDES
+    if overrides:
+        for t in tables:
+            cache = overrides.get(t, {}).get('cache')
+            if cache:
+                aliases.add(cache)
+    return aliases
+
+
+def get_timeout_for_tables(tables):
+    """Returns the cache timeout for a query involving the given tables.
+    Uses the per-table timeout only if ALL tables have a timeout override,
+    otherwise falls back to CACHALOT_TIMEOUT."""
+    overrides = cachalot_settings.CACHALOT_TABLE_OVERRIDES
+    default_timeout = cachalot_settings.CACHALOT_TIMEOUT
+    if not overrides:
+        return default_timeout
+    timeout = None
+    for table in tables:
+        table_timeout = overrides.get(table, {}).get('timeout')
+        if table_timeout is None:
+            return default_timeout
+        if timeout is None:
+            timeout = table_timeout
+        else:
+            timeout = min(timeout, table_timeout)
+    return timeout if timeout is not None else default_timeout
 
 
 def _invalidate_tables(cache, db_alias, tables):
