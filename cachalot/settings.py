@@ -1,3 +1,4 @@
+import threading
 from itertools import chain
 
 from django.apps import apps
@@ -44,6 +45,9 @@ ITERABLES = {tuple, list, frozenset, set}
 class Settings(object):
     patched = False
     converters = {}
+    # Serializes (un)patching so concurrent `reload` calls (e.g. from
+    # `CachalotPanel` on simultaneous requests) can't unpatch twice.
+    _lock = threading.RLock()
 
     CACHALOT_ENABLED = True
     CACHALOT_CACHE = 'default'
@@ -76,27 +80,30 @@ class Settings(object):
                 if name[:2] != '__' and name.isupper()}
 
     def load(self):
-        for name in self.get_names():
-            value = getattr(settings, name, getattr(self.__class__, name))
-            converter = self.converters.get(name)
-            if converter is not None:
-                value = converter(value)
-            setattr(self, name, value)
+        with self._lock:
+            for name in self.get_names():
+                value = getattr(settings, name, getattr(self.__class__, name))
+                converter = self.converters.get(name)
+                if converter is not None:
+                    value = converter(value)
+                setattr(self, name, value)
 
-        if not self.patched:
-            from .monkey_patch import patch
-            patch()
-            self.patched = True
+            if not self.patched:
+                from .monkey_patch import patch
+                patch()
+                self.patched = True
 
     def unload(self):
-        if self.patched:
-            from .monkey_patch import unpatch
-            unpatch()
-            self.patched = False
+        with self._lock:
+            if self.patched:
+                from .monkey_patch import unpatch
+                unpatch()
+                self.patched = False
 
     def reload(self):
-        self.unload()
-        self.load()
+        with self._lock:
+            self.unload()
+            self.load()
 
 
 @Settings.add_converter('CACHALOT_DATABASES')

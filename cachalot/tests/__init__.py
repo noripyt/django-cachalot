@@ -5,7 +5,9 @@ from ..settings import cachalot_settings
 from .read import ReadTestCase, ParameterTypeTestCase
 from .write import WriteTestCase, DatabaseCommandTestCase
 from .transaction import AtomicCacheTestCase, AtomicTestCase
-from .thread_safety import ThreadSafetyTestCase
+from .thread_safety import (
+    SettingsReloadThreadSafetyTestCase, ThreadSafetyTestCase,
+)
 from .multi_db import MultiDatabaseTestCase
 from .settings import SettingsTestCase
 from .api import APITestCase, CommandTestCase
