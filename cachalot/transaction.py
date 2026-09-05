@@ -1,4 +1,9 @@
+import logging
+
 from .settings import cachalot_settings
+
+
+logger = logging.getLogger(__name__)
 
 
 class AtomicCache(dict):
@@ -58,10 +63,29 @@ class AtomicCache(dict):
         # We import this here to avoid a circular import issue.
         from .utils import _invalidate_tables
 
-        if self:
-            self.parent_cache.set_many(
-                self, cachalot_settings.CACHALOT_TIMEOUT)
-        # The previous `set_many` is not enough.  The parent cache needs to be
-        # invalidated in case another transaction occurred in the meantime.
-        _invalidate_tables(self.parent_cache, self.db_alias,
-                           self.to_be_invalidated)
+        # The cache is a best-effort optimisation. If the underlying cache
+        # backend is unreachable when we try to flush the buffer accumulated
+        # during this atomic block (for example, redis is down during a
+        # ``migrate`` run; see issue #245), we must not let that exception
+        # escape: Django is in the middle of committing the surrounding
+        # transaction, and a failure here would abort migrations and leave
+        # the database in an inconsistent state relative to
+        # ``django_migrations``.
+        try:
+            if self:
+                self.parent_cache.set_many(
+                    self, cachalot_settings.CACHALOT_TIMEOUT)
+            # The previous `set_many` is not enough.  The parent cache needs
+            # to be invalidated in case another transaction occurred in the
+            # meantime.
+            _invalidate_tables(self.parent_cache, self.db_alias,
+                               self.to_be_invalidated)
+        except Exception:
+            logger.warning(
+                "django-cachalot could not commit cache invalidations for "
+                "atomic block on database %r; continuing. The cache may "
+                "serve stale query results until entries are evicted or the "
+                "next successful invalidation.",
+                self.db_alias,
+                exc_info=True,
+            )
