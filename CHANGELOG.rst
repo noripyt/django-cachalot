@@ -3,6 +3,7 @@ What’s new in django-cachalot?
 2.9.1
 -----
 - Add support for Django 6.1
+- Tolerate cache backend failures during migrate (Issue #245)
 
 2.9.0
 -----

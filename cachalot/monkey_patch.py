@@ -1,3 +1,4 @@
+import logging
 import re
 import types
 from collections.abc import Iterable
@@ -19,6 +20,9 @@ from .utils import (
     _get_table_cache_keys, _get_tables_from_sql,
     UncachableQuery, is_cachable, filter_cachable,
 )
+
+
+logger = logging.getLogger(__name__)
 
 
 WRITE_COMPILERS = (SQLInsertCompiler, SQLUpdateCompiler, SQLDeleteCompiler)
@@ -198,8 +202,29 @@ def _unpatch_atomic():
 
 
 def _invalidate_on_migration(sender, **kwargs):
-    invalidate(*sender.get_models(), db_alias=kwargs['using'],
-               cache_alias=cachalot_settings.CACHALOT_CACHE)
+    # Django's ``migrate`` command records the applied migrations in
+    # ``django_migrations`` *before* sending ``post_migrate``. If the cache
+    # backend is unreachable at this point (for example, redis is down during
+    # the first run after a fresh checkout, see issue #245), the resulting
+    # exception used to propagate out of ``migrate`` and roll the command back,
+    # which in turn made the next ``migrate`` invocation fail with
+    # ``relation "..." already exists``.
+    #
+    # The cache is a best-effort optimisation; a cache outage must not prevent
+    # migrations from being recorded. We therefore swallow any cache-related
+    # error here and emit a warning so operators can still see what happened.
+    try:
+        invalidate(*sender.get_models(), db_alias=kwargs['using'],
+                   cache_alias=cachalot_settings.CACHALOT_CACHE)
+    except Exception:
+        logger.warning(
+            "django-cachalot could not invalidate the cache after migrations "
+            "on database %r; continuing without invalidation. The cache may "
+            "serve stale query results until entries are evicted or the next "
+            "successful invalidation.",
+            kwargs.get('using'),
+            exc_info=True,
+        )
 
 
 def patch():
