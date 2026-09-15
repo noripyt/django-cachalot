@@ -6,7 +6,7 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.core.management import call_command
 from django.db import (
     connection, transaction, ProgrammingError, OperationalError)
-from django.db.models import Count
+from django.db.models import BooleanField, Case, Count, Exists, OuterRef, When
 from django.db.models.expressions import RawSQL
 from django.test import TransactionTestCase, skipUnlessDBFeature
 
@@ -516,6 +516,47 @@ class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
                 )
             )
         self.assertListEqual(data5, [])
+
+    def test_invalidate_nested_negated_exists(self):
+        user = User.objects.create_user('test')
+        Test.objects.create(name='shared-name', owner=user)
+        tests_without_parent = Test.objects.filter(owner=OuterRef('pk')).filter(
+            ~Exists(TestParent.objects.filter(name=OuterRef('name')))
+        )
+        query = User.objects.filter(Exists(tests_without_parent))
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(query), [user])
+        with self.assertNumQueries(0):
+            self.assertListEqual(list(query.all()), [user])
+
+        TestParent.objects.create(name='shared-name')
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(query.all()), [])
+
+    def test_invalidate_m2m_subquery_in_case_when_annotation(self):
+        child = TestChild.objects.create(name='child')
+        permission1, permission2 = Permission.objects.order_by('pk')[:2]
+        child.permissions.add(permission1)
+        managed = child.permissions.all().values_list('pk', flat=True)
+        query = Permission.objects.annotate(
+            is_managed=Case(
+                When(pk__in=managed, then=True),
+                default=False,
+                output_field=BooleanField(),
+            )
+        ).filter(is_managed=True)
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(query), [permission1])
+        with self.assertNumQueries(0):
+            self.assertListEqual(list(query.all()), [permission1])
+
+        child.permissions.add(permission2)
+
+        with self.assertNumQueries(1):
+            self.assertCountEqual(list(query.all()), [permission1, permission2])
 
     def test_invalidate_raw_subquery(self):
         permission = Permission.objects.first()

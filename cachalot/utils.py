@@ -148,16 +148,20 @@ def _quote_table_name(table_name, connection, enable_quote: bool):
         if enable_quote else table_name
 
 
-def _find_rhs_lhs_subquery(side):
+def _find_rhs_lhs_subqueries(side):
     h_class = side.__class__
     if h_class is Query:
-        return side
+        yield side
     elif h_class is QuerySet:
-        return side.query
+        yield side.query
     elif h_class in (Subquery, Exists):  # Subquery allows QuerySet & Query
-        return side.query.query if side.query.__class__ is QuerySet else side.query
+        yield side.query.query if side.query.__class__ is QuerySet else side.query
     elif h_class in UNCACHABLE_FUNCS:
         raise UncachableQuery
+    elif hasattr(side, 'get_source_expressions'):
+        for expression in side.get_source_expressions():
+            if expression is not None:
+                yield from _find_rhs_lhs_subqueries(expression)
 
 
 def _find_subqueries_in_where(children):
@@ -176,12 +180,8 @@ def _find_subqueries_in_where(children):
                 child_lhs = child.lhs
             except AttributeError:
                 raise UncachableQuery
-            rhs = _find_rhs_lhs_subquery(child_rhs)
-            if rhs is not None:
-                yield rhs
-            lhs = _find_rhs_lhs_subquery(child_lhs)
-            if lhs is not None:
-                yield lhs
+            yield from _find_rhs_lhs_subqueries(child_rhs)
+            yield from _find_rhs_lhs_subqueries(child_lhs)
 
 
 def is_cachable(table):
