@@ -20,7 +20,7 @@ from pytz import UTC
 from cachalot.cache import cachalot_caches
 from ..settings import cachalot_settings
 from ..utils import UncachableQuery
-from .models import SomeChoices, Test, TestChild, TestParent, UnmanagedModel
+from .models import MixedCaseModel, SomeChoices, Test, TestChild, TestParent, UnmanagedModel
 from .test_utils import TestUtilsMixin, FilteredTransactionTestCase
 
 from .tests_decorators import all_final_sql_checks, with_final_sql_check, no_final_sql_check
@@ -906,6 +906,11 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         qs = Test.objects.extra(order_by=['-cachalot_test.name'])
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
+
+    def test_extra_where_mixed_case_table(self):
+        qs = MixedCaseModel.objects.extra(where=['1 = 1'])
+        self.assert_tables(qs, MixedCaseModel)
+        self.assert_query_cached(qs)
 
     def test_table_inheritance(self):
         with self.assertNumQueries(2):

@@ -95,6 +95,16 @@ class Migration(migrations.Migration):
                 ('decimal_range', DecimalRangeField(null=True, blank=True))
             ] + extra_postgres_available_fields(),
         ),
+        migrations.CreateModel(
+            name='MixedCaseModel',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=50)),
+            ],
+            options={
+                'db_table': 'Cachalot_MixedCase',
+            },
+        ),
         migrations.RunSQL('CREATE TABLE cachalot_unmanagedmodel '
                           '(id SERIAL PRIMARY KEY, name VARCHAR(50));'),
     ]

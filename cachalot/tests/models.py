@@ -92,3 +92,10 @@ class UnmanagedModel(Model):
 
     class Meta:
         managed = False
+
+
+class MixedCaseModel(Model):
+    name = CharField(max_length=50)
+
+    class Meta:
+        db_table = 'Cachalot_MixedCase'

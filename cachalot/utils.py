@@ -133,7 +133,7 @@ def _get_tables_from_sql(connection, lowercased_sql, enable_quote: bool = False)
     """Returns names of involved tables after analyzing the final SQL query."""
     return {table for table in (connection.introspection.django_table_names()
             + cachalot_settings.CACHALOT_ADDITIONAL_TABLES)
-            if _quote_table_name(table, connection, enable_quote) in lowercased_sql}
+            if _quote_table_name(table, connection, enable_quote).lower() in lowercased_sql}
 
 
 def _quote_table_name(table_name, connection, enable_quote: bool):
