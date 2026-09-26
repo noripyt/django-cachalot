@@ -1,3 +1,5 @@
+from hashlib import sha1
+
 from django.core.management.color import no_style
 from django.db import DEFAULT_DB_ALIAS, connection, connections, transaction
 
@@ -6,6 +8,14 @@ from django.test.utils import CaptureQueriesContext
 
 from ..utils import _get_tables
 from .models import PostgresModel
+
+
+def query_keygen_without_sql(compiler):
+    """
+    A query key generator that, unlike the default one, does not store
+    the generated SQL on the compiler.
+    """
+    return sha1(str(compiler.as_sql()).encode('utf-8')).hexdigest()
 
 
 class TestUtilsMixin:

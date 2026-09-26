@@ -337,6 +337,20 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
         self.assertTrue(tables)
         return tables
 
+    @override_settings(
+        CACHALOT_QUERY_KEYGEN='cachalot.tests.test_utils.query_keygen_without_sql')
+    def test_query_keygen_without_generated_sql(self):
+        """
+        When the key generator does not store the generated SQL on the
+        compiler, the SQL must be generated again wherever it is needed.
+        """
+        qs = Test.objects.extra(select={'one': '1'})
+        self.assert_tables(qs, Test)
+        self.assert_query_cached(qs)
+
+        with self.settings(CACHALOT_FINAL_SQL_CHECK=True):
+            self.assert_query_cached(Test.objects.all())
+
     @override_settings(CACHALOT_FINAL_SQL_CHECK=True)
     @patch('cachalot.utils._get_tables_from_sql')
     def test_cachalot_final_sql_check_when_true(self, _get_tables_from_sql):

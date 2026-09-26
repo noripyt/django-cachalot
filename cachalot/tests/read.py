@@ -907,6 +907,61 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         self.assert_tables(qs, Test)
         self.assert_query_cached(qs, [self.t2, self.t1])
 
+    @all_final_sql_checks
+    def test_extra_select_keeps_orm_tables(self):
+        """
+        Django adds ``.extra(select=...)`` like this to every many-to-many
+        prefetch queryset. The tables resolved by the ORM must be kept, and
+        ``cachalot_test`` must not be detected only because it is a substring
+        of ``cachalot_testchild_permissions``.
+        """
+        child = TestChild.objects.create(name='child')
+        qn = connection.ops.quote_name
+        qs = Permission.objects.filter(testchild=child).extra(select={
+            '_prefetch_related_val_testchild_id':
+                '%s.%s' % (qn('cachalot_testchild_permissions'),
+                           qn('testchild_id'))})
+        self.assert_tables(qs, Permission, ContentType, TestChild,
+                           'cachalot_testchild_permissions')
+        self.assert_query_cached(qs)
+
+    @all_final_sql_checks
+    def test_extra_select_masked_by_values(self):
+        """
+        ``.values()`` hides the extra select from ``query.extra_select``,
+        but ordering by its alias still puts the raw SQL in the query,
+        so the tables it references must be detected.
+        """
+        qs = Test.objects.extra(
+            select={'parents': 'SELECT COUNT(*) FROM cachalot_testparent'}
+        ).values('id').order_by('parents', 'name')
+        self.assert_tables(qs, Test, TestParent)
+        self.assert_query_cached(qs, [{'id': self.t1.pk}, {'id': self.t2.pk}])
+
+    @all_final_sql_checks
+    def test_extra_where_similar_table_names(self):
+        """
+        Raw SQL must only match whole table names: ``cachalot_test`` must not
+        be detected in ``cachalot_testchild_permissions``, whether the
+        identifiers are quoted or not.
+        """
+        through_table = 'cachalot_testchild_permissions'
+        qs = TestChild.objects.extra(
+            tables=[through_table],
+            where=['%s.testchild_id = cachalot_testchild.testparent_ptr_id'
+                   % through_table])
+        self.assert_tables(qs, TestParent, TestChild, through_table)
+        self.assert_query_cached(qs)
+
+        qn = connection.ops.quote_name
+        qs = TestChild.objects.extra(
+            tables=[through_table],
+            where=['%s.%s = %s.%s' % (qn(through_table), qn('testchild_id'),
+                                      qn('cachalot_testchild'),
+                                      qn('testparent_ptr_id'))])
+        self.assert_tables(qs, TestParent, TestChild, through_table)
+        self.assert_query_cached(qs)
+
     def test_table_inheritance(self):
         with self.assertNumQueries(2):
             t_child = TestChild.objects.create(name='test_child')
@@ -1109,6 +1164,17 @@ class ReadTestCase(TestUtilsMixin, FilteredTransactionTestCase):
     def test_now_annotate(self):
         """Check that queries with a Now() annotation are not cached #193"""
         qs = Test.objects.annotate(now=Now())
+        self.assert_query_cached(qs, after=1)
+
+    @all_final_sql_checks
+    def test_now_extra_select(self):
+        """
+        ``.extra(select=...)`` queries are analysed like any other query,
+        so a ``Now()`` parameter still makes them uncachable.
+        """
+        qs = Test.objects.extra(select={'one': '1'}).filter(datetime__lte=Now())
+        with self.assertRaises(UncachableQuery):
+            self.assert_tables(qs, Test)
         self.assert_query_cached(qs, after=1)
 
 

@@ -748,6 +748,65 @@ class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
             self.assertListEqual(data4, [t1, t2])
             self.assertListEqual([o.username_length for o in data4], [4, 5])
 
+    def test_invalidate_extra_select_masked_by_values(self):
+        """
+        ``.values()`` hides the extra select from ``query.extra_select``,
+        but ordering by its alias still puts the raw SQL in the query,
+        so writes to the tables it references must invalidate the query.
+        """
+        t = Test.objects.create(name='test')
+        qs = Test.objects.extra(
+            select={'parents': 'SELECT COUNT(*) FROM cachalot_testparent'}
+        ).values('id').order_by('parents', 'name')
+
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(qs.all()), [{'id': t.pk}])
+        with self.assertNumQueries(0):
+            self.assertListEqual(list(qs.all()), [{'id': t.pk}])
+
+        TestParent.objects.create(name='parent')
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(qs.all()), [{'id': t.pk}])
+
+    def test_invalidate_prefetch_related_similar_table_names(self):
+        """
+        Writes to ``cachalot_test`` must not invalidate the many-to-many
+        prefetch query on ``cachalot_testchild_permissions``: that table name
+        is only a substring of the through table name. Writes to the tables
+        the prefetch query really reads must still invalidate it.
+        """
+        child = TestChild.objects.create(name='child')
+        permissions = list(Permission.objects.all()[:2])
+        child.permissions.add(permissions[0])
+
+        def _query():
+            return [list(c.permissions.all())
+                    for c in TestChild.objects.prefetch_related('permissions')]
+
+        with self.assertNumQueries(2):
+            self.assertListEqual(_query(), [[permissions[0]]])
+        with self.assertNumQueries(0):
+            self.assertListEqual(_query(), [[permissions[0]]])
+
+        Test.objects.create(name='test')
+        with self.assertNumQueries(0):
+            self.assertListEqual(_query(), [[permissions[0]]])
+
+        child.permissions.add(permissions[1])
+        with self.assertNumQueries(1):
+            self.assertListEqual(_query(), [permissions])
+
+        permissions[1].save()
+        with self.assertNumQueries(1):
+            self.assertListEqual(_query(), [permissions])
+
+        child2 = TestChild.objects.create(name='child2')
+        with self.assertNumQueries(2):
+            self.assertListEqual(_query(), [permissions, []])
+        child2.delete()
+        with self.assertNumQueries(2):
+            self.assertListEqual(_query(), [permissions])
+
     def test_invalidate_having(self):
         def _query():
             return User.objects.annotate(n=Count('user_permissions')).filter(n__gte=1)
@@ -922,6 +981,30 @@ class WriteTestCase(TestUtilsMixin, FilteredTransactionTestCase):
         with self.assertNumQueries(1):
             self.assertListEqual(
                 list(Test.objects.values_list('name', flat=True)),
+                ['new name'])
+
+    def test_raw_update_similar_table_names(self):
+        """
+        A raw query on ``cachalot_testparent`` must invalidate that table
+        but not ``cachalot_test``, whose name is only a substring of it.
+        """
+        t = Test.objects.create(name='test')
+        p = TestParent.objects.create(name='parent')
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(Test.objects.all()), [t])
+        with self.assertNumQueries(1):
+            self.assertListEqual(list(TestParent.objects.all()), [p])
+
+        with self.assertNumQueries(1):
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE cachalot_testparent SET name = 'new name';")
+
+        with self.assertNumQueries(0):
+            self.assertListEqual(list(Test.objects.all()), [t])
+        with self.assertNumQueries(1):
+            self.assertListEqual(
+                list(TestParent.objects.values_list('name', flat=True)),
                 ['new name'])
 
     def test_raw_delete(self):
