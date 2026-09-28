@@ -116,11 +116,11 @@ class SettingsTestCase(TestUtilsMixin, TransactionTestCase):
             with self.assertNumQueries(1):
                 list(qs.all())
 
-        # We have to test with a full second and not a shorter time because
-        # memcached only takes the integer part of the timeout into account.
-        with self.settings(CACHALOT_TIMEOUT=1):
+        # memcached's clock ticks about once a second and sometimes skips one,
+        # so an entry with a timeout of N seconds lives N - 2 to N seconds.
+        with self.settings(CACHALOT_TIMEOUT=3):
             self.assert_query_cached(qs)
-            sleep(1)
+            sleep(3.5)
             with self.assertNumQueries(1):
                 list(Test.objects.all())
 
